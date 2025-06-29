@@ -47,8 +47,12 @@ export const InferenceTab: React.FC<InferenceTabProps> = ({
 }) => {
   // Audio alerts state
   const [audioEnabled, setAudioEnabled] = useState(false);
-  const [class0ChimeUrl, setClass0ChimeUrl] = useState("");
-  const [class1ChimeUrl, setClass1ChimeUrl] = useState("");
+  const [class0ChimeUrl, setClass0ChimeUrl] = useState<
+    string | (() => Promise<void>)
+  >("");
+  const [class1ChimeUrl, setClass1ChimeUrl] = useState<
+    string | (() => Promise<void>)
+  >("");
   const [volume, setVolume] = useState(0.5);
 
   // Trigger conditions
@@ -68,35 +72,101 @@ export const InferenceTab: React.FC<InferenceTabProps> = ({
   const [lastPlayTime, setLastPlayTime] = useState<number>(0);
   const [audioContextInitialized, setAudioContextInitialized] = useState(false);
   const audioRef = useRef<HTMLAudioElement>(null);
+  const audioContext = useRef<AudioContext | null>(null);
 
-  // Distinct built-in tones with different frequencies (actual working WAV data)
+  // Generate built-in tones using Web Audio API
+  const generateTone = useCallback(
+    (
+      frequency: number,
+      duration: number = 0.3,
+      type: OscillatorType = "sine",
+    ) => {
+      if (!audioContext.current) {
+        audioContext.current = new (window.AudioContext ||
+          (window as any).webkitAudioContext)();
+      }
+
+      const ctx = audioContext.current;
+      const oscillator = ctx.createOscillator();
+      const gainNode = ctx.createGain();
+
+      oscillator.connect(gainNode);
+      gainNode.connect(ctx.destination);
+
+      oscillator.frequency.setValueAtTime(frequency, ctx.currentTime);
+      oscillator.type = type;
+
+      // Envelope for smooth sound
+      gainNode.gain.setValueAtTime(0, ctx.currentTime);
+      gainNode.gain.linearRampToValueAtTime(
+        volume * 0.3,
+        ctx.currentTime + 0.01,
+      );
+      gainNode.gain.exponentialRampToValueAtTime(
+        0.001,
+        ctx.currentTime + duration,
+      );
+
+      oscillator.start(ctx.currentTime);
+      oscillator.stop(ctx.currentTime + duration);
+
+      return new Promise<void>((resolve) => {
+        oscillator.onended = () => resolve();
+      });
+    },
+    [volume],
+  );
+
   const builtInTones = {
-    bell: "data:audio/wav;base64,UklGRjIAAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQ4AAACAW4+/Pz8/gFuPvz8/P4Bbj78/Pz+AW4+/Pz8/",
-    chime:
-      "data:audio/wav;base64,UklGRjIAAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQ4AAADNzMzMzczMzczMzMzMzMzMzczMzczMzMzMzMzMzMzM",
-    success:
-      "data:audio/wav;base64,UklGRjIAAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQ4AAAAf39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f",
-    notification:
-      "data:audio/wav;base64,UklGRjIAAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQ4AAAAlJSUlJSUlJSUlJSUlJSUlJSUlJSUlJSUlJSUlJSUlJSUl",
+    bell: async () => {
+      // Bell-like sound with multiple harmonics
+      await generateTone(800, 0.2, "sine");
+      setTimeout(() => generateTone(1000, 0.3, "sine"), 100);
+      setTimeout(() => generateTone(600, 0.4, "sine"), 200);
+    },
+    chime: async () => {
+      // Chime with ascending tones
+      await generateTone(523, 0.2, "sine"); // C5
+      setTimeout(() => generateTone(659, 0.2, "sine"), 150); // E5
+      setTimeout(() => generateTone(784, 0.3, "sine"), 300); // G5
+    },
+    success: async () => {
+      // Success sound with cheerful progression
+      await generateTone(523, 0.15, "sine"); // C5
+      setTimeout(() => generateTone(659, 0.15, "sine"), 120); // E5
+      setTimeout(() => generateTone(784, 0.15, "sine"), 240); // G5
+      setTimeout(() => generateTone(1047, 0.25, "sine"), 360); // C6
+    },
+    notification: async () => {
+      // Simple notification beep
+      await generateTone(880, 0.2, "sine"); // A5
+      setTimeout(() => generateTone(880, 0.2, "sine"), 300); // A5 again
+    },
   };
 
   // Initialize audio context on first user interaction
   const initializeAudioContext = useCallback(() => {
-    if (!audioContextInitialized && audioRef.current) {
-      // Try to play a silent sound to unlock audio context
-      audioRef.current.volume = 0;
-      audioRef.current
-        .play()
-        .then(() => {
-          console.log("🔓 Audio context initialized");
+    if (!audioContextInitialized) {
+      try {
+        if (!audioContext.current) {
+          audioContext.current = new (window.AudioContext ||
+            (window as any).webkitAudioContext)();
+        }
+
+        if (audioContext.current.state === "suspended") {
+          audioContext.current.resume().then(() => {
+            console.log("🔓 Audio context initialized");
+            setAudioContextInitialized(true);
+          });
+        } else {
+          console.log("🔓 Audio context already initialized");
           setAudioContextInitialized(true);
-          audioRef.current!.volume = volume;
-        })
-        .catch(() => {
-          console.log("🔒 Audio context still locked");
-        });
+        }
+      } catch (error) {
+        console.error("❌ Failed to initialize audio context:", error);
+      }
     }
-  }, [audioContextInitialized, volume]);
+  }, [audioContextInitialized]);
 
   // Play chime when conditions are met
   useEffect(() => {
@@ -191,13 +261,13 @@ export const InferenceTab: React.FC<InferenceTabProps> = ({
       return;
     }
 
-    // Get chime URL
-    let chimeUrl = "";
+    // Get chime URL or function
+    let chimeSource: string | (() => Promise<void>) = "";
     if (currentPrediction === "0" && class0ChimeUrl) {
-      chimeUrl = class0ChimeUrl;
+      chimeSource = class0ChimeUrl;
       console.log("🔔 Playing Class 0 chime");
     } else if (currentPrediction === "1" && class1ChimeUrl) {
-      chimeUrl = class1ChimeUrl;
+      chimeSource = class1ChimeUrl;
       console.log("🔔 Playing Class 1 chime");
     } else {
       console.log(
@@ -207,36 +277,48 @@ export const InferenceTab: React.FC<InferenceTabProps> = ({
     }
 
     // Play the chime
-    if (chimeUrl && audioRef.current) {
-      console.log("🎵 Attempting to play:", chimeUrl);
+    const playSound = async () => {
+      if (chimeSource) {
+        console.log(
+          "🎵 Attempting to play:",
+          typeof chimeSource === "function" ? "built-in tone" : chimeSource,
+        );
 
-      // Reset audio element
-      audioRef.current.pause();
-      audioRef.current.currentTime = 0;
-
-      // Set new source and volume
-      audioRef.current.src = chimeUrl;
-      audioRef.current.volume = volume;
-
-      // Load and play
-      audioRef.current.load();
-      audioRef.current
-        .play()
-        .then(() => {
-          console.log("✅ Audio played successfully");
-          setLastPlayedPrediction(currentPrediction);
-          setLastPlayTime(currentTime);
-        })
-        .catch((error) => {
-          console.error("❌ Audio play failed:", error);
-          if (error.name === "NotAllowedError") {
-            console.log("🔐 Audio blocked - user interaction required");
-            setAudioContextInitialized(false);
+        // Check if it's a built-in tone function
+        if (typeof chimeSource === "function") {
+          try {
+            await chimeSource();
+            console.log("✅ Built-in tone played successfully");
+            setLastPlayedPrediction(currentPrediction);
+            setLastPlayTime(currentTime);
+          } catch (error: any) {
+            console.error("❌ Built-in tone play failed:", error);
           }
-        });
-    } else {
-      console.log("🚫 No audio element or chime URL");
-    }
+        } else {
+          // Handle URL-based audio
+          try {
+            // Create a new audio element to avoid cutting off current playback
+            const audio = new Audio(chimeSource);
+            audio.volume = volume;
+
+            await audio.play();
+            console.log("✅ Audio played successfully");
+            setLastPlayedPrediction(currentPrediction);
+            setLastPlayTime(currentTime);
+          } catch (error: any) {
+            console.error("❌ Audio play failed:", error);
+            if (error.name === "NotAllowedError") {
+              console.log("🔐 Audio blocked - user interaction required");
+              setAudioContextInitialized(false);
+            }
+          }
+        }
+      } else {
+        console.log("🚫 No chime configured");
+      }
+    };
+
+    playSound();
   }, [
     prediction.label,
     prediction.confidence,
@@ -640,30 +722,41 @@ export const InferenceTab: React.FC<InferenceTabProps> = ({
                     <input
                       type="url"
                       placeholder="Enter URL for Class 0 sound (mp3, wav, ogg)"
-                      value={class0ChimeUrl}
-                      onChange={(e) => setClass0ChimeUrl(e.target.value)}
+                      value={
+                        typeof class0ChimeUrl === "string" ? class0ChimeUrl : ""
+                      }
+                      onChange={(e) =>
+                        setClass0ChimeUrl(e.target.value as string)
+                      }
                       className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:border-green-500 focus:outline-none"
                     />
                     <div className="flex gap-2 flex-wrap">
                       <button
                         onClick={() => {
-                          if (class0ChimeUrl && audioRef.current) {
+                          if (class0ChimeUrl) {
                             console.log(
                               "🧪 Testing Class 0 chime:",
                               class0ChimeUrl,
                             );
                             initializeAudioContext();
-                            audioRef.current.pause();
-                            audioRef.current.currentTime = 0;
-                            audioRef.current.src = class0ChimeUrl;
-                            audioRef.current.volume = volume;
-                            audioRef.current.load();
-                            audioRef.current.play().catch((error) => {
-                              console.error("❌ Test play failed:", error);
-                              alert(
-                                "Failed to play sound. Check URL and browser permissions.",
-                              );
-                            });
+
+                            if (typeof class0ChimeUrl === "function") {
+                              class0ChimeUrl().catch((error) => {
+                                console.error("❌ Test play failed:", error);
+                                alert(
+                                  "Failed to play built-in sound. Check browser permissions.",
+                                );
+                              });
+                            } else {
+                              const audio = new Audio(class0ChimeUrl);
+                              audio.volume = volume;
+                              audio.play().catch((error) => {
+                                console.error("❌ Test play failed:", error);
+                                alert(
+                                  "Failed to play sound. Check URL and browser permissions.",
+                                );
+                              });
+                            }
                           }
                         }}
                         disabled={!class0ChimeUrl}
@@ -691,10 +784,9 @@ export const InferenceTab: React.FC<InferenceTabProps> = ({
                       </button>
                     </div>
                     <p className="text-xs text-green-200">
-                      Try:
-                      https://www2.cs.uic.edu/~i101/SoundFiles/BabyElephantWalk60.wav
-                      or
-                      https://www.soundjay.com/misc/sounds/bell-ringing-05.wav
+                      Try built-in sounds above, or use:
+                      https://www.soundboard.com/handler/DownLoadTrack.ashx?trackid=1341
+                      (Note: Some URLs may not work due to CORS restrictions)
                     </p>
                   </div>
                 </div>
@@ -710,30 +802,41 @@ export const InferenceTab: React.FC<InferenceTabProps> = ({
                     <input
                       type="url"
                       placeholder="Enter URL for Class 1 sound (mp3, wav, ogg)"
-                      value={class1ChimeUrl}
-                      onChange={(e) => setClass1ChimeUrl(e.target.value)}
+                      value={
+                        typeof class1ChimeUrl === "string" ? class1ChimeUrl : ""
+                      }
+                      onChange={(e) =>
+                        setClass1ChimeUrl(e.target.value as string)
+                      }
                       className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:border-purple-500 focus:outline-none"
                     />
                     <div className="flex gap-2 flex-wrap">
                       <button
                         onClick={() => {
-                          if (class1ChimeUrl && audioRef.current) {
+                          if (class1ChimeUrl) {
                             console.log(
                               "🧪 Testing Class 1 chime:",
                               class1ChimeUrl,
                             );
                             initializeAudioContext();
-                            audioRef.current.pause();
-                            audioRef.current.currentTime = 0;
-                            audioRef.current.src = class1ChimeUrl;
-                            audioRef.current.volume = volume;
-                            audioRef.current.load();
-                            audioRef.current.play().catch((error) => {
-                              console.error("❌ Test play failed:", error);
-                              alert(
-                                "Failed to play sound. Check URL and browser permissions.",
-                              );
-                            });
+
+                            if (typeof class1ChimeUrl === "function") {
+                              class1ChimeUrl().catch((error) => {
+                                console.error("❌ Test play failed:", error);
+                                alert(
+                                  "Failed to play built-in sound. Check browser permissions.",
+                                );
+                              });
+                            } else {
+                              const audio = new Audio(class1ChimeUrl);
+                              audio.volume = volume;
+                              audio.play().catch((error) => {
+                                console.error("❌ Test play failed:", error);
+                                alert(
+                                  "Failed to play sound. Check URL and browser permissions.",
+                                );
+                              });
+                            }
                           }
                         }}
                         disabled={!class1ChimeUrl}
@@ -763,9 +866,9 @@ export const InferenceTab: React.FC<InferenceTabProps> = ({
                       </button>
                     </div>
                     <p className="text-xs text-purple-200">
-                      Try:
-                      https://www2.cs.uic.edu/~i101/SoundFiles/CantinaBand60.wav
-                      or https://www.soundjay.com/misc/sounds/chime-sound.wav
+                      Try built-in sounds above, or use:
+                      https://www.soundboard.com/handler/DownLoadTrack.ashx?trackid=1342
+                      (Note: Some URLs may not work due to CORS restrictions)
                     </p>
                   </div>
                 </div>
