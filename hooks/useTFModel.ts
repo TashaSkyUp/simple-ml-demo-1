@@ -403,7 +403,7 @@ export const useTFModel = ({
 
     const newModel = tf.sequential();
     newModel.add(
-      tf.layers.inputLayer({ inputShape: [28, 28, 1], name: "input_layer" }),
+      tf.layers.inputLayer({ inputShape: [28, 28, 3], name: "input_layer" }),
     );
 
     try {
@@ -578,8 +578,18 @@ export const useTFModel = ({
       let tempMultiOutputModel: tf.LayersModel | null = null;
 
       try {
-        inputTensorForMultiOutputModel = tf
-          .tensor(inputGrid, [28, 28, 1], "float32")
+        // Handle both grayscale and RGB inputs for layer visualization
+        let inputTensorForMultiOutputModel: tf.Tensor;
+        if (Array.isArray(inputGrid[0][0])) {
+          // RGB input
+          inputTensorForMultiOutputModel = tf.tensor(inputGrid, [28, 28, 3], "float32");
+        } else {
+          // Grayscale input, convert to RGB
+          const rgbGrid = (inputGrid as number[][]).map(row =>
+            row.map(val => [val, val, val])
+          );
+          inputTensorForMultiOutputModel = tf.tensor(rgbGrid, [28, 28, 3], "float32");
+        }
           .expandDims(0);
 
         outputs.push({
@@ -587,7 +597,7 @@ export const useTFModel = ({
           maps: [inputGrid],
           layerClassName: "InputLayer",
           outputShape: inputTensorForMultiOutputModel.shape.slice(),
-          config: { inputShape: [28, 28, 1] },
+          config: { inputShape: [28, 28, 3] },
         });
 
         const symbolicOutputs = currentModel.layers.map(
@@ -747,7 +757,7 @@ export const useTFModel = ({
   );
 
   const runPrediction = useCallback(
-    async (grid: number[][]) => {
+    async (grid: number[][] | number[][][]) => {
       let activeModel = modelRef.current;
       if (
         !activeModel ||
@@ -772,7 +782,18 @@ export const useTFModel = ({
         return;
       }
 
-      const inputTensor = tf.tensor(grid, [28, 28, 1], "float32").expandDims(0);
+      // Handle both grayscale (2D) and RGB (3D) inputs
+      let inputTensor: tf.Tensor;
+      if (Array.isArray(grid[0][0])) {
+        // RGB input: grid is number[][][]
+        inputTensor = tf.tensor(grid, [28, 28, 3], "float32").expandDims(0);
+      } else {
+        // Grayscale input: grid is number[][], convert to RGB by duplicating channels
+        const rgbGrid = (grid as number[][]).map(row =>
+          row.map(val => [val, val, val])
+        );
+        inputTensor = tf.tensor(rgbGrid, [28, 28, 3], "float32").expandDims(0);
+      }
       try {
         if (!activeModel) {
           setPrediction({ label: "?", confidence: 0 });
@@ -851,12 +872,23 @@ export const useTFModel = ({
 
       setStatus("training");
 
-      const xsArray = trainingData.map((dp) => dp.grid);
+      const xsArray = trainingData.map((dp) => {
+        // Handle both grayscale and RGB inputs
+        if (Array.isArray(dp.grid[0][0])) {
+          // RGB input: grid is number[][][]
+          return dp.grid;
+        } else {
+          // Grayscale input: grid is number[][], convert to RGB by duplicating channels
+          return (dp.grid as number[][]).map(row =>
+            row.map(val => [val, val, val])
+          );
+        }
+      });
       const ysArray = trainingData.map((dp) => dp.label);
 
       const xs = tf.tensor(
         xsArray,
-        [trainingData.length, 28, 28, 1],
+        [trainingData.length, 28, 28, 3],
         "float32",
       );
       const ys = tf.tensor2d(ysArray, [trainingData.length, 1]);

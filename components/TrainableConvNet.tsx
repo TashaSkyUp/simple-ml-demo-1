@@ -202,7 +202,10 @@ export const TrainableConvNet: React.FC = () => {
     });
   };
 
-  const handleAddTrainingData = (grid: number[][], label: 0 | 1) => {
+  const handleAddTrainingData = (
+    grid: number[][] | number[][][],
+    label: 0 | 1,
+  ) => {
     setTrainingData((prev) => [
       ...prev,
       { id: generateUniqueId(), grid, label },
@@ -214,7 +217,7 @@ export const TrainableConvNet: React.FC = () => {
   };
 
   const predictFromDataCollectionCanvas = useCallback(
-    async (grid: number[][]) => {
+    async (grid: number[][] | number[][][]) => {
       await runPrediction(grid);
     },
     [runPrediction],
@@ -421,6 +424,7 @@ export const TrainableConvNet: React.FC = () => {
             onAugmentFlipChange={setAugmentFlip}
             augmentTranslate={augmentTranslate}
             onAugmentTranslateChange={setAugmentTranslate}
+            useRGB={true}
           />
         </div>
         <div className="bg-gray-800 p-6 rounded-lg shadow-lg">
