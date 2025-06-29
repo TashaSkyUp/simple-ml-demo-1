@@ -1059,6 +1059,62 @@ export const useTFModel = ({
     setEpochsRun(0);
   }, []);
 
+  // Save model weights to a serializable format
+  const saveModelWeights = useCallback(async (): Promise<any[] | null> => {
+    if (!modelRef.current) {
+      console.warn("No model available to save weights from");
+      return null;
+    }
+
+    try {
+      const weights = modelRef.current.getWeights();
+      const weightsData = await Promise.all(
+        weights.map(async (weight) => {
+          const data = await weight.data();
+          return {
+            shape: weight.shape,
+            data: Array.from(data),
+          };
+        }),
+      );
+
+      // Dispose of the weight tensors to free memory
+      weights.forEach((weight) => weight.dispose());
+
+      return weightsData;
+    } catch (error) {
+      console.error("Failed to save model weights:", error);
+      return null;
+    }
+  }, []);
+
+  // Load model weights from serialized format
+  const loadModelWeights = useCallback(
+    async (weightsData: any[]): Promise<boolean> => {
+      if (!modelRef.current || !weightsData) {
+        console.warn("No model available or no weights data to load");
+        return false;
+      }
+
+      try {
+        // Convert the serialized data back to tensors
+        const weightTensors = weightsData.map((weightData) => {
+          return tf.tensor(weightData.data, weightData.shape);
+        });
+
+        // Set the weights on the model
+        modelRef.current.setWeights(weightTensors);
+
+        console.log("Model weights loaded successfully");
+        return true;
+      } catch (error) {
+        console.error("Failed to load model weights:", error);
+        return false;
+      }
+    },
+    [],
+  );
+
   useEffect(() => {
     if (status === "uninitialized") {
       initializeModel();
@@ -1079,5 +1135,7 @@ export const useTFModel = ({
     startTrainingLogic,
     resetModelTrainingState,
     runGPUBenchmark,
+    saveModelWeights,
+    loadModelWeights,
   };
 };

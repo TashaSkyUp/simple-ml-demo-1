@@ -17,6 +17,7 @@ An interactive web application for training Convolutional Neural Networks (CNNs)
 - 🏗️ **Customizable Architecture**: Define your own CNN layers and parameters
 - 🔄 **Drag-and-Drop Layer Management**: Reorder CNN layers with intuitive drag-and-drop
 - 🔧 **3D Reshape Layer**: Advanced layer for reshaping tensor dimensions
+- 💾 **Session Save/Load**: Save and restore complete sessions including trained model weights
 
 ### ⚡ **Performance & Compatibility**
 - 🚀 **GPU Acceleration**: Automatic WebGL/WebGPU acceleration for faster training
@@ -174,6 +175,19 @@ If you see errors like "SyntaxError: Unexpected reserved word" or "await import"
 - See how your network processes input data
 - Analyze prediction confidence scores
 - Explore the training pipeline visualization
+
+### 5. Session Management
+- **Save Sessions**: Export complete sessions including:
+  - Network architecture (layer configuration)
+  - Training data (all collected samples)
+  - Trained model weights (preserves learning progress)
+  - Training metrics (epochs run, loss history)
+- **Load Sessions**: Restore previous work instantly
+  - Architecture and training data load immediately
+  - Trained weights restore after model initialization
+  - Continue training from where you left off
+- **Session Files**: Timestamped JSON files for easy organization
+- **Full Portability**: Share sessions between devices or with others
 
 ## Layer Types
 

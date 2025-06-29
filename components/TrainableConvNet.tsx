@@ -34,6 +34,9 @@ type TrainingControlsStatus =
 interface AppSessionData {
   layers: LayerConfig[];
   trainingData: TrainingDataPoint[];
+  modelWeights?: any[] | null;
+  epochsRun?: number;
+  lossHistory?: number[];
 }
 
 export const TrainableConvNet: React.FC = () => {
@@ -108,6 +111,8 @@ export const TrainableConvNet: React.FC = () => {
     startTrainingLogic,
     resetModelTrainingState,
     runGPUBenchmark,
+    saveModelWeights,
+    loadModelWeights,
   } = useTFModel({
     initialLayers: layers,
     learningRate,
@@ -331,22 +336,70 @@ export const TrainableConvNet: React.FC = () => {
   };
   const mappedStatusForTrainingControls = getTrainingControlsStatus(tfStatus);
 
-  const handleSaveSession = () => {
-    const sessionData: AppSessionData = {
-      layers: layers,
-      trainingData: trainingData,
-    };
-    const jsonString = JSON.stringify(sessionData, null, 2);
-    const blob = new Blob([jsonString], { type: "application/json" });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = "cnn_session_data.json";
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
-    alert("Session data saved successfully!");
+  const handleSaveSession = async () => {
+    const saveButton = document.querySelector(
+      '[aria-label="Save complete session (architecture, training data, and trained weights) to a JSON file"]',
+    ) as HTMLButtonElement;
+
+    try {
+      // Show loading state
+      if (saveButton) {
+        saveButton.disabled = true;
+        saveButton.textContent = "Saving...";
+      }
+
+      // Save model weights
+      const weights = await saveModelWeights();
+
+      if (weights === null && epochsRun > 0) {
+        console.warn(
+          "Failed to save model weights, but continuing with session save",
+        );
+      }
+
+      const sessionData: AppSessionData = {
+        layers: layers,
+        trainingData: trainingData,
+        modelWeights: weights,
+        epochsRun: epochsRun,
+        lossHistory: lossHistory,
+      };
+
+      const jsonString = JSON.stringify(sessionData, null, 2);
+      const blob = new Blob([jsonString], { type: "application/json" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+
+      // Generate filename with timestamp
+      const timestamp = new Date()
+        .toISOString()
+        .replace(/[:.]/g, "-")
+        .slice(0, -5);
+      a.download = `cnn_session_${timestamp}.json`;
+
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+
+      const message = weights
+        ? `Session saved successfully!\n• Architecture: ${layers.length} layers\n• Training data: ${trainingData.length} samples\n• Trained weights: Included\n• Epochs: ${epochsRun}\n• Loss history: ${lossHistory.length} points`
+        : `Session saved successfully!\n• Architecture: ${layers.length} layers\n• Training data: ${trainingData.length} samples\n• Trained weights: Not available\n• Epochs: ${epochsRun}`;
+
+      alert(message);
+    } catch (error) {
+      console.error("Error saving session:", error);
+      alert(
+        `Failed to save session data: ${error instanceof Error ? error.message : "Unknown error"}`,
+      );
+    } finally {
+      // Restore button state
+      if (saveButton) {
+        saveButton.disabled = false;
+        saveButton.textContent = "Save Session";
+      }
+    }
   };
 
   const handleLoadSession = () => {
@@ -358,7 +411,7 @@ export const TrainableConvNet: React.FC = () => {
       if (target.files && target.files[0]) {
         const file = target.files[0];
         const reader = new FileReader();
-        reader.onload = (event) => {
+        reader.onload = async (event) => {
           try {
             const result = event.target?.result;
             if (typeof result === "string") {
@@ -369,13 +422,37 @@ export const TrainableConvNet: React.FC = () => {
                 Array.isArray(parsedData.layers) &&
                 Array.isArray(parsedData.trainingData)
               ) {
-                // Further validation could be added here (e.g., check structure of layer objects, training data points)
+                // Load layers and training data first
                 setLayers(parsedData.layers);
                 setTrainingData(parsedData.trainingData);
-                // Model will re-initialize due to layers change via useEffect in useTFModel
-                alert(
-                  "Session data loaded successfully! Model will re-initialize.",
-                );
+
+                // Wait a moment for model to re-initialize, then load weights
+                setTimeout(async () => {
+                  let message = `Session loaded successfully!\n• Architecture: ${parsedData.layers.length} layers\n• Training data: ${parsedData.trainingData.length} samples`;
+
+                  if (
+                    parsedData.modelWeights &&
+                    parsedData.modelWeights.length > 0
+                  ) {
+                    const success = await loadModelWeights(
+                      parsedData.modelWeights,
+                    );
+                    if (success) {
+                      message += `\n• Trained weights: Restored (${parsedData.modelWeights.length} layers)`;
+                      if (parsedData.epochsRun) {
+                        message += `\n• Previous training: ${parsedData.epochsRun} epochs`;
+                      }
+                    } else {
+                      message +=
+                        "\n• Trained weights: Failed to restore (using random weights)";
+                    }
+                  } else {
+                    message +=
+                      "\n• Trained weights: None found (using random weights)";
+                  }
+
+                  alert(message);
+                }, 1000); // Give model time to initialize
               } else {
                 throw new Error("Invalid session file structure.");
               }

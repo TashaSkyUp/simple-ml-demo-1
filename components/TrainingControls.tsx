@@ -173,17 +173,37 @@ export const TrainingControls: React.FC<TrainingControlsProps> = ({
         <button
           onClick={onSaveSession}
           className="w-full flex justify-center items-center gap-3 bg-blue-600 hover:bg-blue-500 text-white font-bold py-3 rounded transition-colors text-lg focus:outline-none focus:ring-2 focus:ring-blue-400"
-          aria-label="Save current session (architecture and training data) to a JSON file"
+          aria-label="Save complete session (architecture, training data, and trained weights) to a JSON file"
         >
           Save Session
         </button>
         <button
           onClick={onLoadSession}
           className="w-full flex justify-center items-center gap-3 bg-purple-600 hover:bg-purple-500 text-white font-bold py-3 rounded transition-colors text-lg focus:outline-none focus:ring-2 focus:ring-purple-400"
-          aria-label="Load session (architecture and training data) from a JSON file"
+          aria-label="Load complete session (architecture, training data, and trained weights) from a JSON file"
         >
           Load Session
         </button>
+      </div>
+      <div className="mt-3 p-3 bg-gray-800 rounded-md">
+        <div className="text-sm text-gray-300">
+          <div className="flex items-center gap-2 mb-2">
+            <span className="text-blue-400">💾</span>
+            <span className="font-medium">Session Management</span>
+          </div>
+          <div className="space-y-1 text-xs">
+            <div>
+              • <strong>Save:</strong> Architecture + Training Data + Trained
+              Weights
+            </div>
+            <div>
+              • <strong>Load:</strong> Restore complete training state
+            </div>
+            <div>
+              • <strong>Share:</strong> Sessions work across devices
+            </div>
+          </div>
+        </div>
       </div>
       <div className="mt-6 space-y-4">
         <div>
