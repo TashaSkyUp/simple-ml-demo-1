@@ -33,6 +33,9 @@ export const DataCollection: React.FC<DataCollectionProps> = ({
 }) => {
   const { canvasRef, clearCanvas } = useDrawingCanvas({
     onDrawEnd: (grid) => {
+      // Clear captured image data when drawing
+      setCapturedImageData(null);
+
       if (predictFromCanvas) {
         // Convert grayscale grid to RGB if needed
         if (
@@ -59,13 +62,18 @@ export const DataCollection: React.FC<DataCollectionProps> = ({
   const [isGenerating, setIsGenerating] = useState<boolean>(false);
   const [generationError, setGenerationError] = useState<string | null>(null);
   const [inputMode, setInputMode] = useState<"draw" | "camera">("draw");
+  const [capturedImageData, setCapturedImageData] = useState<
+    number[][] | number[][][] | null
+  >(null);
 
   const handleCameraCapture = useCallback(
     (imageData: ImageData, canvas: HTMLCanvasElement) => {
+      let processedData: number[][] | number[][][];
+
       if (useRGB) {
-        const rgbGrid = imageDataToRGBGrid(imageData, 28, 28);
+        processedData = imageDataToRGBGrid(imageData, 28, 28);
         if (predictFromCanvas) {
-          predictFromCanvas(rgbGrid);
+          predictFromCanvas(processedData);
         }
       } else {
         // Convert to grayscale for backward compatibility
@@ -75,32 +83,53 @@ export const DataCollection: React.FC<DataCollectionProps> = ({
         const ctx = tempCanvas.getContext("2d");
         if (ctx) {
           ctx.putImageData(imageData, 0, 0);
-          const grid = imageToGrid(tempCanvas);
+          processedData = imageToGrid(tempCanvas);
           if (predictFromCanvas) {
-            predictFromCanvas(grid);
+            predictFromCanvas(processedData);
           }
+        } else {
+          processedData = imageDataToRGBGrid(imageData, 28, 28);
         }
       }
+
+      // Store the captured data for training sample addition
+      setCapturedImageData(processedData);
     },
     [predictFromCanvas, useRGB],
   );
 
   const handleAddData = (label: 0 | 1) => {
-    if (!canvasRef.current) return;
-
     let originalGrid: number[][] | number[][][];
     let isEmpty: boolean;
 
-    if (useRGB) {
-      originalGrid = imageToRGBGrid(canvasRef.current);
-      isEmpty = (originalGrid as number[][][])
-        .flat(2)
-        .every((pixel) => pixel < 0.01);
+    // Use captured camera data if in camera mode and available
+    if (inputMode === "camera" && capturedImageData) {
+      originalGrid = capturedImageData;
+      if (useRGB) {
+        isEmpty = (originalGrid as number[][][])
+          .flat(2)
+          .every((pixel) => pixel < 0.01);
+      } else {
+        isEmpty = (originalGrid as number[][])
+          .flat()
+          .every((pixel) => pixel < 0.01);
+      }
+    } else if (canvasRef.current) {
+      // Use canvas data for drawing mode
+      if (useRGB) {
+        originalGrid = imageToRGBGrid(canvasRef.current);
+        isEmpty = (originalGrid as number[][][])
+          .flat(2)
+          .every((pixel) => pixel < 0.01);
+      } else {
+        originalGrid = imageToGrid(canvasRef.current);
+        isEmpty = (originalGrid as number[][])
+          .flat()
+          .every((pixel) => pixel < 0.01);
+      }
     } else {
-      originalGrid = imageToGrid(canvasRef.current);
-      isEmpty = (originalGrid as number[][])
-        .flat()
-        .every((pixel) => pixel < 0.01);
+      alert("Please draw something or capture a photo before adding.");
+      return;
     }
 
     if (isEmpty) {
@@ -174,6 +203,7 @@ export const DataCollection: React.FC<DataCollectionProps> = ({
     }
 
     clearCanvas();
+    setCapturedImageData(null); // Clear captured data after adding
     // predictFromCanvas is called by clearCanvas through onDrawEnd
   };
 

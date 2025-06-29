@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useRef } from "react";
 import type {
   LayerConfig,
   ConvLayerConfig,
@@ -27,7 +27,11 @@ export const ArchitectureDefinition: React.FC<ArchitectureDefinitionProps> = ({
   reorderLayers,
 }) => {
   const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
-  const [dragOverIndex, setDragOverIndex] = useState<number | null>(null);
+  const [hoverIndex, setHoverIndex] = useState<number | null>(null);
+  const touchStartRef = useRef<{ x: number; y: number; index: number } | null>(
+    null,
+  );
+  const touchElementRef = useRef<HTMLElement | null>(null);
 
   const handleNumericInput = (
     value: string,
@@ -102,12 +106,11 @@ export const ArchitectureDefinition: React.FC<ArchitectureDefinitionProps> = ({
     index: number,
   ) => {
     e.preventDefault();
-    e.dataTransfer.dropEffect = "move";
-    setDragOverIndex(index);
+    setHoverIndex(index);
   };
 
   const handleDragLeave = () => {
-    setDragOverIndex(null);
+    setHoverIndex(null);
   };
 
   const handleDrop = (
@@ -119,7 +122,65 @@ export const ArchitectureDefinition: React.FC<ArchitectureDefinitionProps> = ({
       reorderLayers(draggedIndex, dropIndex);
     }
     setDraggedIndex(null);
-    setDragOverIndex(null);
+    setHoverIndex(null);
+  };
+
+  // Touch handlers for mobile drag and drop
+  const handleTouchStart = (e: React.TouchEvent, index: number) => {
+    const touch = e.touches[0];
+    touchStartRef.current = {
+      x: touch.clientX,
+      y: touch.clientY,
+      index,
+    };
+    touchElementRef.current = e.currentTarget as HTMLElement;
+    setDraggedIndex(index);
+    e.preventDefault();
+  };
+
+  const handleTouchMove = (e: React.TouchEvent) => {
+    if (!touchStartRef.current || !touchElementRef.current) return;
+    e.preventDefault();
+
+    const touch = e.touches[0];
+    const deltaY = touch.clientY - touchStartRef.current.y;
+
+    // Find which layer we're hovering over
+    const elements = document.querySelectorAll("[data-layer-index]");
+    let hoverTarget = null;
+
+    for (const element of elements) {
+      const rect = element.getBoundingClientRect();
+      if (touch.clientY >= rect.top && touch.clientY <= rect.bottom) {
+        hoverTarget = parseInt(element.getAttribute("data-layer-index") || "0");
+        break;
+      }
+    }
+
+    if (hoverTarget !== null) {
+      setHoverIndex(hoverTarget);
+    }
+  };
+
+  const handleTouchEnd = (e: React.TouchEvent) => {
+    if (!touchStartRef.current || hoverIndex === null) {
+      setDraggedIndex(null);
+      setHoverIndex(null);
+      touchStartRef.current = null;
+      touchElementRef.current = null;
+      return;
+    }
+
+    const draggedIdx = touchStartRef.current.index;
+    if (draggedIdx !== hoverIndex) {
+      reorderLayers(draggedIdx, hoverIndex);
+    }
+
+    setDraggedIndex(null);
+    setHoverIndex(null);
+    touchStartRef.current = null;
+    touchElementRef.current = null;
+    e.preventDefault();
   };
 
   return (
@@ -131,17 +192,20 @@ export const ArchitectureDefinition: React.FC<ArchitectureDefinitionProps> = ({
         {layers.map((layer, index) => (
           <div
             key={layer.id}
+            data-layer-index={index}
             draggable
             onDragStart={(e) => handleDragStart(e, index)}
             onDragEnd={handleDragEnd}
             onDragOver={(e) => handleDragOver(e, index)}
             onDragLeave={handleDragLeave}
             onDrop={(e) => handleDrop(e, index)}
+            onTouchStart={(e) => handleTouchStart(e, index)}
+            onTouchMove={handleTouchMove}
+            onTouchEnd={handleTouchEnd}
             className={`
                             bg-gray-700 p-3 rounded-md cursor-move transition-all duration-200
                             ${draggedIndex === index ? "opacity-50 scale-95" : ""}
-                            ${dragOverIndex === index && draggedIndex !== index ? "ring-2 ring-cyan-500 transform scale-105" : ""}
-                            hover:bg-gray-600 hover:shadow-lg
+                            ${hoverIndex === index ? "border-2 border-cyan-400 bg-gray-600" : "border-2 border-transparent"}
                         `}
           >
             <div className="flex justify-between items-center mb-2">
