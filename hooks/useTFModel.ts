@@ -595,11 +595,31 @@ export const useTFModel = ({
             .expandDims(0);
         }
 
+        // For input layer visualization, convert data to proper format
+        let inputMaps: number[][];
+        if (Array.isArray(inputGrid[0][0])) {
+          // RGB input: convert to individual channel maps for visualization
+          const rgbGrid = inputGrid as number[][][];
+          inputMaps = [
+            rgbGrid.map((row) => row.map((pixel) => pixel[0])), // R channel
+            rgbGrid.map((row) => row.map((pixel) => pixel[1])), // G channel
+            rgbGrid.map((row) => row.map((pixel) => pixel[2])), // B channel
+          ];
+        } else {
+          // Grayscale input: convert to RGB format
+          const grayGrid = inputGrid as number[][];
+          inputMaps = [
+            grayGrid, // R channel
+            grayGrid, // G channel
+            grayGrid, // B channel
+          ];
+        }
+
         outputs.push({
           id: currentModel.inputs[0].name,
-          maps: [inputGrid],
+          maps: inputMaps,
           layerClassName: "InputLayer",
-          outputShape: inputTensorForMultiOutputModel.shape.slice(),
+          outputShape: [28, 28, 3],
           config: { inputShape: [28, 28, 3] },
         });
 
