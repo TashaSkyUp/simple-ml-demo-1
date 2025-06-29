@@ -71,18 +71,19 @@ export const FeatureMapCanvas: React.FC<FeatureMapCanvasProps> = ({ mapData, siz
                     const val = displayMap[y][x];
                     if (Math.abs(val) > 1e-4) {
                         const intensity = Math.min(1, Math.abs(val) / maxAbsVal);
-                    ctx.fillStyle = val > 0
-                        ? `rgba(56, 189, 248, ${intensity})` // cyan-400 for positive
-                        : `rgba(239, 68, 68, ${intensity})`; // red-500 for negative
-                    ctx.fillRect(x * cellSize, y * cellSize, cellSize, cellSize);
+                        ctx.fillStyle = val > 0
+                            ? `rgba(56, 189, 248, ${intensity})` // cyan-400 for positive
+                            : `rgba(239, 68, 68, ${intensity})`; // red-500 for negative
+                        ctx.fillRect(x * cellSize, y * cellSize, cellSize, cellSize);
+                    }
                 }
             }
-        }
-         if (label) { // Draw label on top, could be outside if there's space
-            ctx.fillStyle = '#9ca3af'; // text-gray-400
-            ctx.font = 'bold 10px sans-serif';
-            ctx.textAlign = 'center';
-            ctx.fillText(label, size / 2, size - 5); // Position at bottom
+            if (label) { // Draw label on top, could be outside if there's space
+                ctx.fillStyle = '#9ca3af'; // text-gray-400
+                ctx.font = 'bold 10px sans-serif';
+                ctx.textAlign = 'center';
+                ctx.fillText(label, size / 2, size - 5); // Position at bottom
+            }
         }
 
     }, [mapData, size, channelIndexToDisplay, label]);
