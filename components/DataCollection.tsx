@@ -1,25 +1,21 @@
-import React, { useState, useCallback } from "react";
+import React, { useState, useCallback, useRef } from "react";
 import { useDrawingCanvas } from "../hooks/useDrawingCanvas";
 import {
-  imageToGrid,
   imageToRGBGrid,
   imageDataToRGBGrid,
-  flipGridHorizontal,
   flipRGBGridHorizontal,
-  translateGrid,
   translateRGBGrid,
 } from "../utils/cnnUtils"; // base64ToGrid no longer needed here
-import { CameraCapture } from "./CameraCapture";
+import { CameraCapture, CameraCaptureHandle } from "./CameraCapture";
 // import { GoogleGenAI } from "@google/genai"; // Import for Gemini API - Disabled for compatibility
 
 interface DataCollectionProps {
-  onAddData: (grid: number[][][] | number[][], label: 0 | 1) => void;
-  predictFromCanvas?: (grid: number[][][] | number[][]) => void;
+  onAddData: (grid: number[][][], label: 0 | 1) => void;
+  predictFromCanvas?: (grid: number[][][]) => void;
   augmentFlip: boolean;
   onAugmentFlipChange: (value: boolean) => void;
   augmentTranslate: boolean;
   onAugmentTranslateChange: (value: boolean) => void;
-  useRGB?: boolean;
 }
 
 export const DataCollection: React.FC<DataCollectionProps> = ({
@@ -29,7 +25,6 @@ export const DataCollection: React.FC<DataCollectionProps> = ({
   onAugmentFlipChange,
   augmentTranslate,
   onAugmentTranslateChange,
-  useRGB = true,
 }) => {
   const { canvasRef, clearCanvas } = useDrawingCanvas({
     onDrawEnd: (grid) => {
@@ -37,18 +32,8 @@ export const DataCollection: React.FC<DataCollectionProps> = ({
       setLastCapturedData(null);
 
       if (predictFromCanvas) {
-        // Convert grayscale grid to RGB if needed
-        if (
-          useRGB &&
-          Array.isArray(grid) &&
-          Array.isArray(grid[0]) &&
-          typeof grid[0][0] === "number"
-        ) {
-          const rgbGrid = grid.map((row) => row.map((val) => [val, val, val]));
-          predictFromCanvas(rgbGrid as number[][][]);
-        } else {
-          predictFromCanvas(grid);
-        }
+        const rgbGrid = grid.map((row) => row.map((val) => [val, val, val]));
+        predictFromCanvas(rgbGrid);
       }
     },
     canvasWidth: 280,
@@ -63,34 +48,15 @@ export const DataCollection: React.FC<DataCollectionProps> = ({
   const [generationError, setGenerationError] = useState<string | null>(null);
   const [inputMode, setInputMode] = useState<"draw" | "camera">("draw");
   const [lastCapturedData, setLastCapturedData] = useState<
-    number[][] | number[][][] | null
+    number[][][] | null
   >(null);
+  const [isCameraStreaming, setIsCameraStreaming] = useState<boolean>(false);
+
+  const cameraRef = useRef<CameraCaptureHandle | null>(null);
 
   const handleCameraCapture = useCallback(
     (imageData: ImageData, canvas: HTMLCanvasElement) => {
-      let processedData: number[][] | number[][][];
-
-      if (useRGB) {
-        processedData = imageDataToRGBGrid(imageData, 28, 28);
-      } else {
-        // Convert to grayscale
-        const tempCanvas = document.createElement("canvas");
-        tempCanvas.width = imageData.width;
-        tempCanvas.height = imageData.height;
-        const ctx = tempCanvas.getContext("2d");
-        if (ctx) {
-          ctx.putImageData(imageData, 0, 0);
-          processedData = imageToGrid(tempCanvas);
-        } else {
-          // Fallback: convert RGB to grayscale manually
-          const rgbData = imageDataToRGBGrid(imageData, 28, 28);
-          processedData = rgbData.map((row) =>
-            row.map(
-              (pixel) => pixel[0] * 0.299 + pixel[1] * 0.587 + pixel[2] * 0.114,
-            ),
-          );
-        }
-      }
+      const processedData = imageDataToRGBGrid(imageData, 28, 28);
 
       // Store and predict
       setLastCapturedData(processedData);
@@ -98,38 +64,101 @@ export const DataCollection: React.FC<DataCollectionProps> = ({
         predictFromCanvas(processedData);
       }
     },
-    [predictFromCanvas, useRGB],
+    [predictFromCanvas],
+  );
+
+  const handleCaptureAndAdd = useCallback(
+    (label: 0 | 1) => {
+      if (!cameraRef.current) {
+        alert("Camera not ready");
+        return;
+      }
+      const result = cameraRef.current.capture();
+      if (!result) {
+        alert("Capture failed");
+        return;
+      }
+      const { imageData } = result;
+      const grid = imageDataToRGBGrid(imageData, 28, 28);
+      setLastCapturedData(grid);
+      if (predictFromCanvas) {
+        predictFromCanvas(grid);
+      }
+      addGridData(grid, label);
+    },
+    [addGridData, predictFromCanvas],
+  );
+
+  const addGridData = useCallback(
+    (grid: number[][][], label: 0 | 1) => {
+      const gridsToSubmit: number[][][] = [];
+      const NUM_TRANSLATIONS_PER_BASE = 2;
+
+      gridsToSubmit.push(grid);
+
+      if (augmentFlip && augmentTranslate) {
+        const flippedGrid = flipRGBGridHorizontal(grid);
+        gridsToSubmit.push(flippedGrid);
+
+        for (let i = 0; i < NUM_TRANSLATIONS_PER_BASE; i++) {
+          let dx = 0,
+            dy = 0;
+          do {
+            dx = Math.floor(Math.random() * 5) - 2;
+            dy = Math.floor(Math.random() * 5) - 2;
+          } while (dx === 0 && dy === 0);
+
+          const translatedGrid = translateRGBGrid(grid, dx, dy);
+          gridsToSubmit.push(translatedGrid);
+        }
+
+        for (let i = 0; i < NUM_TRANSLATIONS_PER_BASE; i++) {
+          let dx = 0,
+            dy = 0;
+          do {
+            dx = Math.floor(Math.random() * 5) - 2;
+            dy = Math.floor(Math.random() * 5) - 2;
+          } while (dx === 0 && dy === 0);
+
+          const translatedFlippedGrid = translateRGBGrid(flippedGrid, dx, dy);
+          gridsToSubmit.push(translatedFlippedGrid);
+        }
+      } else if (augmentFlip) {
+        const flippedGrid = flipRGBGridHorizontal(grid);
+        gridsToSubmit.push(flippedGrid);
+      } else if (augmentTranslate) {
+        for (let i = 0; i < NUM_TRANSLATIONS_PER_BASE; i++) {
+          let dx = 0,
+            dy = 0;
+          do {
+            dx = Math.floor(Math.random() * 5) - 2;
+            dy = Math.floor(Math.random() * 5) - 2;
+          } while (dx === 0 && dy === 0);
+
+          const translatedGrid = translateRGBGrid(grid, dx, dy);
+          gridsToSubmit.push(translatedGrid);
+        }
+      }
+
+      for (const g of gridsToSubmit) {
+        onAddData(g, label);
+      }
+    },
+    [augmentFlip, augmentTranslate, onAddData],
   );
 
   const handleAddData = (label: 0 | 1) => {
-    let originalGrid: number[][] | number[][][];
+    let originalGrid: number[][][];
     let isEmpty: boolean;
 
     // Use captured camera data if in camera mode and available
     if (inputMode === "camera" && lastCapturedData) {
-      originalGrid = lastCapturedData;
-      if (useRGB && Array.isArray(originalGrid[0][0])) {
-        isEmpty = (originalGrid as number[][][])
-          .flat(2)
-          .every((pixel) => pixel < 0.01);
-      } else {
-        isEmpty = (originalGrid as number[][])
-          .flat()
-          .every((pixel) => pixel < 0.01);
-      }
+      originalGrid = lastCapturedData as number[][][];
+      isEmpty = originalGrid.flat(2).every((pixel) => pixel < 0.01);
     } else if (inputMode === "draw" && canvasRef.current) {
       // Use canvas data for drawing mode
-      if (useRGB) {
-        originalGrid = imageToRGBGrid(canvasRef.current);
-        isEmpty = (originalGrid as number[][][])
-          .flat(2)
-          .every((pixel) => pixel < 0.01);
-      } else {
-        originalGrid = imageToGrid(canvasRef.current);
-        isEmpty = (originalGrid as number[][])
-          .flat()
-          .every((pixel) => pixel < 0.01);
-      }
+      originalGrid = imageToRGBGrid(canvasRef.current);
+      isEmpty = originalGrid.flat(2).every((pixel) => pixel < 0.01);
     } else {
       alert(
         inputMode === "camera"
@@ -146,68 +175,7 @@ export const DataCollection: React.FC<DataCollectionProps> = ({
       return;
     }
 
-    const gridsToSubmit: (number[][] | number[][][])[] = [];
-    const NUM_TRANSLATIONS_PER_BASE = 2;
-
-    gridsToSubmit.push(originalGrid);
-
-    if (augmentFlip && augmentTranslate) {
-      const flippedGrid = useRGB
-        ? flipRGBGridHorizontal(originalGrid as number[][][])
-        : flipGridHorizontal(originalGrid as number[][]);
-      gridsToSubmit.push(flippedGrid);
-
-      for (let i = 0; i < NUM_TRANSLATIONS_PER_BASE; i++) {
-        let dx = 0,
-          dy = 0;
-        do {
-          dx = Math.floor(Math.random() * 5) - 2;
-          dy = Math.floor(Math.random() * 5) - 2;
-        } while (dx === 0 && dy === 0);
-
-        const translatedGrid = useRGB
-          ? translateRGBGrid(originalGrid as number[][][], dx, dy)
-          : translateGrid(originalGrid as number[][], dx, dy);
-        gridsToSubmit.push(translatedGrid);
-      }
-
-      for (let i = 0; i < NUM_TRANSLATIONS_PER_BASE; i++) {
-        let dx = 0,
-          dy = 0;
-        do {
-          dx = Math.floor(Math.random() * 5) - 2;
-          dy = Math.floor(Math.random() * 5) - 2;
-        } while (dx === 0 && dy === 0);
-
-        const translatedFlippedGrid = useRGB
-          ? translateRGBGrid(flippedGrid as number[][][], dx, dy)
-          : translateGrid(flippedGrid as number[][], dx, dy);
-        gridsToSubmit.push(translatedFlippedGrid);
-      }
-    } else if (augmentFlip) {
-      const flippedGrid = useRGB
-        ? flipRGBGridHorizontal(originalGrid as number[][][])
-        : flipGridHorizontal(originalGrid as number[][]);
-      gridsToSubmit.push(flippedGrid);
-    } else if (augmentTranslate) {
-      for (let i = 0; i < NUM_TRANSLATIONS_PER_BASE; i++) {
-        let dx = 0,
-          dy = 0;
-        do {
-          dx = Math.floor(Math.random() * 5) - 2;
-          dy = Math.floor(Math.random() * 5) - 2;
-        } while (dx === 0 && dy === 0);
-
-        const translatedGrid = useRGB
-          ? translateRGBGrid(originalGrid as number[][][], dx, dy)
-          : translateGrid(originalGrid as number[][], dx, dy);
-        gridsToSubmit.push(translatedGrid);
-      }
-    }
-
-    for (const grid of gridsToSubmit) {
-      onAddData(grid, label);
-    }
+    addGridData(originalGrid, label);
 
     if (inputMode === "draw") {
       clearCanvas();
@@ -275,7 +243,7 @@ export const DataCollection: React.FC<DataCollectionProps> = ({
 
               // Manually trigger prediction after drawing programmatically
               if (predictFromCanvas) {
-                const grid = imageToGrid(canvas);
+                const grid = imageToRGBGrid(canvas);
                 predictFromCanvas!(grid);
               }
             }
@@ -285,7 +253,7 @@ export const DataCollection: React.FC<DataCollectionProps> = ({
           setGenerationError("Failed to load generated image onto canvas.");
           // Ensure predictFromCanvas is called with an empty grid if image load fails after clearing
           if (predictFromCanvas && canvasRef.current) {
-            const grid = imageToGrid(canvasRef.current); // Will be empty or whatever state it's in
+            const grid = imageToRGBGrid(canvasRef.current); // Will be empty or whatever state it's in
             predictFromCanvas(grid);
           }
         };
@@ -344,27 +312,37 @@ export const DataCollection: React.FC<DataCollectionProps> = ({
             Camera Capture
           </h3>
           <CameraCapture
+            ref={cameraRef}
             onImageCapture={handleCameraCapture}
             onError={(error) => console.error("Camera error:", error)}
+            onStreamingChange={setIsCameraStreaming}
             width={280}
             height={280}
           />
-          {lastCapturedData && (
+          {(isCameraStreaming || lastCapturedData) && (
             <div className="w-full max-w-[280px] mx-auto mt-4">
-              <div className="bg-green-900/30 border border-green-600 rounded-lg p-3 mb-3">
-                <p className="text-green-300 text-sm text-center">
-                  ✅ Photo captured! Add it as a training sample:
-                </p>
-              </div>
+              {isCameraStreaming ? (
+                <div className="bg-blue-900/30 border border-blue-600 rounded-lg p-3 mb-3">
+                  <p className="text-blue-300 text-sm text-center">
+                    📸 Camera active - press a button to capture
+                  </p>
+                </div>
+              ) : (
+                <div className="bg-green-900/30 border border-green-600 rounded-lg p-3 mb-3">
+                  <p className="text-green-300 text-sm text-center">
+                    ✅ Photo captured! Add it as a training sample:
+                  </p>
+                </div>
+              )}
               <div className="grid grid-cols-2 gap-4">
                 <button
-                  onClick={() => handleAddData(0)}
+                  onClick={() => (isCameraStreaming ? handleCaptureAndAdd(0) : handleAddData(0))}
                   className="bg-sky-600 hover:bg-sky-500 text-white font-bold py-3 px-4 rounded transition-colors text-lg focus:outline-none focus:ring-2 focus:ring-sky-400"
                 >
                   Add as '0'
                 </button>
                 <button
-                  onClick={() => handleAddData(1)}
+                  onClick={() => (isCameraStreaming ? handleCaptureAndAdd(1) : handleAddData(1))}
                   className="bg-amber-500 hover:bg-amber-400 text-white font-bold py-3 px-4 rounded transition-colors text-lg focus:outline-none focus:ring-2 focus:ring-amber-300"
                 >
                   Add as '1'

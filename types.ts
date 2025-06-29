@@ -74,7 +74,7 @@ export type LayerConfig =
 
 export interface TrainingDataPoint {
   id: number | string;
-  grid: number[][] | number[][][]; // Support both grayscale (2D) and RGB (3D)
+  grid: number[][][]; // Training samples are stored as RGB grids
   label: 0 | 1;
 }
 
