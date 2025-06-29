@@ -4,15 +4,25 @@ An interactive web application for training Convolutional Neural Networks (CNNs)
 
 ## Features
 
+### 🆕 **Camera Capture (NEW!)**
+- 📸 **Real-time Camera Input**: Capture photos directly from your device camera
+- 🎯 **RGB Image Processing**: Full 3-channel (RGB) image support for realistic training
+- 📱 **Mobile Optimized**: Automatic camera selection (front/back) and responsive design
+- 🔄 **Dual Input Modes**: Seamlessly switch between drawing and camera capture
+
+### 🧠 **Machine Learning**
 - 🎨 **Interactive Drawing Canvas**: Draw samples directly in the browser
 - 🧠 **Real-time CNN Training**: Train neural networks with TensorFlow.js
 - 📊 **Live Visualizations**: Watch training progress, loss curves, and feature maps
 - 🏗️ **Customizable Architecture**: Define your own CNN layers and parameters
 - 🔄 **Drag-and-Drop Layer Management**: Reorder CNN layers with intuitive drag-and-drop
 - 🔧 **3D Reshape Layer**: Advanced layer for reshaping tensor dimensions
-- 🚀 **GPU Acceleration**: Automatic WebGL/GPU acceleration for faster training
+
+### ⚡ **Performance & Compatibility**
+- 🚀 **GPU Acceleration**: Automatic WebGL/WebGPU acceleration for faster training
 - 📱 **Responsive Design**: Works on desktop and mobile devices
-- 🤖 **AI Integration**: Enhanced with Google's Gemini AI for insights
+- 🌈 **RGB Processing**: Full-color image processing (upgraded from grayscale)
+- 🔒 **Privacy First**: All processing happens locally in your browser
 
 ## Prerequisites
 
