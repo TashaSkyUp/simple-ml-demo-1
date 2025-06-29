@@ -21,10 +21,13 @@ export const CameraCapture: React.FC<CameraCaptureProps> = ({
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const streamRef = useRef<MediaStream | null>(null);
 
-  const handleError = useCallback((errorMessage: string) => {
-    setError(errorMessage);
-    onError?.(errorMessage);
-  }, [onError]);
+  const handleError = useCallback(
+    (errorMessage: string) => {
+      setError(errorMessage);
+      onError?.(errorMessage);
+    },
+    [onError],
+  );
 
   const startCamera = useCallback(async () => {
     try {
@@ -40,8 +43,8 @@ export const CameraCapture: React.FC<CameraCaptureProps> = ({
         video: {
           width: { ideal: width },
           height: { ideal: height },
-          facingMode: "environment" // Prefer back camera on mobile
-        }
+          facingMode: "environment", // Prefer back camera on mobile
+        },
       });
 
       if (videoRef.current) {
@@ -55,7 +58,9 @@ export const CameraCapture: React.FC<CameraCaptureProps> = ({
       setHasPermission(false);
 
       if (err.name === "NotAllowedError") {
-        handleError("Camera access denied. Please allow camera permissions and try again.");
+        handleError(
+          "Camera access denied. Please allow camera permissions and try again.",
+        );
       } else if (err.name === "NotFoundError") {
         handleError("No camera found on this device.");
       } else if (err.name === "NotSupportedError") {
@@ -68,7 +73,7 @@ export const CameraCapture: React.FC<CameraCaptureProps> = ({
 
   const stopCamera = useCallback(() => {
     if (streamRef.current) {
-      streamRef.current.getTracks().forEach(track => track.stop());
+      streamRef.current.getTracks().forEach((track) => track.stop());
       streamRef.current = null;
     }
     if (videoRef.current) {
@@ -116,17 +121,31 @@ export const CameraCapture: React.FC<CameraCaptureProps> = ({
   return (
     <div className="camera-capture bg-gray-800 p-4 rounded-lg">
       <div className="flex flex-col items-center space-y-4">
-
         {/* Camera Controls */}
-        <div className="flex space-x-3">
+        <div className="flex flex-col items-center space-y-3">
           {!isStreaming ? (
             <button
               onClick={startCamera}
-              className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg flex items-center space-x-2 transition-colors"
+              className="px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-lg flex items-center space-x-2 transition-colors text-lg font-semibold"
             >
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
+              <svg
+                className="w-6 h-6"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"
+                />
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"
+                />
               </svg>
               <span>Start Camera</span>
             </button>
@@ -134,21 +153,41 @@ export const CameraCapture: React.FC<CameraCaptureProps> = ({
             <>
               <button
                 onClick={captureImage}
-                className="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg flex items-center space-x-2 transition-colors"
+                className="px-8 py-4 bg-green-600 hover:bg-green-700 text-white rounded-lg flex items-center space-x-2 transition-colors text-xl font-bold shadow-lg"
               >
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                <svg
+                  className="w-8 h-8"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
+                  />
                 </svg>
-                <span>Capture Photo</span>
+                <span>📸 Capture</span>
               </button>
               <button
                 onClick={stopCamera}
-                className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg flex items-center space-x-2 transition-colors"
+                className="px-4 py-2 bg-gray-600 hover:bg-gray-500 text-white rounded-lg flex items-center space-x-2 transition-colors"
               >
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                <svg
+                  className="w-4 h-4"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M6 18L18 6M6 6l12 12"
+                  />
                 </svg>
-                <span>Stop Camera</span>
+                <span>Stop</span>
               </button>
             </>
           )}
@@ -179,9 +218,24 @@ export const CameraCapture: React.FC<CameraCaptureProps> = ({
               style={{ width, height }}
             >
               <div className="text-center text-gray-400">
-                <svg className="w-16 h-16 mx-auto mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
+                <svg
+                  className="w-16 h-16 mx-auto mb-2"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={1}
+                    d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"
+                  />
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={1}
+                    d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"
+                  />
                 </svg>
                 <p>Camera Preview</p>
               </div>
@@ -201,8 +255,18 @@ export const CameraCapture: React.FC<CameraCaptureProps> = ({
         {error && (
           <div className="bg-red-900/50 border border-red-600 rounded-lg p-3 max-w-md">
             <div className="flex items-center space-x-2">
-              <svg className="w-5 h-5 text-red-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+              <svg
+                className="w-5 h-5 text-red-400 flex-shrink-0"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                />
               </svg>
               <p className="text-red-300 text-sm">{error}</p>
             </div>
@@ -213,8 +277,18 @@ export const CameraCapture: React.FC<CameraCaptureProps> = ({
         {hasPermission === false && (
           <div className="bg-yellow-900/50 border border-yellow-600 rounded-lg p-3 max-w-md">
             <div className="flex items-center space-x-2">
-              <svg className="w-5 h-5 text-yellow-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
+              <svg
+                className="w-5 h-5 text-yellow-400 flex-shrink-0"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z"
+                />
               </svg>
               <div className="text-yellow-300 text-sm">
                 <p className="font-semibold">Camera Permission Required</p>
@@ -225,10 +299,23 @@ export const CameraCapture: React.FC<CameraCaptureProps> = ({
         )}
 
         {/* Usage Instructions */}
-        <div className="text-center text-gray-400 text-sm max-w-md">
-          <p>📸 Capture photos to use as training samples for your CNN model</p>
-          <p className="mt-1">💡 Make sure your subject is well-lit and clearly visible</p>
-        </div>
+        {isStreaming && (
+          <div className="text-center text-green-400 text-sm max-w-md bg-green-900/20 p-3 rounded-lg border border-green-600">
+            <p className="font-semibold">📹 Camera Active</p>
+            <p className="mt-1">
+              Position your subject and tap the capture button
+            </p>
+          </div>
+        )}
+
+        {!isStreaming && (
+          <div className="text-center text-gray-400 text-sm max-w-md">
+            <p>📸 Capture photos to use as training samples</p>
+            <p className="mt-1">
+              💡 Make sure your subject is well-lit and clearly visible
+            </p>
+          </div>
+        )}
       </div>
     </div>
   );

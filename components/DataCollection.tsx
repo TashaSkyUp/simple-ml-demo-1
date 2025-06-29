@@ -34,7 +34,7 @@ export const DataCollection: React.FC<DataCollectionProps> = ({
   const { canvasRef, clearCanvas } = useDrawingCanvas({
     onDrawEnd: (grid) => {
       // Clear captured image data when drawing
-      setCapturedImageData(null);
+      setLastCapturedData(null);
 
       if (predictFromCanvas) {
         // Convert grayscale grid to RGB if needed
@@ -62,7 +62,7 @@ export const DataCollection: React.FC<DataCollectionProps> = ({
   const [isGenerating, setIsGenerating] = useState<boolean>(false);
   const [generationError, setGenerationError] = useState<string | null>(null);
   const [inputMode, setInputMode] = useState<"draw" | "camera">("draw");
-  const [capturedImageData, setCapturedImageData] = useState<
+  const [lastCapturedData, setLastCapturedData] = useState<
     number[][] | number[][][] | null
   >(null);
 
@@ -72,28 +72,31 @@ export const DataCollection: React.FC<DataCollectionProps> = ({
 
       if (useRGB) {
         processedData = imageDataToRGBGrid(imageData, 28, 28);
-        if (predictFromCanvas) {
-          predictFromCanvas(processedData);
-        }
       } else {
-        // Convert to grayscale for backward compatibility
+        // Convert to grayscale
         const tempCanvas = document.createElement("canvas");
-        tempCanvas.width = 280;
-        tempCanvas.height = 280;
+        tempCanvas.width = imageData.width;
+        tempCanvas.height = imageData.height;
         const ctx = tempCanvas.getContext("2d");
         if (ctx) {
           ctx.putImageData(imageData, 0, 0);
           processedData = imageToGrid(tempCanvas);
-          if (predictFromCanvas) {
-            predictFromCanvas(processedData);
-          }
         } else {
-          processedData = imageDataToRGBGrid(imageData, 28, 28);
+          // Fallback: convert RGB to grayscale manually
+          const rgbData = imageDataToRGBGrid(imageData, 28, 28);
+          processedData = rgbData.map((row) =>
+            row.map(
+              (pixel) => pixel[0] * 0.299 + pixel[1] * 0.587 + pixel[2] * 0.114,
+            ),
+          );
         }
       }
 
-      // Store the captured data for training sample addition
-      setCapturedImageData(processedData);
+      // Store and predict
+      setLastCapturedData(processedData);
+      if (predictFromCanvas) {
+        predictFromCanvas(processedData);
+      }
     },
     [predictFromCanvas, useRGB],
   );
@@ -103,9 +106,9 @@ export const DataCollection: React.FC<DataCollectionProps> = ({
     let isEmpty: boolean;
 
     // Use captured camera data if in camera mode and available
-    if (inputMode === "camera" && capturedImageData) {
-      originalGrid = capturedImageData;
-      if (useRGB) {
+    if (inputMode === "camera" && lastCapturedData) {
+      originalGrid = lastCapturedData;
+      if (useRGB && Array.isArray(originalGrid[0][0])) {
         isEmpty = (originalGrid as number[][][])
           .flat(2)
           .every((pixel) => pixel < 0.01);
@@ -114,7 +117,7 @@ export const DataCollection: React.FC<DataCollectionProps> = ({
           .flat()
           .every((pixel) => pixel < 0.01);
       }
-    } else if (canvasRef.current) {
+    } else if (inputMode === "draw" && canvasRef.current) {
       // Use canvas data for drawing mode
       if (useRGB) {
         originalGrid = imageToRGBGrid(canvasRef.current);
@@ -128,7 +131,11 @@ export const DataCollection: React.FC<DataCollectionProps> = ({
           .every((pixel) => pixel < 0.01);
       }
     } else {
-      alert("Please draw something or capture a photo before adding.");
+      alert(
+        inputMode === "camera"
+          ? "Please capture a photo first."
+          : "Please draw something or capture a photo first.",
+      );
       return;
     }
 
@@ -202,9 +209,10 @@ export const DataCollection: React.FC<DataCollectionProps> = ({
       onAddData(grid, label);
     }
 
-    clearCanvas();
-    setCapturedImageData(null); // Clear captured data after adding
-    // predictFromCanvas is called by clearCanvas through onDrawEnd
+    if (inputMode === "draw") {
+      clearCanvas();
+    }
+    // Don't clear captured data for camera mode - allow multiple samples from same photo
   };
 
   const handleGenerateImage = useCallback(async () => {
@@ -341,22 +349,29 @@ export const DataCollection: React.FC<DataCollectionProps> = ({
             width={280}
             height={280}
           />
-          <div className="w-full max-w-[280px] mx-auto grid grid-cols-2 gap-4 mt-4">
-            <button
-              onClick={() => handleAddData(0)}
-              className="bg-sky-600 hover:bg-sky-500 text-white font-bold py-3 px-4 rounded transition-colors text-lg focus:outline-none focus:ring-2 focus:ring-sky-400"
-              aria-label="Add captured photo as sample for class 0"
-            >
-              Add Photo as '0'
-            </button>
-            <button
-              onClick={() => handleAddData(1)}
-              className="bg-amber-500 hover:bg-amber-400 text-white font-bold py-3 px-4 rounded transition-colors text-lg focus:outline-none focus:ring-2 focus:ring-amber-300"
-              aria-label="Add captured photo as sample for class 1"
-            >
-              Add Photo as '1'
-            </button>
-          </div>
+          {lastCapturedData && (
+            <div className="w-full max-w-[280px] mx-auto mt-4">
+              <div className="bg-green-900/30 border border-green-600 rounded-lg p-3 mb-3">
+                <p className="text-green-300 text-sm text-center">
+                  ✅ Photo captured! Add it as a training sample:
+                </p>
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <button
+                  onClick={() => handleAddData(0)}
+                  className="bg-sky-600 hover:bg-sky-500 text-white font-bold py-3 px-4 rounded transition-colors text-lg focus:outline-none focus:ring-2 focus:ring-sky-400"
+                >
+                  Add as '0'
+                </button>
+                <button
+                  onClick={() => handleAddData(1)}
+                  className="bg-amber-500 hover:bg-amber-400 text-white font-bold py-3 px-4 rounded transition-colors text-lg focus:outline-none focus:ring-2 focus:ring-amber-300"
+                >
+                  Add as '1'
+                </button>
+              </div>
+            </div>
+          )}
         </div>
       )}
 
