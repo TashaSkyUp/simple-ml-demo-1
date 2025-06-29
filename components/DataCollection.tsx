@@ -144,7 +144,7 @@ export const DataCollection: React.FC<DataCollectionProps> = ({
         onAddData(g, label);
       }
     },
-    [augmentFlip, augmentTranslate, onAddData],
+    [augmentFlip, augmentTranslate, onAddDataonAddData],
   );
 
   const handleAddData = (label: 0 | 1) => {
@@ -176,6 +176,7 @@ export const DataCollection: React.FC<DataCollectionProps> = ({
     }
 
     addGridData(originalGrid, label);
+
     if (inputMode === "draw") {
       clearCanvas();
     }
