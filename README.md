@@ -166,6 +166,21 @@ simple-ml-demo-1/
 - `npm run build` - Build for production
 - `npm run preview` - Preview production build
 
+## Deployment Notes
+
+This demo is published via GitHub Pages at
+<https://tashaskyup.github.io/simple-ml-demo-1/>. The Vite configuration
+uses `/simple-ml-demo-1/` as the default base path so built assets load
+correctly on that host. If you need to deploy the app under a different
+subfolder, override the base URL when building:
+
+```bash
+VITE_BASE_URL=/my-subfolder/ npm run build
+```
+
+Using `VITE_BASE_URL` ensures the generated asset paths match your
+deployment setup.
+
 ## Technology Stack
 
 - **Frontend**: React 19, TypeScript

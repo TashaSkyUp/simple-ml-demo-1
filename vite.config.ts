@@ -9,9 +9,12 @@ export default defineConfig(({ mode }) => {
   // Provide a safe fallback for missing API key
   const safeApiKey = geminiApiKey || "API_KEY_NOT_CONFIGURED";
 
+  // Default base path for GitHub Pages deployment
+  const base = env.VITE_BASE_URL || "/simple-ml-demo-1/";
+
   return {
     plugins: [react()],
-    base: "/simple-ml-demo-1/",
+    base,
     define: {
       "process.env.API_KEY": JSON.stringify(safeApiKey),
       "process.env.GEMINI_API_KEY": JSON.stringify(safeApiKey),
