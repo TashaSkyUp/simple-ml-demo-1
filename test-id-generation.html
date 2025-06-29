@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ID Generation Test</title>
+    <style>
+        body {
+            font-family: monospace;
+            padding: 20px;
+            background: #1a1a1a;
+            color: #fff;
+        }
+        .test-section {
+            margin: 20px 0;
+            padding: 15px;
+            border: 1px solid #444;
+            border-radius: 5px;
+        }
+        .id-list {
+            background: #2a2a2a;
+            padding: 10px;
+            border-radius: 3px;
+            margin: 10px 0;
+        }
+        .duplicate {
+            background: #ff4444;
+            color: white;
+            padding: 2px 4px;
+            border-radius: 2px;
+        }
+        .unique {
+            background: #44ff44;
+            color: black;
+            padding: 2px 4px;
+            border-radius: 2px;
+        }
+    </style>
+</head>
+<body>
+    <h1>ID Generation Test</h1>
+    <p>This test verifies that unique IDs are generated consistently to prevent React key duplicates.</p>
+
+    <div class="test-section">
+        <h2>Test 1: Single ID Generation</h2>
+        <button onclick="testSingleGeneration()">Generate Single ID</button>
+        <div id="single-result"></div>
+    </div>
+
+    <div class="test-section">
+        <h2>Test 2: Rapid Multiple ID Generation (Simulating Initial State)</h2>
+        <button onclick="testRapidGeneration()">Generate 10 IDs Rapidly</button>
+        <div id="rapid-result"></div>
+    </div>
+
+    <div class="test-section">
+        <h2>Test 3: ID Generation Over Time</h2>
+        <button onclick="testTimeBasedGeneration()">Generate IDs with Delay</button>
+        <div id="time-result"></div>
+    </div>
+
+    <div class="test-section">
+        <h2>Test 4: Duplicate Detection</h2>
+        <button onclick="testDuplicateDetection()">Generate 100 IDs and Check Duplicates</button>
+        <div id="duplicate-result"></div>
+    </div>
+
+    <div class="test-section">
+        <h2>Current Implementation</h2>
+        <div class="id-list">
+            <pre id="current-implementation"></pre>
+        </div>
+    </div>
+
+    <script>
+        // Copy the exact ID generation logic from the React component
+        const generateUniqueId = () => {
+            // Use crypto.randomUUID if available, otherwise fallback to timestamp + random
+            if (typeof crypto !== "undefined" && crypto.randomUUID) {
+                return crypto.randomUUID();
+            }
+            // Fallback for browsers without crypto.randomUUID
+            return Date.now().toString(36) + Math.random().toString(36).substr(2, 9);
+        };
+
+        // Display the current implementation
+        document.getElementById('current-implementation').textContent = generateUniqueId.toString();
+
+        function testSingleGeneration() {
+            const id = generateUniqueId();
+            document.getElementById('single-result').innerHTML = `
+                <div class="id-list">Generated ID: <strong>${id}</strong></div>
+                <div>Type: ${typeof id}</div>
+                <div>Length: ${id.length}</div>
+            `;
+        }
+
+        function testRapidGeneration() {
+            const ids = [];
+            const startTime = performance.now();
+
+            // Generate 10 IDs as quickly as possible (simulating React initial state)
+            for (let i = 0; i < 10; i++) {
+                ids.push(generateUniqueId());
+            }
+
+            const endTime = performance.now();
+            const duplicates = findDuplicates(ids);
+
+            document.getElementById('rapid-result').innerHTML = `
+                <div>Generated ${ids.length} IDs in ${(endTime - startTime).toFixed(2)}ms</div>
+                <div class="id-list">${ids.map((id, index) =>
+                    `${index + 1}: ${id} ${duplicates.includes(id) ? '<span class="duplicate">DUPLICATE</span>' : '<span class="unique">UNIQUE</span>'}`
+                ).join('<br>')}</div>
+                <div><strong>Result: ${duplicates.length === 0 ? '✅ All unique' : `❌ ${duplicates.length} duplicates found`}</strong></div>
+            `;
+        }
+
+        function testTimeBasedGeneration() {
+            const ids = [];
+            const resultDiv = document.getElementById('time-result');
+            resultDiv.innerHTML = 'Generating IDs with 100ms delays...';
+
+            let count = 0;
+            const interval = setInterval(() => {
+                ids.push(generateUniqueId());
+                count++;
+
+                if (count >= 5) {
+                    clearInterval(interval);
+                    const duplicates = findDuplicates(ids);
+
+                    resultDiv.innerHTML = `
+                        <div class="id-list">${ids.map((id, index) =>
+                            `${index + 1}: ${id} ${duplicates.includes(id) ? '<span class="duplicate">DUPLICATE</span>' : '<span class="unique">UNIQUE</span>'}`
+                        ).join('<br>')}</div>
+                        <div><strong>Result: ${duplicates.length === 0 ? '✅ All unique' : `❌ ${duplicates.length} duplicates found`}</strong></div>
+                    `;
+                }
+            }, 100);
+        }
+
+        function testDuplicateDetection() {
+            const ids = [];
+            const startTime = performance.now();
+
+            // Generate 100 IDs
+            for (let i = 0; i < 100; i++) {
+                ids.push(generateUniqueId());
+            }
+
+            const endTime = performance.now();
+            const duplicates = findDuplicates(ids);
+            const uniqueCount = new Set(ids).size;
+
+            document.getElementById('duplicate-result').innerHTML = `
+                <div>Generated 100 IDs in ${(endTime - startTime).toFixed(2)}ms</div>
+                <div>Unique IDs: ${uniqueCount}/100</div>
+                <div>Duplicates found: ${100 - uniqueCount}</div>
+                <div><strong>Result: ${duplicates.length === 0 ? '✅ All unique' : `❌ ${duplicates.length} duplicates found`}</strong></div>
+                ${duplicates.length > 0 ? `<div class="id-list">Duplicate IDs:<br>${duplicates.join('<br>')}</div>` : ''}
+            `;
+        }
+
+        function findDuplicates(array) {
+            const seen = new Set();
+            const duplicates = new Set();
+
+            for (const item of array) {
+                if (seen.has(item)) {
+                    duplicates.add(item);
+                } else {
+                    seen.add(item);
+                }
+            }
+
+            return Array.from(duplicates);
+        }
+
+        // Auto-run initial test
+        window.addEventListener('load', () => {
+            console.log('🧪 ID Generation Test Loaded');
+            console.log('Crypto API available:', typeof crypto !== "undefined" && crypto.randomUUID);
+
+            // Test initial generation like React component does
+            const initialIds = [];
+            for (let i = 0; i < 4; i++) {
+                initialIds.push(generateUniqueId());
+            }
+
+            console.log('Initial IDs (simulating React component initial state):');
+            initialIds.forEach((id, index) => {
+                console.log(`${index + 1}: ${id}`);
+            });
+
+            const duplicates = findDuplicates(initialIds);
+            if (duplicates.length > 0) {
+                console.error('❌ DUPLICATES FOUND:', duplicates);
+            } else {
+                console.log('✅ All initial IDs are unique');
+            }
+        });
+    </script>
+</body>
+</html>

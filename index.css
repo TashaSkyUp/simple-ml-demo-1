@@ -1,0 +1,200 @@
+/* Global styles for the Interactive CNN Trainer */
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  padding: 0;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
+    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
+    sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  background-color: #111827; /* bg-gray-900 */
+  color: #ffffff;
+}
+
+/* Canvas styles for drawing */
+canvas {
+  cursor: crosshair;
+  border-radius: 0.375rem; /* rounded-md */
+  border: 2px solid #374151; /* border-gray-700 */
+}
+
+canvas:hover {
+  border-color: #06b6d4; /* border-cyan-500 */
+}
+
+/* Button hover effects */
+button:hover:not(:disabled) {
+  transform: translateY(-1px);
+  transition: transform 0.2s ease-in-out;
+}
+
+button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Loading animations */
+.loading-spinner {
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Smooth transitions for interactive elements */
+.transition-all {
+  transition: all 0.3s ease-in-out;
+}
+
+/* Custom focus styles */
+button:focus,
+input:focus,
+select:focus {
+  outline: 2px solid #06b6d4;
+  outline-offset: 2px;
+}
+
+/* Grid layout utilities */
+.grid-cols-responsive {
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+}
+
+/* Mobile-first responsive design */
+@media (max-width: 768px) {
+  .mobile-stack {
+    flex-direction: column;
+  }
+
+  .mobile-full-width {
+    width: 100%;
+  }
+
+  .mobile-text-sm {
+    font-size: 0.875rem;
+  }
+}
+
+/* Animation for model training progress */
+.training-progress {
+  background: linear-gradient(90deg, #06b6d4, #0891b2);
+  background-size: 200% 100%;
+  animation: gradient-shift 2s ease-in-out infinite;
+}
+
+@keyframes gradient-shift {
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
+}
+
+/* Feature map visualization styles */
+.feature-map-grid {
+  display: grid;
+  gap: 0.5rem;
+  grid-template-columns: repeat(auto-fit, minmax(50px, 1fr));
+}
+
+.feature-map-item {
+  aspect-ratio: 1;
+  border-radius: 0.25rem;
+  overflow: hidden;
+}
+
+/* Loss graph styles */
+.loss-graph-container {
+  position: relative;
+  background: #1f2937;
+  border-radius: 0.5rem;
+  padding: 1rem;
+}
+
+/* Prediction display styles */
+.prediction-bar {
+  height: 1rem;
+  background: linear-gradient(to right, #ef4444, #f59e0b, #10b981);
+  border-radius: 0.25rem;
+  transition: width 0.3s ease;
+}
+
+/* Architecture definition styles */
+.layer-card {
+  background: #374151;
+  border: 1px solid #4b5563;
+  border-radius: 0.5rem;
+  padding: 1rem;
+  transition: all 0.2s ease;
+}
+
+.layer-card:hover {
+  border-color: #06b6d4;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(6, 182, 212, 0.1);
+}
+
+/* Data collection styles */
+.drawing-canvas-container {
+  position: relative;
+  display: inline-block;
+}
+
+.drawing-instructions {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+  color: #9ca3af;
+  font-size: 0.875rem;
+  text-align: center;
+}
+
+/* Training controls styles */
+.control-panel {
+  background: #1f2937;
+  border: 1px solid #374151;
+  border-radius: 0.75rem;
+  padding: 1.5rem;
+}
+
+.metric-display {
+  background: #111827;
+  border: 1px solid #374151;
+  border-radius: 0.5rem;
+  padding: 1rem;
+}
+
+/* Pipeline visualization styles */
+.pipeline-stage {
+  background: #1f2937;
+  border: 2px solid #374151;
+  border-radius: 0.5rem;
+  padding: 1rem;
+  position: relative;
+}
+
+.pipeline-stage.active {
+  border-color: #06b6d4;
+  box-shadow: 0 0 20px rgba(6, 182, 212, 0.2);
+}
+
+.pipeline-arrow {
+  color: #6b7280;
+  font-size: 1.5rem;
+}

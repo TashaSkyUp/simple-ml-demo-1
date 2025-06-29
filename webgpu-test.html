@@ -1,0 +1,456 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WebGPU Diagnostic Tool</title>
+    <style>
+        body {
+            font-family: 'Courier New', monospace;
+            background: #0a0a0a;
+            color: #00ff00;
+            padding: 20px;
+            line-height: 1.6;
+        }
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+        .test-section {
+            background: #1a1a1a;
+            border: 1px solid #333;
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 5px;
+        }
+        .pass { color: #00ff00; }
+        .fail { color: #ff4444; }
+        .warn { color: #ffaa00; }
+        .info { color: #4488ff; }
+        .code {
+            background: #000;
+            padding: 10px;
+            border-left: 3px solid #444;
+            margin: 10px 0;
+            font-family: monospace;
+            white-space: pre-wrap;
+        }
+        button {
+            background: #333;
+            color: #00ff00;
+            border: 1px solid #555;
+            padding: 10px 20px;
+            cursor: pointer;
+            margin: 5px;
+            border-radius: 3px;
+        }
+        button:hover {
+            background: #444;
+        }
+        .gpu-info {
+            background: #001122;
+            border-left: 3px solid #0066cc;
+            padding: 10px;
+            margin: 10px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔍 WebGPU Diagnostic Tool</h1>
+        <p class="info">This tool will check if WebGPU is available and working in your browser.</p>
+
+        <div class="test-section">
+            <h2>📋 System Information</h2>
+            <div id="system-info">
+                <div>User Agent: <span id="user-agent"></span></div>
+                <div>Platform: <span id="platform"></span></div>
+                <div>Language: <span id="language"></span></div>
+            </div>
+        </div>
+
+        <div class="test-section">
+            <h2>🌐 Browser WebGPU Support</h2>
+            <div id="browser-support"></div>
+        </div>
+
+        <div class="test-section">
+            <h2>🔧 WebGPU Adapter Test</h2>
+            <div id="adapter-test"></div>
+            <button onclick="testWebGPUAdapter()">Test WebGPU Adapter</button>
+        </div>
+
+        <div class="test-section">
+            <h2>⚡ GPU Device Test</h2>
+            <div id="device-test"></div>
+            <button onclick="testWebGPUDevice()">Test WebGPU Device</button>
+        </div>
+
+        <div class="test-section">
+            <h2>🧮 Simple Compute Test</h2>
+            <div id="compute-test"></div>
+            <button onclick="testWebGPUCompute()">Test WebGPU Compute</button>
+        </div>
+
+        <div class="test-section">
+            <h2>🎯 TensorFlow.js WebGPU Test</h2>
+            <div id="tensorflow-test"></div>
+            <button onclick="testTensorFlowWebGPU()">Test TensorFlow.js WebGPU</button>
+        </div>
+
+        <div class="test-section">
+            <h2>🛠️ Troubleshooting Tips</h2>
+            <div class="code">
+For Brave Browser on Linux:
+1. Enable hardware acceleration:
+   brave://settings/ → System → "Use hardware acceleration when available"
+
+2. Enable WebGPU flags:
+   brave://flags/ → Search for "webgpu" → Enable these:
+   - #enable-unsafe-webgpu
+   - #enable-webgpu-developer-features
+   - #enable-vulkan (if available)
+
+3. Launch with command line flags:
+   brave-browser --enable-unsafe-webgpu --enable-features=Vulkan
+
+4. Check GPU support:
+   brave://gpu/ → Look for WebGPU status
+
+For Chrome:
+   google-chrome --enable-unsafe-webgpu --enable-features=Vulkan
+
+System requirements:
+- Modern GPU with Vulkan or D3D12 support
+- Updated graphics drivers
+- Linux: Mesa 21.0+ or proprietary drivers
+            </div>
+        </div>
+
+        <div class="test-section">
+            <h2>📊 Test Results Summary</h2>
+            <div id="summary"></div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@4.22.0/dist/tf.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs-backend-webgpu@4.22.0/dist/tf-backend-webgpu.min.js"></script>
+
+    <script>
+        let testResults = {};
+
+        // Initialize system info
+        document.addEventListener('DOMContentLoaded', function() {
+            document.getElementById('user-agent').textContent = navigator.userAgent;
+            document.getElementById('platform').textContent = navigator.platform;
+            document.getElementById('language').textContent = navigator.language;
+
+            checkBrowserSupport();
+        });
+
+        function log(elementId, message, type = 'info') {
+            const element = document.getElementById(elementId);
+            const className = type === 'pass' ? 'pass' : type === 'fail' ? 'fail' : type === 'warn' ? 'warn' : 'info';
+            element.innerHTML += `<div class="${className}">${message}</div>`;
+            console.log(`[${type.toUpperCase()}] ${message}`);
+        }
+
+        function checkBrowserSupport() {
+            const supportDiv = document.getElementById('browser-support');
+
+            if ('gpu' in navigator) {
+                log('browser-support', '✅ navigator.gpu is available', 'pass');
+                testResults.navigatorGPU = true;
+            } else {
+                log('browser-support', '❌ navigator.gpu is NOT available', 'fail');
+                log('browser-support', '💡 Your browser does not support WebGPU API', 'warn');
+                testResults.navigatorGPU = false;
+            }
+
+            // Check WebGPU feature detection
+            if (typeof GPUAdapter !== 'undefined') {
+                log('browser-support', '✅ GPUAdapter interface is available', 'pass');
+            } else {
+                log('browser-support', '❌ GPUAdapter interface is NOT available', 'fail');
+            }
+        }
+
+        async function testWebGPUAdapter() {
+            const testDiv = document.getElementById('adapter-test');
+            testDiv.innerHTML = '<div class="info">🔄 Testing WebGPU adapter...</div>';
+
+            if (!navigator.gpu) {
+                log('adapter-test', '❌ Cannot test adapter - navigator.gpu not available', 'fail');
+                testResults.adapter = false;
+                return;
+            }
+
+            try {
+                const adapter = await navigator.gpu.requestAdapter();
+
+                if (adapter) {
+                    log('adapter-test', '✅ WebGPU adapter successfully requested', 'pass');
+                    testResults.adapter = true;
+
+                    // Get adapter info
+                    const info = adapter.info || {};
+                    if (info.vendor) log('adapter-test', `📍 Vendor: ${info.vendor}`, 'info');
+                    if (info.device) log('adapter-test', `🖥️ Device: ${info.device}`, 'info');
+                    if (info.description) log('adapter-test', `📝 Description: ${info.description}`, 'info');
+
+                    // Get adapter limits
+                    const limits = adapter.limits;
+                    log('adapter-test', `🔢 Max texture size: ${limits.maxTextureDimension2D || 'unknown'}`, 'info');
+                    log('adapter-test', `💾 Max buffer size: ${limits.maxBufferSize || 'unknown'} bytes`, 'info');
+
+                    // Get adapter features
+                    const features = Array.from(adapter.features || []);
+                    if (features.length > 0) {
+                        log('adapter-test', `🎯 Features: ${features.join(', ')}`, 'info');
+                    }
+                } else {
+                    log('adapter-test', '❌ WebGPU adapter request returned null', 'fail');
+                    log('adapter-test', '💡 Your GPU may not support WebGPU', 'warn');
+                    testResults.adapter = false;
+                }
+            } catch (error) {
+                log('adapter-test', `❌ WebGPU adapter request failed: ${error.message}`, 'fail');
+                testResults.adapter = false;
+            }
+        }
+
+        async function testWebGPUDevice() {
+            const testDiv = document.getElementById('device-test');
+            testDiv.innerHTML = '<div class="info">🔄 Testing WebGPU device...</div>';
+
+            if (!testResults.adapter) {
+                log('device-test', '❌ Cannot test device - adapter test failed', 'fail');
+                return;
+            }
+
+            try {
+                const adapter = await navigator.gpu.requestAdapter();
+                if (!adapter) {
+                    log('device-test', '❌ No adapter available for device test', 'fail');
+                    return;
+                }
+
+                const device = await adapter.requestDevice();
+                log('device-test', '✅ WebGPU device successfully created', 'pass');
+                testResults.device = true;
+
+                // Test device properties
+                log('device-test', `🏷️ Device label: ${device.label || 'unlabeled'}`, 'info');
+
+                // Test command encoder
+                const commandEncoder = device.createCommandEncoder();
+                log('device-test', '✅ Command encoder created successfully', 'pass');
+
+                // Clean up
+                device.destroy();
+                log('device-test', '✅ Device cleaned up successfully', 'pass');
+
+            } catch (error) {
+                log('device-test', `❌ WebGPU device creation failed: ${error.message}`, 'fail');
+                testResults.device = false;
+            }
+        }
+
+        async function testWebGPUCompute() {
+            const testDiv = document.getElementById('compute-test');
+            testDiv.innerHTML = '<div class="info">🔄 Testing WebGPU compute...</div>';
+
+            if (!testResults.device) {
+                log('compute-test', '❌ Cannot test compute - device test failed', 'fail');
+                return;
+            }
+
+            try {
+                const adapter = await navigator.gpu.requestAdapter();
+                const device = await adapter.requestDevice();
+
+                // Simple compute shader that adds 1 to each element
+                const computeShaderCode = `
+                    @group(0) @binding(0) var<storage, read_write> data: array<f32>;
+
+                    @compute @workgroup_size(64)
+                    fn main(@builtin(global_invocation_id) global_id: vec3<u32>) {
+                        let index = global_id.x;
+                        if (index >= arrayLength(&data)) {
+                            return;
+                        }
+                        data[index] = data[index] + 1.0;
+                    }
+                `;
+
+                const computeShader = device.createShaderModule({ code: computeShaderCode });
+                log('compute-test', '✅ Compute shader compiled successfully', 'pass');
+
+                // Create buffer with test data
+                const input = new Float32Array([1, 2, 3, 4]);
+                const buffer = device.createBuffer({
+                    size: input.byteLength,
+                    usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_SRC | GPUBufferUsage.COPY_DST,
+                });
+
+                device.queue.writeBuffer(buffer, 0, input);
+                log('compute-test', '✅ Input data written to buffer', 'pass');
+
+                // Create compute pipeline
+                const pipeline = device.createComputePipeline({
+                    layout: 'auto',
+                    compute: {
+                        module: computeShader,
+                        entryPoint: 'main',
+                    },
+                });
+
+                const bindGroup = device.createBindGroup({
+                    layout: pipeline.getBindGroupLayout(0),
+                    entries: [{ binding: 0, resource: { buffer } }],
+                });
+
+                // Run compute
+                const commandEncoder = device.createCommandEncoder();
+                const passEncoder = commandEncoder.beginComputePass();
+                passEncoder.setPipeline(pipeline);
+                passEncoder.setBindGroup(0, bindGroup);
+                passEncoder.dispatchWorkgroups(1);
+                passEncoder.end();
+
+                // Read result
+                const resultBuffer = device.createBuffer({
+                    size: input.byteLength,
+                    usage: GPUBufferUsage.COPY_DST | GPUBufferUsage.MAP_READ,
+                });
+
+                commandEncoder.copyBufferToBuffer(buffer, 0, resultBuffer, 0, input.byteLength);
+                device.queue.submit([commandEncoder.finish()]);
+
+                await resultBuffer.mapAsync(GPUMapMode.READ);
+                const result = new Float32Array(resultBuffer.getMappedRange());
+
+                log('compute-test', `✅ Compute test completed! Input: [${input.join(', ')}] → Output: [${Array.from(result).join(', ')}]`, 'pass');
+
+                if (result[0] === 2 && result[1] === 3 && result[2] === 4 && result[3] === 5) {
+                    log('compute-test', '✅ Compute results are correct!', 'pass');
+                    testResults.compute = true;
+                } else {
+                    log('compute-test', '❌ Compute results are incorrect', 'fail');
+                    testResults.compute = false;
+                }
+
+                // Clean up
+                resultBuffer.unmap();
+                device.destroy();
+
+            } catch (error) {
+                log('compute-test', `❌ WebGPU compute test failed: ${error.message}`, 'fail');
+                testResults.compute = false;
+            }
+        }
+
+        async function testTensorFlowWebGPU() {
+            const testDiv = document.getElementById('tensorflow-test');
+            testDiv.innerHTML = '<div class="info">🔄 Testing TensorFlow.js WebGPU backend...</div>';
+
+            try {
+                // Wait for TensorFlow.js to be ready
+                await tf.ready();
+                log('tensorflow-test', '✅ TensorFlow.js is ready', 'pass');
+
+                // Check available backends
+                const engine = tf.engine();
+                const registry = engine.registry || {};
+                const backends = Object.keys(registry);
+                log('tensorflow-test', `📋 Available backends: ${backends.join(', ')}`, 'info');
+
+                if (backends.includes('webgpu')) {
+                    log('tensorflow-test', '✅ WebGPU backend is registered with TensorFlow.js', 'pass');
+
+                    // Try to switch to WebGPU
+                    try {
+                        await tf.setBackend('webgpu');
+                        const currentBackend = tf.getBackend();
+
+                        if (currentBackend === 'webgpu') {
+                            log('tensorflow-test', '✅ Successfully switched to WebGPU backend', 'pass');
+                            testResults.tensorflowWebGPU = true;
+
+                            // Test a simple operation
+                            const a = tf.tensor2d([[1, 2], [3, 4]]);
+                            const b = tf.tensor2d([[5, 6], [7, 8]]);
+                            const result = tf.add(a, b);
+                            const data = await result.data();
+
+                            log('tensorflow-test', `✅ WebGPU tensor operation successful: [${Array.from(data).join(', ')}]`, 'pass');
+
+                            // Clean up
+                            a.dispose();
+                            b.dispose();
+                            result.dispose();
+
+                        } else {
+                            log('tensorflow-test', `❌ Failed to switch to WebGPU, using: ${currentBackend}`, 'fail');
+                            testResults.tensorflowWebGPU = false;
+                        }
+                    } catch (switchError) {
+                        log('tensorflow-test', `❌ Error switching to WebGPU backend: ${switchError.message}`, 'fail');
+                        testResults.tensorflowWebGPU = false;
+                    }
+                } else {
+                    log('tensorflow-test', '❌ WebGPU backend is NOT registered with TensorFlow.js', 'fail');
+                    log('tensorflow-test', '💡 Make sure @tensorflow/tfjs-backend-webgpu is loaded', 'warn');
+                    testResults.tensorflowWebGPU = false;
+                }
+
+            } catch (error) {
+                log('tensorflow-test', `❌ TensorFlow.js WebGPU test failed: ${error.message}`, 'fail');
+                testResults.tensorflowWebGPU = false;
+            }
+
+            updateSummary();
+        }
+
+        function updateSummary() {
+            const summaryDiv = document.getElementById('summary');
+            let summary = '<h3>📊 Overall WebGPU Status</h3>';
+
+            const tests = [
+                { name: 'Browser Support', key: 'navigatorGPU', critical: true },
+                { name: 'WebGPU Adapter', key: 'adapter', critical: true },
+                { name: 'WebGPU Device', key: 'device', critical: true },
+                { name: 'WebGPU Compute', key: 'compute', critical: false },
+                { name: 'TensorFlow.js WebGPU', key: 'tensorflowWebGPU', critical: true }
+            ];
+
+            let allCriticalPassed = true;
+            let passedCount = 0;
+
+            tests.forEach(test => {
+                const passed = testResults[test.key];
+                const status = passed ? '✅ PASS' : '❌ FAIL';
+                const criticality = test.critical ? '(Critical)' : '(Optional)';
+                summary += `<div class="${passed ? 'pass' : 'fail'}">${status} ${test.name} ${criticality}</div>`;
+
+                if (passed) passedCount++;
+                if (test.critical && !passed) allCriticalPassed = false;
+            });
+
+            summary += '<br><div class="info"><strong>Overall Assessment:</strong></div>';
+
+            if (allCriticalPassed) {
+                summary += '<div class="pass">🎉 WebGPU is fully functional! TensorFlow.js should work with GPU acceleration.</div>';
+            } else if (testResults.navigatorGPU && testResults.adapter) {
+                summary += '<div class="warn">⚠️ WebGPU is partially functional. Some features may not work.</div>';
+            } else {
+                summary += '<div class="fail">❌ WebGPU is not functional. Fallback to WebGL or CPU recommended.</div>';
+            }
+
+            summary += `<div class="info">Tests passed: ${passedCount}/${tests.length}</div>`;
+
+            summaryDiv.innerHTML = summary;
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,6 @@
+{
+  "name": "Interactive ConvNet Trainer with TensorFlow.js",
+  "description": "A web application using TensorFlow.js to interactively build, train, and visualize a Convolutional Neural Network for binary image classification. Users can define network architecture, provide drawing samples for two classes with optional augmentation, train the model, and see live predictions and feature map visualizations.",
+  "requestFramePermissions": [],
+  "prompt": ""
+}

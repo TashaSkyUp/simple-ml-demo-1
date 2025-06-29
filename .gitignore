@@ -1,0 +1,123 @@
+# Logs
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+node_modules
+dist
+dist-ssr
+*.local
+
+# Editor directories and files
+.vscode/*
+!.vscode/extensions.json
+.idea
+.DS_Store
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+# Environment variables and secrets
+.env
+.env.local
+.env.*.local
+.env.development.local
+.env.test.local
+.env.production.local
+.env.safe
+.env.secret
+.env.private
+*.env
+
+# API Keys and Credentials
+**/api-keys.json
+**/credentials.json
+**/service-account*.json
+**/gcp-key*.json
+**/firebase-key*.json
+**/*-key.json
+**/*-credentials.json
+**/*-secret.json
+**/*-private-key.json
+
+# SSH Keys
+*.pem
+*.key
+*.p12
+*.pfx
+id_rsa*
+id_dsa*
+id_ecdsa*
+id_ed25519*
+
+# Cloud provider credentials
+.aws/
+.gcp/
+.azure/
+gcloud/
+aws-credentials
+azure-credentials
+
+# Deployment scripts with embedded secrets
+deploy-simple.sh
+**/deploy-*-secrets.sh
+**/deploy-with-keys.sh
+
+# Database credentials
+database.json
+db-config.json
+*.db-key
+
+# Certificate files
+*.crt
+*.cer
+*.ca-bundle
+*.p7b
+*.p7s
+*.der
+
+# Backup files that might contain secrets
+*.bak
+*.backup
+*.old
+*-backup
+*-old
+
+# IDE and tool specific files that might contain secrets
+.vscode/settings.json
+.idea/workspace.xml
+*.swp
+*.swo
+*~
+
+# OS generated files
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+.AppleDouble
+.LSOverride
+.DocumentRevisions-V100
+.fseventsd
+.Spotlight-V100
+.TemporaryItems
+.Trashes
+.VolumeIcon.icns
+.com.apple.timemachine.donotpresent
+.AppleDB
+.AppleDesktop
+Network Trash Folder
+Temporary Items
+.apdisk
+
+# Temporary files
+*.tmp
+*.temp
+temp/
+tmp/
