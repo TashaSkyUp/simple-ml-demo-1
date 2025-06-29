@@ -16,6 +16,8 @@ interface DataCollectionProps {
   onAugmentFlipChange: (value: boolean) => void;
   augmentTranslate: boolean;
   onAugmentTranslateChange: (value: boolean) => void;
+  liveCameraMode?: boolean;
+  onLiveCameraModeChange?: (enabled: boolean) => void;
 }
 
 export const DataCollection: React.FC<DataCollectionProps> = ({
@@ -25,6 +27,8 @@ export const DataCollection: React.FC<DataCollectionProps> = ({
   onAugmentFlipChange,
   augmentTranslate,
   onAugmentTranslateChange,
+  liveCameraMode = false,
+  onLiveCameraModeChange,
 }) => {
   const { canvasRef, clearCanvas } = useDrawingCanvas({
     onDrawEnd: (grid) => {
@@ -65,6 +69,14 @@ export const DataCollection: React.FC<DataCollectionProps> = ({
       }
     },
     [predictFromCanvas],
+  );
+
+  const handleLiveModeChange = useCallback(
+    (enabled: boolean) => {
+      setIsCameraStreaming(enabled);
+      onLiveCameraModeChange?.(enabled);
+    },
+    [onLiveCameraModeChange],
   );
 
   const addGridData = useCallback(
@@ -314,10 +326,12 @@ export const DataCollection: React.FC<DataCollectionProps> = ({
           <CameraCapture
             ref={cameraRef}
             onImageCapture={handleCameraCapture}
-            onError={(error) => console.error("Camera error:", error)}
             onStreamingChange={setIsCameraStreaming}
-            width={280}
-            height={280}
+            onLiveModeChange={handleLiveModeChange}
+            liveModeEnabled={liveCameraMode}
+            onError={(error) => console.error("Camera error:", error)}
+            width={224}
+            height={224}
           />
           {(isCameraStreaming || lastCapturedData) && (
             <div className="w-full max-w-[280px] mx-auto mt-4">

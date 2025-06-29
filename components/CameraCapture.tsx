@@ -2,12 +2,16 @@ import React, { useState, useRef, useCallback, useImperativeHandle, forwardRef }
 
 export interface CameraCaptureHandle {
   capture: () => { imageData: ImageData; canvas: HTMLCanvasElement } | null;
+  startLiveMode: () => void;
+  stopLiveMode: () => void;
 }
 
 interface CameraCaptureProps {
   onImageCapture: (imageData: ImageData, canvas: HTMLCanvasElement) => void;
   onError?: (error: string) => void;
   onStreamingChange?: (streaming: boolean) => void;
+  onLiveModeChange?: (enabled: boolean) => void;
+  liveModeEnabled?: boolean;
   width?: number;
   height?: number;
 }
@@ -17,16 +21,20 @@ export const CameraCapture = forwardRef<CameraCaptureHandle, CameraCaptureProps>
   onImageCapture,
   onError,
   onStreamingChange,
+  onLiveModeChange,
+  liveModeEnabled = false,
   width = 280,
   height = 280,
 }, ref) => {
   const [isStreaming, setIsStreaming] = useState(false);
   const [hasPermission, setHasPermission] = useState<boolean | null>(null);
   const [error, setError] = useState<string>("");
+  const [isLiveMode, setIsLiveMode] = useState(false);
 
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const streamRef = useRef<MediaStream | null>(null);
+  const liveIntervalRef = useRef<NodeJS.Timeout | null>(null);
 
   const handleError = useCallback(
     (errorMessage: string) => {
@@ -103,7 +111,7 @@ export const CameraCapture = forwardRef<CameraCaptureHandle, CameraCaptureProps>
 
     if (!ctx) {
       handleError("Could not get canvas context");
-      return;
+      return null;
     }
 
     // Set canvas size
@@ -121,16 +129,53 @@ export const CameraCapture = forwardRef<CameraCaptureHandle, CameraCaptureProps>
     return { imageData, canvas };
   }, [width, height, onImageCapture, handleError]);
 
+  const startLiveMode = useCallback(() => {
+    if (!isStreaming) {
+      handleError("Camera must be streaming to start live mode");
+      return;
+    }
+
+    setIsLiveMode(true);
+    onLiveModeChange?.(true);
+
+    // Capture frames every 500ms for live pipeline updates
+    liveIntervalRef.current = setInterval(() => {
+      captureImage();
+    }, 500);
+  }, [isStreaming, captureImage, onLiveModeChange, handleError]);
+
+  const stopLiveMode = useCallback(() => {
+    setIsLiveMode(false);
+    onLiveModeChange?.(false);
+
+    if (liveIntervalRef.current) {
+      clearInterval(liveIntervalRef.current);
+      liveIntervalRef.current = null;
+    }
+  }, [onLiveModeChange]);
+
+  // Auto-start/stop live mode based on liveModeEnabled prop
+  React.useEffect(() => {
+    if (liveModeEnabled && isStreaming && !isLiveMode) {
+      startLiveMode();
+    } else if (!liveModeEnabled && isLiveMode) {
+      stopLiveMode();
+    }
+  }, [liveModeEnabled, isStreaming, isLiveMode, startLiveMode, stopLiveMode]);
+
   useImperativeHandle(ref, () => ({
     capture: captureImage,
+    startLiveMode,
+    stopLiveMode,
   }));
 
   // Cleanup on unmount
   React.useEffect(() => {
     return () => {
+      stopLiveMode();
       stopCamera();
     };
-  }, [stopCamera]);
+  }, [stopCamera, stopLiveMode]);
 
   return (
     <div className="camera-capture bg-gray-800 p-4 rounded-lg">
@@ -182,30 +227,65 @@ export const CameraCapture = forwardRef<CameraCaptureHandle, CameraCaptureProps>
                     d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
                   />
                 </svg>
-                <span>📸 Capture</span>
-              </button>
-              <button
-                onClick={stopCamera}
-                className="px-4 py-2 bg-gray-600 hover:bg-gray-500 text-white rounded-lg flex items-center space-x-2 transition-colors"
-              >
-                <svg
-                  className="w-4 h-4"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
                 >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M6 18L18 6M6 6l12 12"
-                  />
-                </svg>
-                <span>Stop</span>
-              </button>
-            </>
-          )}
-        </div>
+                  <span>📸 Capture</span>
+                </button>
+                <div className="flex space-x-2">
+                  <button
+                    onClick={isLiveMode ? stopLiveMode : startLiveMode}
+                    className={`px-4 py-2 ${
+                      isLiveMode
+                        ? "bg-orange-600 hover:bg-orange-700 live-toggle"
+                        : "bg-purple-600 hover:bg-purple-700"
+                    } text-white rounded-lg flex items-center space-x-2 transition-colors`}
+                  >
+                    <svg
+                      className="w-4 h-4"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      {isLiveMode ? (
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M10 9v6m4-6v6"
+                        />
+                      ) : (
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M14.828 14.828a4 4 0 01-5.656 0M9 10h1.586a1 1 0 01.707.293l2.414 2.414a1 1 0 00.707.293H15M9 10V9a2 2 0 012-2h2a2 2 0 012 2v1M9 10v5a2 2 0 002 2h2a2 2 0 002-2v-5"
+                        />
+                      )}
+                    </svg>
+                    <span>{isLiveMode ? "🔴 Stop Live" : "🟣 Go Live"}</span>
+                  </button>
+                  <button
+                    onClick={stopCamera}
+                    className="px-4 py-2 bg-gray-600 hover:bg-gray-500 text-white rounded-lg flex items-center space-x-2 transition-colors"
+                  >
+                    <svg
+                      className="w-4 h-4"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M6 18L18 6M6 6l12 12"
+                      />
+                    </svg>
+                    <span>Stop</span>
+                  </button>
+                </div>
+              </>
+            )}
+          </div>
 
         {/* Camera Preview */}
         <div className="relative">
@@ -215,7 +295,11 @@ export const CameraCapture = forwardRef<CameraCaptureHandle, CameraCaptureProps>
             playsInline
             muted
             className={`rounded-lg border-2 ${
-              isStreaming ? "border-green-500" : "border-gray-600"
+              isLiveMode
+                ? "camera-live-border"
+                : isStreaming
+                  ? "border-green-500"
+                  : "border-gray-600"
             }`}
             style={{ width, height }}
             onLoadedMetadata={() => {
@@ -253,6 +337,13 @@ export const CameraCapture = forwardRef<CameraCaptureHandle, CameraCaptureProps>
                 </svg>
                 <p>Camera Preview</p>
               </div>
+            </div>
+          )}
+
+          {/* Live Mode Indicator */}
+          {isLiveMode && (
+            <div className="absolute top-2 right-2 bg-red-600 text-white px-2 py-1 rounded-full text-xs font-bold live-indicator">
+              🔴 LIVE
             </div>
           )}
         </div>
@@ -313,11 +404,20 @@ export const CameraCapture = forwardRef<CameraCaptureHandle, CameraCaptureProps>
         )}
 
         {/* Usage Instructions */}
-        {isStreaming && (
+        {isStreaming && !isLiveMode && (
           <div className="text-center text-green-400 text-sm max-w-md bg-green-900/20 p-3 rounded-lg border border-green-600">
             <p className="font-semibold">📹 Camera Active</p>
             <p className="mt-1">
-              Position your subject and tap the capture button
+              Position your subject and tap the capture button or go live for pipeline visualization
+            </p>
+          </div>
+        )}
+
+        {isLiveMode && (
+          <div className="text-center text-red-400 text-sm max-w-md bg-red-900/20 p-3 rounded-lg border border-red-600 live-pulse">
+            <p className="font-semibold">🔴 Live Pipeline Mode</p>
+            <p className="mt-1">
+              CNN pipeline is updating in real-time with camera feed
             </p>
           </div>
         )}
@@ -327,6 +427,9 @@ export const CameraCapture = forwardRef<CameraCaptureHandle, CameraCaptureProps>
             <p>📸 Capture photos to use as training samples</p>
             <p className="mt-1">
               💡 Make sure your subject is well-lit and clearly visible
+            </p>
+            <p className="mt-1">
+              🟣 Use "Go Live" mode to see real-time CNN pipeline visualization
             </p>
           </div>
         )}

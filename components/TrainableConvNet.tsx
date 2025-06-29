@@ -90,6 +90,10 @@ export const TrainableConvNet: React.FC = () => {
   const [augmentFlip, setAugmentFlip] = useState<boolean>(false);
   const [augmentTranslate, setAugmentTranslate] = useState<boolean>(false);
 
+  // Live camera pipeline mode
+  const [liveCameraMode, setLiveCameraMode] = useState<boolean>(false);
+  const [isCameraStreaming, setIsCameraStreaming] = useState<boolean>(false);
+
   const {
     model, // This is now a tf.Sequential or null
     status: tfStatus, // Renamed to avoid conflict and to clarify its origin
@@ -202,10 +206,7 @@ export const TrainableConvNet: React.FC = () => {
     });
   };
 
-  const handleAddTrainingData = (
-    grid: number[][][],
-    label: 0 | 1,
-  ) => {
+  const handleAddTrainingData = (grid: number[][][], label: 0 | 1) => {
     setTrainingData((prev) => [
       ...prev,
       { id: generateUniqueId(), grid, label },
@@ -424,6 +425,8 @@ export const TrainableConvNet: React.FC = () => {
             onAugmentFlipChange={setAugmentFlip}
             augmentTranslate={augmentTranslate}
             onAugmentTranslateChange={setAugmentTranslate}
+            liveCameraMode={liveCameraMode}
+            onLiveCameraModeChange={setIsCameraStreaming}
           />
         </div>
         <div className="bg-gray-800 p-6 rounded-lg shadow-lg">
@@ -465,6 +468,9 @@ export const TrainableConvNet: React.FC = () => {
         activeVizChannel={activeVizChannel}
         onChannelCycle={handleChannelCycle}
         status={tfStatus}
+        liveCameraMode={liveCameraMode}
+        onLiveCameraModeChange={setLiveCameraMode}
+        isCameraStreaming={isCameraStreaming}
       />
     </div>
   );
