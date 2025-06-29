@@ -582,15 +582,18 @@ export const useTFModel = ({
         let inputTensorForMultiOutputModel: tf.Tensor;
         if (Array.isArray(inputGrid[0][0])) {
           // RGB input
-          inputTensorForMultiOutputModel = tf.tensor(inputGrid, [28, 28, 3], "float32");
+          inputTensorForMultiOutputModel = tf
+            .tensor(inputGrid, [28, 28, 3], "float32")
+            .expandDims(0);
         } else {
           // Grayscale input, convert to RGB
-          const rgbGrid = (inputGrid as number[][]).map(row =>
-            row.map(val => [val, val, val])
+          const rgbGrid = (inputGrid as number[][]).map((row) =>
+            row.map((val) => [val, val, val]),
           );
-          inputTensorForMultiOutputModel = tf.tensor(rgbGrid, [28, 28, 3], "float32");
+          inputTensorForMultiOutputModel = tf
+            .tensor(rgbGrid, [28, 28, 3], "float32")
+            .expandDims(0);
         }
-          .expandDims(0);
 
         outputs.push({
           id: currentModel.inputs[0].name,
@@ -789,8 +792,8 @@ export const useTFModel = ({
         inputTensor = tf.tensor(grid, [28, 28, 3], "float32").expandDims(0);
       } else {
         // Grayscale input: grid is number[][], convert to RGB by duplicating channels
-        const rgbGrid = (grid as number[][]).map(row =>
-          row.map(val => [val, val, val])
+        const rgbGrid = (grid as number[][]).map((row) =>
+          row.map((val) => [val, val, val]),
         );
         inputTensor = tf.tensor(rgbGrid, [28, 28, 3], "float32").expandDims(0);
       }
@@ -879,8 +882,8 @@ export const useTFModel = ({
           return dp.grid;
         } else {
           // Grayscale input: grid is number[][], convert to RGB by duplicating channels
-          return (dp.grid as number[][]).map(row =>
-            row.map(val => [val, val, val])
+          return (dp.grid as number[][]).map((row) =>
+            row.map((val) => [val, val, val]),
           );
         }
       });
