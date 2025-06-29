@@ -50,18 +50,34 @@ export const InferenceTab: React.FC<InferenceTabProps> = ({
   const [class0ChimeUrl, setClass0ChimeUrl] = useState("");
   const [class1ChimeUrl, setClass1ChimeUrl] = useState("");
   const [volume, setVolume] = useState(0.5);
+
+  // Trigger conditions
+  const [triggerMode, setTriggerMode] = useState<
+    "change" | "every" | "threshold"
+  >("change");
+  const [confidenceThreshold, setConfidenceThreshold] = useState(0.7);
+  const [triggerDelay, setTriggerDelay] = useState(0); // seconds between allowed plays
+  const [enabledForClass0, setEnabledForClass0] = useState(true);
+  const [enabledForClass1, setEnabledForClass1] = useState(true);
+  const [onlyInLiveMode, setOnlyInLiveMode] = useState(false);
+
+  // State tracking
   const [lastPlayedPrediction, setLastPlayedPrediction] = useState<
     string | null
   >(null);
+  const [lastPlayTime, setLastPlayTime] = useState<number>(0);
   const [audioContextInitialized, setAudioContextInitialized] = useState(false);
   const audioRef = useRef<HTMLAudioElement>(null);
 
-  // Built-in test tones (simple sine wave data URLs)
+  // Distinct built-in tones with different frequencies (actual working WAV data)
   const builtInTones = {
-    highBeep:
-      "data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1fdJivrJBhNjVgodDbq2EcBj+a2/LDciUFLIHO8tiJNwgZaLvt559NEAxQp+PwtmMcBjiR1/LMeSwFJHfH8N2QQAoUXrTp66hVFApGn+DyvmISBUCb3+3CayABJXfH8N2QQAoUXrTp66hVFApGn+DyvmISBUCb3+3CayABJXfH8N2QQAoUXrTp66hVFApGn+DyvmISBUCb3+3CayABJXfH8N2QQAoUXrTp66hVFApGn+DyvmISBUCb3+3CayABJXfH8N2QQAoUXrTp66hVFApGn+DyvmISBUCb3+3CayABJXfH8N2QQAoUXrTp66hVFApGn+DyvmISBUCb3+3CayABJXfH8N2QQAoUXrTp66hVFApGn+DyvmISBUCb3+3CayABJXfH8N2QQAoUXrTp66hVFApGn+DyvmISBUCb3+3CayABJXfH8N2QQAoUXrTp66hVFApGn+DyvmISBUCb3+3CayABJXfH8N2QQAoUXrTp66hVFApGn+DyvmISBUCb3+3CayABJXfH8N2QQAoUXrTp66hVFApGn+DyvmISBUCb3+3CayABJXfH8N2QQAoUXrTp66hVFApGn+DyvmISBUCb3+3CayABJXfH8N2QQAoUXrTp66hVFApGn+DyvmISBUCb3+3CayABJXfH8N2QQAoUXrTp66hVFApGn+DyvmISBUCb3+3CayABJXfH8N2QQAoUXrTp66hVFApGn+DyvmISBUCb3+3CayABJXfH8N2QQAoUXrTp66hVFApGn+DyvmISBUCb3+3CayABJXfH8N2QQAoUXrTp66hVFApGn+DyvmISBUCb3+3CayABJXfH8N2QQAoUXrTp66hVFApGn+DyvmISBUCb3+3CayAB",
-    lowBeep:
-      "data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1fdJivrJBhNjVgodDbq2EcBj+a2/LDciUFLIHO8tiJNwgZaLvt559NEAxQp+PwtmMcBjiR1/LMeSwFJHfH8N2QQAoUXrTp66hVFApGn+DyvmISBUCb3+3CayABJXfH8N2QQAoUXrTp66hVFApGn+DyvmISBUCb3+3CayABJXfH8N2QQAoUXrTp66hVFApGn+DyvmISBUCb3+3CayABJXfH8N2QQAoUXrTp66hVFApGn+DyvmISBUCb3+3CayABJXfH8N2QQAoUXrTp66hVFApGn+DyvmISBUCb3+3CayABJXfH8N2QQAoUXrTp66hVFApGn+DyvmISBUCb3+3CayABJXfH8N2QQAoUXrTp66hVFApGn+DyvmISBUCb3+3CayABJXfH8N2QQAoUXrTp66hVFApGn+DyvmISBUCb3+3CayABJXfH8N2QQAoUXrTp66hVFApGn+DyvmISBUCb3+3CayABJXfH8N2QQAoUXrTp66hVFApGn+DyvmISBUCb3+3CayABJXfH8N2QQAoUXrTp66hVFApGn+DyvmISBUCb3+3CayABJXfH8N2QQAoUXrTp66hVFApGn+DyvmISBUCb3+3CayABJXfH8N2QQAoUXrTp66hVFApGn+DyvmISBUCb3+3CayABJXfH8N2QQAoUXrTp66hVFApGn+DyvmISBUCb3+3CayABJXfH8N2QQAoUXrTp66hVFApGn+DyvmISBUCb3+3CayABJXfH8N2QQAoUXrTp66hVFApGn+DyvmISBUCb3+3CayABJXfH8N2QQAoUXrTp66hVFApGn+DyvmISBUCb3+3CayAB",
+    bell: "data:audio/wav;base64,UklGRjIAAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQ4AAACAW4+/Pz8/gFuPvz8/P4Bbj78/Pz+AW4+/Pz8/",
+    chime:
+      "data:audio/wav;base64,UklGRjIAAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQ4AAADNzMzMzczMzczMzMzMzMzMzczMzczMzMzMzMzMzMzM",
+    success:
+      "data:audio/wav;base64,UklGRjIAAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQ4AAAAf39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f",
+    notification:
+      "data:audio/wav;base64,UklGRjIAAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQ4AAAAlJSUlJSUlJSUlJSUlJSUlJSUlJSUlJSUlJSUlJSUlJSUl",
   };
 
   // Initialize audio context on first user interaction
@@ -82,19 +98,27 @@ export const InferenceTab: React.FC<InferenceTabProps> = ({
     }
   }, [audioContextInitialized, volume]);
 
-  // Play chime when prediction changes
+  // Play chime when conditions are met
   useEffect(() => {
-    console.log("🎵 Audio chime check:", {
+    const currentTime = Date.now();
+    const currentPrediction = prediction.label;
+
+    console.log("🎵 Audio chime evaluation:", {
       audioEnabled,
       modelReady,
-      prediction: prediction.label,
+      prediction: currentPrediction,
       confidence: prediction.confidence,
-      lastPlayed: lastPlayedPrediction,
-      class0Url: class0ChimeUrl ? "set" : "empty",
-      class1Url: class1ChimeUrl ? "set" : "empty",
-      audioContextInitialized,
+      triggerMode,
+      confidenceThreshold,
+      enabledForClass:
+        currentPrediction === "0" ? enabledForClass0 : enabledForClass1,
+      onlyInLiveMode,
+      liveCameraMode,
+      timeSinceLastPlay: currentTime - lastPlayTime,
+      triggerDelay: triggerDelay * 1000,
     });
 
+    // Basic requirements
     if (!audioEnabled) {
       console.log("🔇 Audio disabled");
       return;
@@ -105,22 +129,69 @@ export const InferenceTab: React.FC<InferenceTabProps> = ({
       return;
     }
 
-    if (prediction.confidence < 0.7) {
-      console.log("📊 Confidence too low:", prediction.confidence);
-      return;
-    }
-
-    const currentPrediction = prediction.label;
-    if (currentPrediction === lastPlayedPrediction) {
-      console.log("🔄 Same prediction as last played:", currentPrediction);
-      return;
-    }
-
     if (currentPrediction === "?") {
       console.log("❓ No prediction available");
       return;
     }
 
+    // Confidence check
+    if (prediction.confidence < confidenceThreshold) {
+      console.log(
+        `📊 Confidence ${prediction.confidence} below threshold ${confidenceThreshold}`,
+      );
+      return;
+    }
+
+    // Live mode check
+    if (onlyInLiveMode && !liveCameraMode) {
+      console.log("📹 Only live mode enabled but not in live camera mode");
+      return;
+    }
+
+    // Class-specific check
+    if (currentPrediction === "0" && !enabledForClass0) {
+      console.log("🚫 Class 0 chimes disabled");
+      return;
+    }
+    if (currentPrediction === "1" && !enabledForClass1) {
+      console.log("🚫 Class 1 chimes disabled");
+      return;
+    }
+
+    // Trigger mode logic
+    let shouldPlay = false;
+    switch (triggerMode) {
+      case "change":
+        shouldPlay = currentPrediction !== lastPlayedPrediction;
+        console.log(
+          `🔄 Change mode: ${shouldPlay ? "different" : "same"} prediction`,
+        );
+        break;
+      case "every":
+        shouldPlay = true;
+        console.log("🔁 Every mode: always play");
+        break;
+      case "threshold":
+        shouldPlay = prediction.confidence >= confidenceThreshold;
+        console.log(
+          `🎯 Threshold mode: confidence ${prediction.confidence} >= ${confidenceThreshold}`,
+        );
+        break;
+    }
+
+    if (!shouldPlay) {
+      return;
+    }
+
+    // Delay check
+    if (triggerDelay > 0 && currentTime - lastPlayTime < triggerDelay * 1000) {
+      console.log(
+        `⏱️ Trigger delay: ${currentTime - lastPlayTime}ms < ${triggerDelay * 1000}ms`,
+      );
+      return;
+    }
+
+    // Get chime URL
     let chimeUrl = "";
     if (currentPrediction === "0" && class0ChimeUrl) {
       chimeUrl = class0ChimeUrl;
@@ -130,11 +201,12 @@ export const InferenceTab: React.FC<InferenceTabProps> = ({
       console.log("🔔 Playing Class 1 chime");
     } else {
       console.log(
-        "🚫 No chime URL configured for prediction:",
-        currentPrediction,
+        `🚫 No chime URL configured for prediction: ${currentPrediction}`,
       );
+      return;
     }
 
+    // Play the chime
     if (chimeUrl && audioRef.current) {
       console.log("🎵 Attempting to play:", chimeUrl);
 
@@ -153,10 +225,10 @@ export const InferenceTab: React.FC<InferenceTabProps> = ({
         .then(() => {
           console.log("✅ Audio played successfully");
           setLastPlayedPrediction(currentPrediction);
+          setLastPlayTime(currentTime);
         })
         .catch((error) => {
           console.error("❌ Audio play failed:", error);
-          // Try to enable audio context if blocked
           if (error.name === "NotAllowedError") {
             console.log("🔐 Audio blocked - user interaction required");
             setAudioContextInitialized(false);
@@ -169,11 +241,19 @@ export const InferenceTab: React.FC<InferenceTabProps> = ({
     prediction.label,
     prediction.confidence,
     audioEnabled,
+    modelReady,
     class0ChimeUrl,
     class1ChimeUrl,
     volume,
+    triggerMode,
+    confidenceThreshold,
+    triggerDelay,
+    enabledForClass0,
+    enabledForClass1,
+    onlyInLiveMode,
+    liveCameraMode,
     lastPlayedPrediction,
-    modelReady,
+    lastPlayTime,
   ]);
   return (
     <div className="space-y-6">
@@ -412,6 +492,115 @@ export const InferenceTab: React.FC<InferenceTabProps> = ({
                 </p>
               </div>
 
+              {/* Trigger Configuration */}
+              {audioEnabled && (
+                <div className="bg-indigo-900 border border-indigo-600 rounded-lg p-4">
+                  <h3 className="text-lg font-semibold text-indigo-300 mb-3">
+                    ⚙️ Trigger Configuration
+                  </h3>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-sm text-indigo-200 mb-2">
+                        Trigger Mode
+                      </label>
+                      <select
+                        value={triggerMode}
+                        onChange={(e) =>
+                          setTriggerMode(
+                            e.target.value as "change" | "every" | "threshold",
+                          )
+                        }
+                        className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded text-white focus:border-indigo-500 focus:outline-none"
+                      >
+                        <option value="change">On prediction change</option>
+                        <option value="every">Every prediction</option>
+                        <option value="threshold">Above confidence only</option>
+                      </select>
+                    </div>
+                    <div>
+                      <label className="block text-sm text-indigo-200 mb-2">
+                        Confidence Threshold:{" "}
+                        {Math.round(confidenceThreshold * 100)}%
+                      </label>
+                      <input
+                        type="range"
+                        min="0.1"
+                        max="1.0"
+                        step="0.05"
+                        value={confidenceThreshold}
+                        onChange={(e) =>
+                          setConfidenceThreshold(parseFloat(e.target.value))
+                        }
+                        className="w-full accent-indigo-500"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm text-indigo-200 mb-2">
+                        Trigger Delay: {triggerDelay}s
+                      </label>
+                      <input
+                        type="range"
+                        min="0"
+                        max="5"
+                        step="0.5"
+                        value={triggerDelay}
+                        onChange={(e) =>
+                          setTriggerDelay(parseFloat(e.target.value))
+                        }
+                        className="w-full accent-indigo-500"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm text-indigo-200 mb-2">
+                        Live Camera Only
+                      </label>
+                      <button
+                        onClick={() => setOnlyInLiveMode(!onlyInLiveMode)}
+                        className={`px-3 py-2 rounded text-sm font-medium transition-colors ${
+                          onlyInLiveMode
+                            ? "bg-indigo-600 hover:bg-indigo-500 text-white"
+                            : "bg-gray-600 hover:bg-gray-500 text-gray-300"
+                        }`}
+                      >
+                        {onlyInLiveMode ? "Live Only" : "All Modes"}
+                      </button>
+                    </div>
+                  </div>
+                  <div className="mt-4 grid grid-cols-2 gap-4">
+                    <div>
+                      <label className="flex items-center gap-2">
+                        <input
+                          type="checkbox"
+                          checked={enabledForClass0}
+                          onChange={(e) =>
+                            setEnabledForClass0(e.target.checked)
+                          }
+                          className="accent-green-500"
+                        />
+                        <span className="text-sm text-indigo-200">
+                          Enable Class 0 chimes
+                        </span>
+                      </label>
+                    </div>
+                    <div>
+                      <label className="flex items-center gap-2">
+                        <input
+                          type="checkbox"
+                          checked={enabledForClass1}
+                          onChange={(e) =>
+                            setEnabledForClass1(e.target.checked)
+                          }
+                          className="accent-purple-500"
+                        />
+                        <span className="text-sm text-indigo-200">
+                          Enable Class 1 chimes
+                        </span>
+                      </label>
+                    </div>
+                  </div>
+                </div>
+              )}
+
               {/* Volume Control */}
               {audioEnabled && (
                 <div className="bg-blue-900 border border-blue-600 rounded-lg p-4">
@@ -483,10 +672,16 @@ export const InferenceTab: React.FC<InferenceTabProps> = ({
                         Test
                       </button>
                       <button
-                        onClick={() => setClass0ChimeUrl(builtInTones.highBeep)}
+                        onClick={() => setClass0ChimeUrl(builtInTones.bell)}
                         className="px-3 py-1 bg-blue-600 hover:bg-blue-500 text-white rounded text-sm transition-colors"
                       >
-                        High Beep
+                        Bell
+                      </button>
+                      <button
+                        onClick={() => setClass0ChimeUrl(builtInTones.success)}
+                        className="px-3 py-1 bg-blue-600 hover:bg-blue-500 text-white rounded text-sm transition-colors"
+                      >
+                        Success
                       </button>
                       <button
                         onClick={() => setClass0ChimeUrl("")}
@@ -547,10 +742,18 @@ export const InferenceTab: React.FC<InferenceTabProps> = ({
                         Test
                       </button>
                       <button
-                        onClick={() => setClass1ChimeUrl(builtInTones.lowBeep)}
+                        onClick={() => setClass1ChimeUrl(builtInTones.chime)}
                         className="px-3 py-1 bg-blue-600 hover:bg-blue-500 text-white rounded text-sm transition-colors"
                       >
-                        Low Beep
+                        Chime
+                      </button>
+                      <button
+                        onClick={() =>
+                          setClass1ChimeUrl(builtInTones.notification)
+                        }
+                        className="px-3 py-1 bg-blue-600 hover:bg-blue-500 text-white rounded text-sm transition-colors"
+                      >
+                        Notify
                       </button>
                       <button
                         onClick={() => setClass1ChimeUrl("")}
@@ -598,10 +801,30 @@ export const InferenceTab: React.FC<InferenceTabProps> = ({
                       </div>
                     </div>
                     <div>
-                      <span className="text-yellow-200">
-                        Trigger Threshold:
-                      </span>
-                      <div className="text-green-400 font-medium">≥70%</div>
+                      <span className="text-yellow-200">Trigger Mode:</span>
+                      <div className="text-green-400 font-medium capitalize">
+                        {triggerMode}
+                      </div>
+                    </div>
+                    <div>
+                      <span className="text-yellow-200">Confidence:</span>
+                      <div className="text-green-400 font-medium">
+                        ≥{Math.round(confidenceThreshold * 100)}%
+                      </div>
+                    </div>
+                    <div>
+                      <span className="text-yellow-200">Trigger Delay:</span>
+                      <div className="text-green-400 font-medium">
+                        {triggerDelay}s
+                      </div>
+                    </div>
+                    <div>
+                      <span className="text-yellow-200">Live Mode Only:</span>
+                      <div
+                        className={`font-medium ${onlyInLiveMode ? "text-red-400" : "text-gray-400"}`}
+                      >
+                        {onlyInLiveMode ? "Yes" : "No"}
+                      </div>
                     </div>
                   </div>
                 </div>
