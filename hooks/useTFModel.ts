@@ -120,20 +120,34 @@ const initializeGPUAcceleration = async () => {
   if (availability.webgl) {
     console.log("  🔥 WebGL: Standard GPU acceleration available");
   }
-  console.log("  ⚡ CPU: Always available as fallback");
+  console.log("  💻 CPU: Always available as fallback");
 
-  // Run performance comparison first
-  const perfResult = await compareBackendPerformance();
-
-  // Set optimal backend based on performance test
-  try {
-    await tf.setBackend(perfResult.recommendation);
+  // Prioritize WebGPU if available, then WebGL, then CPU
+  let selectedBackend = "cpu";
+  if (availability.webgpu) {
+    selectedBackend = "webgpu";
     console.log(
-      `✅ TensorFlow.js using ${perfResult.recommendation} backend (performance optimized)`,
+      "🌟 Selecting WebGPU as default backend (next-generation performance)",
+    );
+  } else if (availability.webgl) {
+    selectedBackend = "webgl";
+    console.log("🔥 Selecting WebGL as default backend (GPU acceleration)");
+  } else {
+    console.log("💻 Falling back to CPU backend");
+  }
+
+  // Set the selected backend
+  try {
+    await tf.setBackend(selectedBackend);
+    console.log(
+      `✅ TensorFlow.js using ${selectedBackend} backend (default prioritization)`,
     );
 
-    // Configure WebGL optimizations if using WebGL
-    if (perfResult.recommendation === "webgl") {
+    // Configure backend-specific optimizations
+    if (selectedBackend === "webgpu") {
+      console.log("🌟 WebGPU backend configured for optimal performance");
+      // WebGPU optimizations can be added here when available
+    } else if (selectedBackend === "webgl") {
       // Conservative settings for better compatibility
       tf.env().set("WEBGL_PACK", true);
       tf.env().set("WEBGL_RENDER_FLOAT32_CAPABLE", true);
@@ -166,7 +180,7 @@ const initializeGPUAcceleration = async () => {
     await tf.setBackend("cpu");
   }
 
-  console.log(`🚀 Backend optimized for performance`);
+  console.log(`🚀 Backend initialized with WebGPU prioritization`);
 };
 
 // Initialize GPU acceleration

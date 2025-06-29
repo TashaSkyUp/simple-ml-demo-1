@@ -18,6 +18,7 @@ interface DataCollectionProps {
   onAugmentTranslateChange: (value: boolean) => void;
   liveCameraMode?: boolean;
   onLiveCameraModeChange?: (enabled: boolean) => void;
+  inferenceMode?: boolean;
 }
 
 export const DataCollection: React.FC<DataCollectionProps> = ({
@@ -29,6 +30,7 @@ export const DataCollection: React.FC<DataCollectionProps> = ({
   onAugmentTranslateChange,
   liveCameraMode = false,
   onLiveCameraModeChange,
+  inferenceMode = false,
 }) => {
   const { canvasRef, clearCanvas } = useDrawingCanvas({
     onDrawEnd: (grid) => {
@@ -308,7 +310,9 @@ export const DataCollection: React.FC<DataCollectionProps> = ({
 
   return (
     <div>
-      <h2 className="text-2xl font-bold mb-4 text-cyan-400">2. Collect Data</h2>
+      <h2 className="text-2xl font-bold mb-4 text-cyan-400">
+        {inferenceMode ? "Live Inference Input" : "2. Collect Data"}
+      </h2>
 
       {/* Input Mode Selection */}
       <div className="mb-6">
@@ -360,38 +364,45 @@ export const DataCollection: React.FC<DataCollectionProps> = ({
               {isCameraStreaming ? (
                 <div className="bg-blue-900/30 border border-blue-600 rounded-lg p-3 mb-3">
                   <p className="text-blue-300 text-sm text-center">
-                    📸 Camera active - press a button to capture
+                    📸 Camera active -{" "}
+                    {inferenceMode
+                      ? "live inference running"
+                      : "press a button to capture"}
                   </p>
                 </div>
               ) : (
-                <div className="bg-green-900/30 border border-green-600 rounded-lg p-3 mb-3">
-                  <p className="text-green-300 text-sm text-center">
-                    ✅ Photo captured! Add it as a training sample:
-                  </p>
+                !inferenceMode && (
+                  <div className="bg-green-900/30 border border-green-600 rounded-lg p-3 mb-3">
+                    <p className="text-green-300 text-sm text-center">
+                      ✅ Photo captured! Add it as a training sample:
+                    </p>
+                  </div>
+                )
+              )}
+              {!inferenceMode && (
+                <div className="grid grid-cols-2 gap-4">
+                  <button
+                    onClick={() =>
+                      isCameraStreaming
+                        ? handleCaptureAndAdd(0)
+                        : handleAddData(0)
+                    }
+                    className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded transition-colors"
+                  >
+                    Add as Class 0
+                  </button>
+                  <button
+                    onClick={() =>
+                      isCameraStreaming
+                        ? handleCaptureAndAdd(1)
+                        : handleAddData(1)
+                    }
+                    className="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded transition-colors"
+                  >
+                    Add as Class 1
+                  </button>
                 </div>
               )}
-              <div className="grid grid-cols-2 gap-4">
-                <button
-                  onClick={() =>
-                    isCameraStreaming
-                      ? handleCaptureAndAdd(0)
-                      : handleAddData(0)
-                  }
-                  className="bg-sky-600 hover:bg-sky-500 text-white font-bold py-3 px-4 rounded transition-colors text-lg focus:outline-none focus:ring-2 focus:ring-sky-400"
-                >
-                  Add as '0'
-                </button>
-                <button
-                  onClick={() =>
-                    isCameraStreaming
-                      ? handleCaptureAndAdd(1)
-                      : handleAddData(1)
-                  }
-                  className="bg-amber-500 hover:bg-amber-400 text-white font-bold py-3 px-4 rounded transition-colors text-lg focus:outline-none focus:ring-2 focus:ring-amber-300"
-                >
-                  Add as '1'
-                </button>
-              </div>
             </div>
           )}
         </div>
@@ -412,88 +423,105 @@ export const DataCollection: React.FC<DataCollectionProps> = ({
               aria-label="Drawing canvas for image samples"
             />
             <div className="w-full max-w-[280px] mt-3 space-y-2">
-              <div className="flex items-center justify-start gap-x-4">
-                <label className="flex items-center text-sm text-gray-300 cursor-pointer">
-                  <input
-                    type="checkbox"
-                    checked={augmentFlip}
-                    onChange={(e) => onAugmentFlipChange(e.target.checked)}
-                    className="form-checkbox h-4 w-4 text-cyan-500 bg-gray-800 border-gray-600 rounded focus:ring-cyan-600"
-                  />
-                  <span className="ml-2">Augment: Flip</span>
-                </label>
-                <label className="flex items-center text-sm text-gray-300 cursor-pointer">
-                  <input
-                    type="checkbox"
-                    checked={augmentTranslate}
-                    onChange={(e) => onAugmentTranslateChange(e.target.checked)}
-                    className="form-checkbox h-4 w-4 text-cyan-500 bg-gray-800 border-gray-600 rounded focus:ring-cyan-600"
-                  />
-                  <span className="ml-2">Augment: Translate</span>
-                </label>
-              </div>
+              {!inferenceMode && (
+                <div className="flex items-center justify-start gap-x-4">
+                  <label className="flex items-center text-sm text-gray-300 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={augmentFlip}
+                      onChange={(e) => onAugmentFlipChange(e.target.checked)}
+                      className="form-checkbox h-4 w-4 text-cyan-500 bg-gray-800 border-gray-600 rounded focus:ring-cyan-600"
+                    />
+                    <span className="ml-2">Augment: Flip</span>
+                  </label>
+                  <label className="flex items-center text-sm text-gray-300 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={augmentTranslate}
+                      onChange={(e) =>
+                        onAugmentTranslateChange(e.target.checked)
+                      }
+                      className="form-checkbox h-4 w-4 text-cyan-500 bg-gray-800 border-gray-600 rounded focus:ring-cyan-600"
+                    />
+                    <span className="ml-2">Augment: Translate</span>
+                  </label>
+                </div>
+              )}
               <button
                 onClick={clearCanvas}
-                className="w-full bg-slate-600 hover:bg-slate-500 text-white font-semibold py-2 px-4 rounded-md transition-colors text-base focus:outline-none focus:ring-2 focus:ring-slate-400 focus:ring-offset-2 focus:ring-offset-gray-800"
+                className="w-full bg-red-600 hover:bg-red-500 text-white font-bold py-2 px-4 rounded transition-colors"
               >
                 Clear Canvas
               </button>
             </div>
-            <div className="w-full max-w-[280px] grid grid-cols-2 gap-4 mt-3">
-              <button
-                onClick={() => handleAddData(0)}
-                className="bg-sky-600 hover:bg-sky-500 text-white font-bold py-3 px-4 rounded transition-colors text-lg focus:outline-none focus:ring-2 focus:ring-sky-400"
-                aria-label="Add canvas content as sample for class 0"
-              >
-                Add Canvas as '0'
-              </button>
-              <button
-                onClick={() => handleAddData(1)}
-                className="bg-amber-500 hover:bg-amber-400 text-white font-bold py-3 px-4 rounded transition-colors text-lg focus:outline-none focus:ring-2 focus:ring-amber-300"
-                aria-label="Add canvas content as sample for class 1"
-              >
-                Add Canvas as '1'
-              </button>
-            </div>
+            {!inferenceMode && (
+              <div className="w-full max-w-[280px] grid grid-cols-2 gap-4 mt-3">
+                <button
+                  onClick={() => handleAddData(0)}
+                  className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded transition-colors"
+                >
+                  Add as Class 0
+                </button>
+                <button
+                  onClick={() => handleAddData(1)}
+                  className="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded transition-colors"
+                >
+                  Add as Class 1
+                </button>
+              </div>
+            )}
+            {inferenceMode && (
+              <div className="w-full max-w-[280px] mt-3">
+                <button
+                  onClick={handleDrawingPredict}
+                  className="w-full bg-purple-600 hover:bg-purple-700 text-white font-bold py-2 px-4 rounded transition-colors"
+                >
+                  🔍 Predict Drawing
+                </button>
+              </div>
+            )}
           </div>
 
           {/* AI Generation Section - Controls */}
-          <hr className="border-gray-700 my-6" />
-          <h3 className="text-lg font-semibold mb-2 text-gray-300">
-            Generate Sample via AI (onto Canvas)
-          </h3>
-          <div className="flex flex-col items-center space-y-3">
-            <div className="w-full max-w-md">
-              <label
-                htmlFor="ai-prompt"
-                className="block text-sm font-medium text-gray-400 mb-1"
-              >
-                Image Prompt
-              </label>
-              <input
-                type="text"
-                id="ai-prompt"
-                value={aiPrompt}
-                onChange={(e) => setAiPrompt(e.target.value)}
-                placeholder="e.g., a simple line drawing of the number 1"
-                className="w-full bg-gray-800 text-white p-2 rounded-md border border-gray-600 focus:ring-cyan-500 focus:border-cyan-500"
-              />
-            </div>
-            <button
-              onClick={handleGenerateImage}
-              disabled={isGenerating}
-              className="w-full max-w-md bg-teal-600 hover:bg-teal-500 text-white font-semibold py-2 px-4 rounded-md transition-colors text-base focus:outline-none focus:ring-2 focus:ring-teal-400 disabled:bg-gray-500 disabled:cursor-wait"
-            >
-              {isGenerating ? "Generating..." : "Generate & Draw on Canvas"}
-            </button>
-            {generationError && (
-              <p className="text-red-400 text-sm mt-2 w-full max-w-md text-center">
-                {generationError}
-              </p>
-            )}
+          {!inferenceMode && (
+            <>
+              <h3 className="text-lg font-semibold mt-6 mb-3 text-gray-300">
+                Generate Sample via AI (onto Canvas)
+              </h3>
+              <div className="flex flex-col items-center space-y-3">
+                <div className="w-full max-w-md">
+                  <label
+                    htmlFor="ai-prompt"
+                    className="block text-sm font-medium text-gray-400 mb-1"
+                  >
+                    Image Prompt
+                  </label>
+                  <input
+                    type="text"
+                    id="ai-prompt"
+                    value={aiPrompt}
+                    onChange={(e) => setAiPrompt(e.target.value)}
+                    placeholder="e.g., a simple line drawing of the number 1"
+                    className="w-full bg-gray-800 text-white p-2 rounded-md border border-gray-600 focus:ring-cyan-500 focus:border-cyan-500"
+                  />
+                </div>
+                <button
+                  onClick={handleGenerateImage}
+                  disabled={isGenerating}
+                  className="w-full max-w-md bg-teal-600 hover:bg-teal-500 text-white font-semibold py-2 px-4 rounded-md transition-colors text-base focus:outline-none focus:ring-2 focus:ring-teal-400 disabled:bg-gray-500 disabled:cursor-wait"
+                >
+                  {isGenerating ? "Generating..." : "Generate & Draw on Canvas"}
+                </button>
+                {generationError && (
+                  <p className="text-red-400 text-sm mt-2 w-full max-w-md text-center">
+                    {generationError}
+                  </p>
+                )}
 
-            {/* Removed separate generated image display and add buttons */}
-          </div>
+                {/* Removed separate generated image display and add buttons */}
+              </div>
+            </>
+          )}
         </div>
       )}
     </div>

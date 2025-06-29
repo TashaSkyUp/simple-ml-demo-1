@@ -2,14 +2,9 @@ import React, { useState, useEffect, useCallback } from "react";
 import type { LayerConfig, TrainingDataPoint, PredictionState } from "../types";
 import { LayerType, ActivationFunction, PoolingType } from "../types";
 // import { imageToGrid, drawGridToCanvas } from '../utils/cnnUtils'; // drawGridToCanvas not used here
-
-import { ArchitectureDefinition } from "./ArchitectureDefinition";
-import { DataCollection } from "./DataCollection";
-import { TrainingControls } from "./TrainingControls";
-import { PredictionDisplay } from "./PredictionDisplay";
-import { PipelineVisualization } from "./PipelineVisualization";
-import { GPUStatus } from "./GPUStatus";
-import { CollapsibleSection } from "./CollapsibleSection";
+import { TabbedInterface } from "./TabbedInterface";
+import { TrainingTab } from "./TrainingTab";
+import { InferenceTab } from "./InferenceTab";
 import { useTFModel, ModelStatus as TFModelStatus } from "../hooks/useTFModel"; // The new TensorFlow.js hook
 import {
   useCollapsibleSections,
@@ -539,301 +534,100 @@ export const TrainableConvNet: React.FC = () => {
     fileInput.click();
   };
 
-  return (
-    <div className="space-y-6">
-      {/* Section Control Panel */}
-      <div className="section-control-panel rounded-lg shadow-lg overflow-hidden">
-        <div className="flex flex-wrap items-center justify-between gap-4 p-4 mobile-section-controls">
-          <div className="flex items-center gap-3">
-            <div className="flex items-center gap-2">
-              <span className="text-2xl">📋</span>
-              <span className="text-lg font-semibold text-gray-100">
-                Interface Control
-              </span>
-            </div>
-            <div className="flex gap-2">
-              <button
-                onClick={() => {
-                  const sectionIds = [
-                    "network-architecture",
-                    "data-collection",
-                    "training-prediction",
-                    "gpu-performance",
-                    "neural-network-visualization",
-                  ];
-                  const allOpen = sectionIds.every((id) => isSectionOpen(id));
-                  if (allOpen) {
-                    sectionIds.forEach((id) => toggleSection(id));
-                  } else {
-                    sectionIds
-                      .filter((id) => !isSectionOpen(id))
-                      .forEach((id) => toggleSection(id));
-                  }
-                }}
-                className="px-4 py-2 text-sm bg-cyan-600 hover:bg-cyan-500 text-white rounded-lg transition-colors font-medium focus:outline-none focus:ring-2 focus:ring-cyan-400 section-toggle-btn hover-lift"
-                title="Toggle all sections (Ctrl+A)"
-              >
-                {[
-                  "network-architecture",
-                  "data-collection",
-                  "training-prediction",
-                  "gpu-performance",
-                  "neural-network-visualization",
-                ].every((id) => isSectionOpen(id))
-                  ? "🔼 Collapse All"
-                  : "🔽 Expand All"}
-              </button>
-              <div className="hidden md:flex items-center gap-2 px-3 py-2 bg-gray-700 rounded-lg keyboard-hint">
-                <span className="text-xs text-gray-300">Quick Keys:</span>
-                <span className="text-xs font-mono bg-gray-600 px-1 py-0.5 rounded">
-                  Ctrl+A
-                </span>
-                <span className="text-xs text-gray-400">Toggle All</span>
-                <span className="text-xs font-mono bg-gray-600 px-1 py-0.5 rounded ml-2">
-                  Ctrl+1-5
-                </span>
-                <span className="text-xs text-gray-400">Sections</span>
-              </div>
-            </div>
-          </div>
-          <div className="flex flex-wrap gap-2 text-xs mobile-section-badges">
-            <button
-              onClick={() => toggleSection("network-architecture")}
-              className={`px-3 py-1 rounded-full transition-all section-status-indicator hover-lift ${
-                isSectionOpen("network-architecture")
-                  ? "bg-green-600 hover:bg-green-500 text-white"
-                  : "bg-gray-600 hover:bg-gray-500 text-gray-200"
-              }`}
-              title="Toggle Architecture section"
-            >
-              🏗️ Architecture ({layers.length})
-            </button>
-            <button
-              onClick={() => toggleSection("data-collection")}
-              className={`px-3 py-1 rounded-full transition-all section-status-indicator hover-lift ${
-                isSectionOpen("data-collection")
-                  ? "bg-green-600 hover:bg-green-500 text-white"
-                  : "bg-gray-600 hover:bg-gray-500 text-gray-200"
-              }`}
-              title="Toggle Data Collection section"
-            >
-              📊 Data ({trainingData.length})
-            </button>
-            <button
-              onClick={() => toggleSection("training-prediction")}
-              className={`px-3 py-1 rounded-full transition-all section-status-indicator hover-lift ${
-                isSectionOpen("training-prediction")
-                  ? "bg-green-600 hover:bg-green-500 text-white"
-                  : "bg-gray-600 hover:bg-gray-500 text-gray-200"
-              }`}
-              title="Toggle Training section"
-            >
-              🧠 Training {epochsRun > 0 ? `(${epochsRun})` : ""}
-            </button>
-            <button
-              onClick={() => toggleSection("gpu-performance")}
-              className={`px-3 py-1 rounded-full transition-all section-status-indicator hover-lift ${
-                isSectionOpen("gpu-performance")
-                  ? "bg-green-600 hover:bg-green-500 text-white"
-                  : "bg-gray-600 hover:bg-gray-500 text-gray-200"
-              }`}
-              title="Toggle GPU Performance section"
-            >
-              ⚡ GPU
-            </button>
-            <button
-              onClick={() => toggleSection("neural-network-visualization")}
-              className={`px-3 py-1 rounded-full transition-all section-status-indicator hover-lift ${
-                isSectionOpen("neural-network-visualization")
-                  ? "bg-green-600 hover:bg-green-500 text-white"
-                  : "bg-gray-600 hover:bg-gray-500 text-gray-200"
-              }`}
-              title="Toggle Visualization section"
-            >
-              🔍 Visualization
-            </button>
-          </div>
-        </div>
-
-        {/* Status Bar */}
-        <div className="status-bar px-4 py-2 border-t border-gray-700">
-          <div className="flex flex-wrap items-center justify-between gap-4 text-xs">
-            <div className="flex items-center gap-4">
-              <span className="text-gray-400">Status:</span>
-              <span
-                className={`px-2 py-1 rounded status-indicator ${
-                  mappedStatusForTrainingControls === "training"
-                    ? "bg-blue-600 text-blue-100 animate-pulse training"
-                    : mappedStatusForTrainingControls === "success"
-                      ? "bg-green-600 text-green-100"
-                      : mappedStatusForTrainingControls === "error"
-                        ? "bg-red-600 text-red-100"
-                        : "bg-gray-600 text-gray-200"
-                }`}
-              >
-                {mappedStatusForTrainingControls === "training"
-                  ? `Training... (${epochsRun}/${numEpochs})`
-                  : mappedStatusForTrainingControls === "success"
-                    ? "Ready"
-                    : mappedStatusForTrainingControls === "error"
-                      ? "Error"
-                      : "Collecting"}
-              </span>
-            </div>
-            <div className="hidden lg:flex items-center gap-4 text-gray-400">
-              <span>
-                Sections:{" "}
-                {
-                  [
-                    "network-architecture",
-                    "data-collection",
-                    "training-prediction",
-                    "gpu-performance",
-                    "neural-network-visualization",
-                  ].filter((id) => isSectionOpen(id)).length
-                }
-                /5 Open
-              </span>
-              <span>Layout: Responsive</span>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Widescreen: 3-column layout, Mobile: Single column */}
-      <div className="grid grid-cols-1 xl:grid-cols-3 lg:grid-cols-2 gap-6 xl-grid-optimize ultra-wide-grid">
-        {/* Architecture & GPU Section */}
-        <div className="xl:col-span-1">
-          <CollapsibleSection
-            title="Network Architecture"
-            icon="🏗️"
-            badge={layers.length}
-            sectionId="network-architecture"
-            isOpen={isSectionOpen("network-architecture")}
-            onToggle={toggleSection}
-            className="h-fit hover-lift"
-          >
-            <ArchitectureDefinition
-              layers={layers}
-              updateLayer={handleUpdateLayer}
-              removeLayer={handleRemoveLayer}
-              addLayer={handleAddLayer}
-              reorderLayers={handleReorderLayers}
-            />
-          </CollapsibleSection>
-
-          <div className="mt-6">
-            <CollapsibleSection
-              title="GPU Performance"
-              icon="⚡"
-              sectionId="gpu-performance"
-              isOpen={isSectionOpen("gpu-performance")}
-              onToggle={toggleSection}
-              className="h-fit hover-lift"
-            >
-              <GPUStatus
-                benchmarkData={gpuBenchmark}
-                onRunBenchmark={runGPUBenchmark}
-              />
-            </CollapsibleSection>
-          </div>
-        </div>
-
-        {/* Data Collection Section */}
-        <div className="xl:col-span-1">
-          <CollapsibleSection
-            title="Data Collection"
-            icon="📊"
-            badge={trainingData.length}
-            sectionId="data-collection"
-            isOpen={isSectionOpen("data-collection")}
-            onToggle={toggleSection}
-            className="h-fit hover-lift"
-          >
-            <DataCollection
-              onAddData={handleAddTrainingData}
-              predictFromCanvas={predictFromDataCollectionCanvas}
-              augmentFlip={augmentFlip}
-              onAugmentFlipChange={setAugmentFlip}
-              augmentTranslate={augmentTranslate}
-              onAugmentTranslateChange={setAugmentTranslate}
-              liveCameraMode={liveCameraMode}
-              onLiveCameraModeChange={setIsCameraStreaming}
-            />
-          </CollapsibleSection>
-        </div>
-
-        {/* Training & Prediction Section */}
-        <div className="xl:col-span-1 lg:col-span-2 xl:col-span-1">
-          <CollapsibleSection
-            title="Training & Prediction"
-            icon="🧠"
-            badge={epochsRun > 0 ? `${epochsRun} epochs` : undefined}
-            sectionId="training-prediction"
-            isOpen={isSectionOpen("training-prediction")}
-            onToggle={toggleSection}
-            className="h-fit hover-lift"
-          >
-            <TrainingControls
-              trainingData={trainingData}
-              onClearTrainingData={handleClearTrainingData}
-              onRemoveTrainingDataPoint={handleRemoveTrainingDataPoint}
-              numEpochs={numEpochs}
-              onNumEpochsChange={setNumEpochs}
-              learningRate={learningRate}
-              onLearningRateChange={setLearningRate}
-              batchSize={batchSize}
-              onBatchSizeChange={(val) => setBatchSize(Math.max(1, val))}
-              maxBatchSize={maxBatchSize}
-              onStartTraining={handleStartTraining}
-              onResetAll={handleFullReset}
-              status={mappedStatusForTrainingControls}
-              epochsRun={epochsRun}
-              lossHistory={lossHistory}
-              onSaveSession={handleSaveSession}
-              onLoadSession={handleLoadSession}
-            />
-            <div className="mt-6">
-              <PredictionDisplay
-                prediction={prediction}
-                modelReady={
-                  !!model &&
-                  (tfStatus === "ready" ||
-                    tfStatus === "success" ||
-                    tfStatus === "training")
-                }
-              />
-            </div>
-          </CollapsibleSection>
-        </div>
-      </div>
-
-      {/* Pipeline Visualization - Full Width */}
-      <CollapsibleSection
-        title="Neural Network Visualization"
-        icon="🔍"
-        badge={
-          liveLayerOutputs.length > 0
-            ? `${liveLayerOutputs.length} layers`
-            : undefined
-        }
-        sectionId="neural-network-visualization"
-        isOpen={isSectionOpen("neural-network-visualization")}
-        onToggle={toggleSection}
-        className="w-full hover-lift"
-      >
-        <PipelineVisualization
-          liveLayerOutputs={liveLayerOutputs}
-          fcWeightsViz={fcWeightsViz}
+  const tabs = [
+    {
+      id: "training",
+      label: "Training",
+      icon: "🎯",
+      badge: `${layers.length} layers, ${trainingData.length} samples`,
+      content: (
+        <TrainingTab
+          // Architecture props
+          layers={layers}
+          onUpdateLayer={handleUpdateLayer}
+          onRemoveLayer={handleRemoveLayer}
+          onAddLayer={handleAddLayer}
+          onReorderLayers={handleReorderLayers}
+          // Data collection props
+          trainingData={trainingData}
+          onAddData={handleAddTrainingData}
+          onClearTrainingData={handleClearTrainingData}
+          onRemoveTrainingDataPoint={handleRemoveTrainingDataPoint}
+          augmentFlip={augmentFlip}
+          onAugmentFlipChange={setAugmentFlip}
+          augmentTranslate={augmentTranslate}
+          onAugmentTranslateChange={setAugmentTranslate}
+          liveCameraMode={liveCameraMode}
+          onLiveCameraModeChange={setIsCameraStreaming}
+          predictFromCanvas={predictFromDataCollectionCanvas}
+          // Training props
+          numEpochs={numEpochs}
+          onNumEpochsChange={setNumEpochs}
+          learningRate={learningRate}
+          onLearningRateChange={setLearningRate}
+          batchSize={batchSize}
+          onBatchSizeChange={(val) => setBatchSize(Math.max(1, val))}
+          maxBatchSize={maxBatchSize}
+          onStartTraining={handleStartTraining}
+          onResetAll={handleFullReset}
+          trainingStatus={mappedStatusForTrainingControls}
+          epochsRun={epochsRun}
+          lossHistory={lossHistory}
+          onSaveSession={handleSaveSession}
+          onLoadSession={handleLoadSession}
+          // GPU props
+          gpuBenchmark={gpuBenchmark}
+          onRunGPUBenchmark={runGPUBenchmark}
+          // Sections state
+          isSectionOpen={isSectionOpen}
+          toggleSection={toggleSection}
+        />
+      ),
+    },
+    {
+      id: "inference",
+      label: "Live Inference",
+      icon: "🔍",
+      badge: liveCameraMode
+        ? "LIVE"
+        : prediction.label !== "?"
+          ? prediction.label
+          : undefined,
+      content: (
+        <InferenceTab
+          modelReady={
+            !!model &&
+            (tfStatus === "ready" ||
+              tfStatus === "success" ||
+              tfStatus === "training")
+          }
           prediction={prediction}
-          activeVizChannel={activeVizChannel}
-          onChannelCycle={handleChannelCycle}
-          status={tfStatus}
+          onPredictFromCanvas={predictFromDataCollectionCanvas}
           liveCameraMode={liveCameraMode}
           onLiveCameraModeChange={setLiveCameraMode}
           isCameraStreaming={isCameraStreaming}
+          liveLayerOutputs={liveLayerOutputs}
+          fcWeightsViz={fcWeightsViz}
+          activeVizChannel={activeVizChannel}
+          onChannelCycle={handleChannelCycle}
+          pipelineStatus={tfStatus}
+          isSectionOpen={isSectionOpen}
+          toggleSection={toggleSection}
         />
-      </CollapsibleSection>
+      ),
+    },
+  ];
+
+  return (
+    <div className="space-y-6">
+      <TabbedInterface
+        tabs={tabs}
+        defaultActiveTab="training"
+        className="w-full"
+        onTabChange={(tabId) => {
+          console.log(`Switched to ${tabId} tab`);
+        }}
+      />
     </div>
   );
 };
