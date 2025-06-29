@@ -47,12 +47,8 @@ export const InferenceTab: React.FC<InferenceTabProps> = ({
 }) => {
   // Audio alerts state
   const [audioEnabled, setAudioEnabled] = useState(false);
-  const [class0ChimeUrl, setClass0ChimeUrl] = useState<
-    string | (() => Promise<void>)
-  >("");
-  const [class1ChimeUrl, setClass1ChimeUrl] = useState<
-    string | (() => Promise<void>)
-  >("");
+  const [class0ChimeUrl, setClass0ChimeUrl] = useState<string>("");
+  const [class1ChimeUrl, setClass1ChimeUrl] = useState<string>("");
   const [volume, setVolume] = useState(0.5);
 
   // Trigger conditions
@@ -142,6 +138,24 @@ export const InferenceTab: React.FC<InferenceTabProps> = ({
       await generateTone(880, 0.2, "sine"); // A5
       setTimeout(() => generateTone(880, 0.2, "sine"), 300); // A5 again
     },
+  };
+
+  // Function to resolve chime source - returns either the function or the URL string
+  const resolveChimeSource = (
+    chimeIdentifier: string,
+  ): (() => Promise<void>) | string => {
+    switch (chimeIdentifier) {
+      case "builtin-bell":
+        return builtInTones.bell;
+      case "builtin-chime":
+        return builtInTones.chime;
+      case "builtin-success":
+        return builtInTones.success;
+      case "builtin-notification":
+        return builtInTones.notification;
+      default:
+        return chimeIdentifier; // Assume it's a URL
+    }
   };
 
   // Initialize audio context on first user interaction
@@ -261,27 +275,31 @@ export const InferenceTab: React.FC<InferenceTabProps> = ({
       return;
     }
 
-    // Get chime URL or function
-    let chimeSource: string | (() => Promise<void>) = "";
+    // Get chime identifier and resolve to source
+    let chimeIdentifier = "";
     if (currentPrediction === "0" && class0ChimeUrl) {
-      chimeSource = class0ChimeUrl;
+      chimeIdentifier = class0ChimeUrl;
       console.log("🔔 Playing Class 0 chime");
     } else if (currentPrediction === "1" && class1ChimeUrl) {
-      chimeSource = class1ChimeUrl;
+      chimeIdentifier = class1ChimeUrl;
       console.log("🔔 Playing Class 1 chime");
     } else {
       console.log(
-        `🚫 No chime URL configured for prediction: ${currentPrediction}`,
+        `🚫 No chime configured for prediction: ${currentPrediction}`,
       );
       return;
     }
+
+    const chimeSource = resolveChimeSource(chimeIdentifier);
 
     // Play the chime
     const playSound = async () => {
       if (chimeSource) {
         console.log(
           "🎵 Attempting to play:",
-          typeof chimeSource === "function" ? "built-in tone" : chimeSource,
+          typeof chimeSource === "function"
+            ? `built-in tone (${chimeIdentifier})`
+            : chimeSource,
         );
 
         // Check if it's a built-in tone function
@@ -294,7 +312,7 @@ export const InferenceTab: React.FC<InferenceTabProps> = ({
           } catch (error: any) {
             console.error("❌ Built-in tone play failed:", error);
           }
-        } else {
+        } else if (typeof chimeSource === "string" && chimeSource.length > 0) {
           // Handle URL-based audio
           try {
             // Create a new audio element to avoid cutting off current playback
@@ -312,6 +330,12 @@ export const InferenceTab: React.FC<InferenceTabProps> = ({
               setAudioContextInitialized(false);
             }
           }
+        } else {
+          console.log(
+            "🚫 Invalid chime source:",
+            typeof chimeSource,
+            chimeSource,
+          );
         }
       } else {
         console.log("🚫 No chime configured");
@@ -723,11 +747,11 @@ export const InferenceTab: React.FC<InferenceTabProps> = ({
                       type="url"
                       placeholder="Enter URL for Class 0 sound (mp3, wav, ogg)"
                       value={
-                        typeof class0ChimeUrl === "string" ? class0ChimeUrl : ""
+                        class0ChimeUrl.startsWith("builtin-")
+                          ? ""
+                          : class0ChimeUrl
                       }
-                      onChange={(e) =>
-                        setClass0ChimeUrl(e.target.value as string)
-                      }
+                      onChange={(e) => setClass0ChimeUrl(e.target.value)}
                       className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:border-green-500 focus:outline-none"
                     />
                     <div className="flex gap-2 flex-wrap">
@@ -740,15 +764,17 @@ export const InferenceTab: React.FC<InferenceTabProps> = ({
                             );
                             initializeAudioContext();
 
-                            if (typeof class0ChimeUrl === "function") {
-                              class0ChimeUrl().catch((error) => {
+                            const chimeSource =
+                              resolveChimeSource(class0ChimeUrl);
+                            if (typeof chimeSource === "function") {
+                              chimeSource().catch((error) => {
                                 console.error("❌ Test play failed:", error);
                                 alert(
                                   "Failed to play built-in sound. Check browser permissions.",
                                 );
                               });
-                            } else {
-                              const audio = new Audio(class0ChimeUrl);
+                            } else if (chimeSource && chimeSource.length > 0) {
+                              const audio = new Audio(chimeSource);
                               audio.volume = volume;
                               audio.play().catch((error) => {
                                 console.error("❌ Test play failed:", error);
@@ -756,6 +782,10 @@ export const InferenceTab: React.FC<InferenceTabProps> = ({
                                   "Failed to play sound. Check URL and browser permissions.",
                                 );
                               });
+                            } else {
+                              alert(
+                                "Invalid sound configuration. Please select a built-in sound or enter a valid URL.",
+                              );
                             }
                           }
                         }}
@@ -765,13 +795,13 @@ export const InferenceTab: React.FC<InferenceTabProps> = ({
                         Test
                       </button>
                       <button
-                        onClick={() => setClass0ChimeUrl(builtInTones.bell)}
+                        onClick={() => setClass0ChimeUrl("builtin-bell")}
                         className="px-3 py-1 bg-blue-600 hover:bg-blue-500 text-white rounded text-sm transition-colors"
                       >
                         Bell
                       </button>
                       <button
-                        onClick={() => setClass0ChimeUrl(builtInTones.success)}
+                        onClick={() => setClass0ChimeUrl("builtin-success")}
                         className="px-3 py-1 bg-blue-600 hover:bg-blue-500 text-white rounded text-sm transition-colors"
                       >
                         Success
@@ -803,11 +833,11 @@ export const InferenceTab: React.FC<InferenceTabProps> = ({
                       type="url"
                       placeholder="Enter URL for Class 1 sound (mp3, wav, ogg)"
                       value={
-                        typeof class1ChimeUrl === "string" ? class1ChimeUrl : ""
+                        class1ChimeUrl.startsWith("builtin-")
+                          ? ""
+                          : class1ChimeUrl
                       }
-                      onChange={(e) =>
-                        setClass1ChimeUrl(e.target.value as string)
-                      }
+                      onChange={(e) => setClass1ChimeUrl(e.target.value)}
                       className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:border-purple-500 focus:outline-none"
                     />
                     <div className="flex gap-2 flex-wrap">
@@ -820,15 +850,17 @@ export const InferenceTab: React.FC<InferenceTabProps> = ({
                             );
                             initializeAudioContext();
 
-                            if (typeof class1ChimeUrl === "function") {
-                              class1ChimeUrl().catch((error) => {
+                            const chimeSource =
+                              resolveChimeSource(class1ChimeUrl);
+                            if (typeof chimeSource === "function") {
+                              chimeSource().catch((error) => {
                                 console.error("❌ Test play failed:", error);
                                 alert(
                                   "Failed to play built-in sound. Check browser permissions.",
                                 );
                               });
-                            } else {
-                              const audio = new Audio(class1ChimeUrl);
+                            } else if (chimeSource && chimeSource.length > 0) {
+                              const audio = new Audio(chimeSource);
                               audio.volume = volume;
                               audio.play().catch((error) => {
                                 console.error("❌ Test play failed:", error);
@@ -836,6 +868,10 @@ export const InferenceTab: React.FC<InferenceTabProps> = ({
                                   "Failed to play sound. Check URL and browser permissions.",
                                 );
                               });
+                            } else {
+                              alert(
+                                "Invalid sound configuration. Please select a built-in sound or enter a valid URL.",
+                              );
                             }
                           }
                         }}
@@ -845,14 +881,14 @@ export const InferenceTab: React.FC<InferenceTabProps> = ({
                         Test
                       </button>
                       <button
-                        onClick={() => setClass1ChimeUrl(builtInTones.chime)}
+                        onClick={() => setClass1ChimeUrl("builtin-chime")}
                         className="px-3 py-1 bg-blue-600 hover:bg-blue-500 text-white rounded text-sm transition-colors"
                       >
                         Chime
                       </button>
                       <button
                         onClick={() =>
-                          setClass1ChimeUrl(builtInTones.notification)
+                          setClass1ChimeUrl("builtin-notification")
                         }
                         className="px-3 py-1 bg-blue-600 hover:bg-blue-500 text-white rounded text-sm transition-colors"
                       >
