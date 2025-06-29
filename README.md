@@ -26,47 +26,81 @@ An interactive web application for training Convolutional Neural Networks (CNNs)
 
 ## Prerequisites
 
-- **Node.js 18+** (recommended) - The app may work with older versions but performance and compatibility are not guaranteed
+- **Node.js 18+** (REQUIRED) - Older versions will not work due to ES module compatibility
 - **Modern Web Browser** with WebGL support (Chrome, Firefox, Safari, Edge)
 - **Gemini API Key** (optional) - For AI-powered features
+
+### Installing Node.js 18+
+
+If you have an older version of Node.js, please upgrade:
+
+**Using Node Version Manager (NVM) - Recommended:**
+```bash
+# Install NVM if you don't have it
+curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.0/install.sh | bash
+source ~/.bashrc
+
+# Install and use Node.js 18
+nvm install 18
+nvm use 18
+nvm alias default 18
+```
+
+**Direct Installation:**
+- Download from [nodejs.org](https://nodejs.org/) (LTS version)
+- Or use your system package manager
+
+**Verify Installation:**
+```bash
+node --version  # Should show v18.x.x or higher
+npm --version   # Should show 8.x.x or higher
+```
 
 ## Quick Start
 
 ### Option 1: Using the Startup Script (Recommended)
 
 1. **Clone or extract the project files**
-2. **Run the startup script**:
+2. **Ensure you have Node.js 18+** (see Prerequisites above)
+3. **Run the startup script**:
    ```bash
+   chmod +x start.sh
    ./start.sh
    ```
    The script will:
-   - Check your Node.js version
+   - Check your Node.js version (must be 18+)
    - Install dependencies automatically
    - Guide you through environment setup
    - Start the development server
 
 ### Option 2: Manual Setup
 
-1. **Install dependencies**:
+1. **Verify Node.js version**:
+   ```bash
+   node --version  # Must be v18.0.0 or higher
+   ```
+
+2. **Install dependencies**:
    ```bash
    npm install
    ```
 
-2. **Set up environment variables**:
+3. **Set up environment variables**:
    ```bash
-   cp .env.local.template .env.local
-   ```
-   Edit `.env.local` and add your Gemini API key:
-   ```env
-   VITE_GEMINI_API_KEY=your_gemini_api_key_here
+   # Create environment file
+   cat > .env.local << EOF
+   # Gemini API Key - Get from https://makersuite.google.com/app/apikey
+   # The app works without this - AI features will be disabled
+   VITE_GEMINI_API_KEY=your_api_key_here
+   EOF
    ```
 
-3. **Start the development server**:
+4. **Start the development server**:
    ```bash
    npm run dev
    ```
 
-4. **Open your browser** and navigate to `http://localhost:5173`
+5. **Open your browser** and navigate to `http://localhost:5173`
 
 ## Getting a Gemini API Key
 
@@ -76,6 +110,43 @@ An interactive web application for training Convolutional Neural Networks (CNNs)
 4. Copy the key and add it to your `.env.local` file
 
 **Note**: The application will work without the API key, but AI-powered features will be disabled.
+
+## Troubleshooting
+
+### Node.js Version Issues
+
+If you see errors like "SyntaxError: Unexpected reserved word" or "await import", you're using an outdated Node.js version:
+
+1. **Check your version**: `node --version`
+2. **If below v18.0.0**, follow the Node.js installation instructions above
+3. **After upgrading**, delete `node_modules` and reinstall:
+   ```bash
+   rm -rf node_modules package-lock.json
+   npm install
+   ```
+
+### Common Startup Issues
+
+1. **Permission denied on start.sh**:
+   ```bash
+   chmod +x start.sh
+   ```
+
+2. **Dependencies won't install**:
+   ```bash
+   # Clear npm cache and try again
+   npm cache clean --force
+   rm -rf node_modules package-lock.json
+   npm install
+   ```
+
+3. **Port 5173 already in use**:
+   ```bash
+   # Kill the process using the port
+   lsof -ti:5173 | xargs kill -9
+   # Or use a different port
+   npm run dev -- --port 3000
+   ```
 
 ## How to Use
 

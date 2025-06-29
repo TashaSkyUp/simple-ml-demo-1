@@ -1,6 +1,5 @@
 import { useState, useRef, useCallback, useEffect } from "react";
-// TensorFlow.js is loaded via CDN as global object
-declare const tf: any;
+import * as tf from "@tensorflow/tfjs";
 import type {
   LayerConfig,
   TrainingDataPoint,
@@ -40,7 +39,12 @@ const compareBackendPerformance = async (): Promise<{
 
       for (let i = 0; i < iterations; i++) {
         const a = tf.randomNormal([28, 28, 1]);
-        const conv = tf.conv2d(a, tf.randomNormal([3, 3, 1, 8]), 1, "same");
+        const conv = tf.conv2d(
+          a.expandDims(0) as tf.Tensor4D,
+          tf.randomNormal([3, 3, 1, 8]) as tf.Tensor4D,
+          1,
+          "same",
+        );
         const pool = tf.maxPool(conv, 2, 2, "valid");
         await pool.data();
         a.dispose();
@@ -263,15 +267,15 @@ export const useTFModel = ({
           // Realistic CNN operations for this app
           const input = tf.randomNormal([1, 28, 28, 1]);
           const conv1 = tf.conv2d(
-            input,
-            tf.randomNormal([3, 3, 1, 8]),
+            input as tf.Tensor4D,
+            tf.randomNormal([3, 3, 1, 8]) as tf.Tensor4D,
             1,
             "same",
           );
           const pool1 = tf.maxPool(conv1, 2, 2, "valid");
           const conv2 = tf.conv2d(
-            pool1,
-            tf.randomNormal([3, 3, 8, 16]),
+            pool1 as tf.Tensor4D,
+            tf.randomNormal([3, 3, 8, 16]) as tf.Tensor4D,
             1,
             "same",
           );
@@ -279,7 +283,7 @@ export const useTFModel = ({
           const flattened = tf.reshape(pool2, [1, -1]);
           const dense = tf.matMul(
             flattened,
-            tf.randomNormal([flattened.shape[1], 1]),
+            tf.randomNormal([flattened.shape[1] || 1, 1]),
           );
 
           await dense.data();
@@ -520,7 +524,9 @@ export const useTFModel = ({
         metrics: ["accuracy"],
       });
 
-      newModel.summary(undefined, undefined, (message) => console.log(message));
+      newModel.summary(undefined, undefined, (message: string) =>
+        console.log(message),
+      );
       modelRef.current = newModel;
       setStatus("ready");
       return newModel;
@@ -545,7 +551,10 @@ export const useTFModel = ({
   }, [buildAndCompileModel, status]);
 
   const generateLiveLayerOutputs = useCallback(
-    async (inputGrid: number[][], modelInstanceForThisCall: tf.Sequential) => {
+    async (
+      inputGrid: number[][] | number[][][],
+      modelInstanceForThisCall: tf.Sequential,
+    ) => {
       if (
         !modelRef.current ||
         modelRef.current !== modelInstanceForThisCall ||
@@ -596,23 +605,24 @@ export const useTFModel = ({
         }
 
         // For input layer visualization, convert data to proper format
-        let inputMaps: number[][];
+        let inputMaps: number[][][];
         if (Array.isArray(inputGrid[0][0])) {
           // RGB input: convert to individual channel maps for visualization
           const rgbGrid = inputGrid as number[][][];
-          inputMaps = [
-            rgbGrid.map((row) => row.map((pixel) => pixel[0])), // R channel
-            rgbGrid.map((row) => row.map((pixel) => pixel[1])), // G channel
-            rgbGrid.map((row) => row.map((pixel) => pixel[2])), // B channel
-          ];
+          const rChannel = rgbGrid.map((row: number[][]) =>
+            row.map((pixel: number[]) => pixel[0]),
+          );
+          const gChannel = rgbGrid.map((row: number[][]) =>
+            row.map((pixel: number[]) => pixel[1]),
+          );
+          const bChannel = rgbGrid.map((row: number[][]) =>
+            row.map((pixel: number[]) => pixel[2]),
+          );
+          inputMaps = [rChannel, gChannel, bChannel];
         } else {
           // Grayscale input: convert to RGB format
-          const grayGrid = inputGrid as number[][];
-          inputMaps = [
-            grayGrid, // R channel
-            grayGrid, // G channel
-            grayGrid, // B channel
-          ];
+          const grayGrid = inputGrid as unknown as number[][];
+          inputMaps = [grayGrid, grayGrid, grayGrid];
         }
 
         outputs.push({
@@ -624,7 +634,7 @@ export const useTFModel = ({
         });
 
         const symbolicOutputs = currentModel.layers.map(
-          (layer) => layer.output as tf.SymbolicTensor,
+          (layer: any) => layer.output as tf.SymbolicTensor,
         );
         if (symbolicOutputs.length === 0) {
           if (inputTensorForMultiOutputModel)
@@ -902,7 +912,7 @@ export const useTFModel = ({
           return dp.grid;
         } else {
           // Grayscale input: grid is number[][], convert to RGB by duplicating channels
-          return (dp.grid as number[][]).map((row) =>
+          return (dp.grid as unknown as number[][]).map((row) =>
             row.map((val) => [val, val, val]),
           );
         }
@@ -924,12 +934,12 @@ export const useTFModel = ({
           batchSize: batchSize,
           shuffle: true,
           callbacks: {
-            onEpochBegin: (epoch) => {
+            onEpochBegin: async (epoch: number) => {
               if (epoch === 0 && status !== "training") {
                 setLossHistory([]);
               }
             },
-            onEpochEnd: async (epoch, logs) => {
+            onEpochEnd: async (epoch: number, logs: any) => {
               if (logs && typeof logs.loss === "number") {
                 setEpochsRun((prevEpochsRun) => prevEpochsRun + 1);
                 setLossHistory((prev) => [...prev, logs.loss!]);
@@ -947,10 +957,10 @@ export const useTFModel = ({
               const currentTrainedModel = modelRef.current;
               if (currentTrainedModel) {
                 const denseLayers = currentTrainedModel.layers.filter(
-                  (l) => (l as tf.layers.Layer).getClassName() === "Dense",
+                  (l: any) => (l as tf.layers.Layer).getClassName() === "Dense",
                 );
                 if (denseLayers && denseLayers.length > 0) {
-                  const lastDenseOutputLayer = denseLayers.find((l) => {
+                  const lastDenseOutputLayer = denseLayers.find((l: any) => {
                     const config = l.getConfig() as any;
                     return (
                       config.units === 1 && config.activation === "sigmoid"
@@ -969,8 +979,8 @@ export const useTFModel = ({
                       originalWeightsTensors.length > 0 &&
                       originalWeightsTensors[0]
                     ) {
-                      clonedWeightsTensors = originalWeightsTensors.map((t) =>
-                        t.clone(),
+                      clonedWeightsTensors = originalWeightsTensors.map(
+                        (t: any) => t.clone(),
                       );
                       const kernel = clonedWeightsTensors[0];
                       const kernelShape = kernel.shape;

@@ -47,9 +47,9 @@ export const DataCollection: React.FC<DataCollectionProps> = ({
   const [isGenerating, setIsGenerating] = useState<boolean>(false);
   const [generationError, setGenerationError] = useState<string | null>(null);
   const [inputMode, setInputMode] = useState<"draw" | "camera">("draw");
-  const [lastCapturedData, setLastCapturedData] = useState<
-    number[][][] | null
-  >(null);
+  const [lastCapturedData, setLastCapturedData] = useState<number[][][] | null>(
+    null,
+  );
   const [isCameraStreaming, setIsCameraStreaming] = useState<boolean>(false);
 
   const cameraRef = useRef<CameraCaptureHandle | null>(null);
@@ -65,28 +65,6 @@ export const DataCollection: React.FC<DataCollectionProps> = ({
       }
     },
     [predictFromCanvas],
-  );
-
-  const handleCaptureAndAdd = useCallback(
-    (label: 0 | 1) => {
-      if (!cameraRef.current) {
-        alert("Camera not ready");
-        return;
-      }
-      const result = cameraRef.current.capture();
-      if (!result) {
-        alert("Capture failed");
-        return;
-      }
-      const { imageData } = result;
-      const grid = imageDataToRGBGrid(imageData, 28, 28);
-      setLastCapturedData(grid);
-      if (predictFromCanvas) {
-        predictFromCanvas(grid);
-      }
-      addGridData(grid, label);
-    },
-    [addGridData, predictFromCanvas],
   );
 
   const addGridData = useCallback(
@@ -144,7 +122,29 @@ export const DataCollection: React.FC<DataCollectionProps> = ({
         onAddData(g, label);
       }
     },
-    [augmentFlip, augmentTranslate, onAddDataonAddData],
+    [augmentFlip, augmentTranslate, onAddData],
+  );
+
+  const handleCaptureAndAdd = useCallback(
+    (label: 0 | 1) => {
+      if (!cameraRef.current) {
+        alert("Camera not ready");
+        return;
+      }
+      const result = cameraRef.current.capture();
+      if (!result) {
+        alert("Capture failed");
+        return;
+      }
+      const { imageData } = result;
+      const grid = imageDataToRGBGrid(imageData, 28, 28);
+      setLastCapturedData(grid);
+      if (predictFromCanvas) {
+        predictFromCanvas(grid);
+      }
+      addGridData(grid, label);
+    },
+    [addGridData, predictFromCanvas],
   );
 
   const handleAddData = (label: 0 | 1) => {
@@ -336,13 +336,21 @@ export const DataCollection: React.FC<DataCollectionProps> = ({
               )}
               <div className="grid grid-cols-2 gap-4">
                 <button
-                  onClick={() => (isCameraStreaming ? handleCaptureAndAdd(0) : handleAddData(0))}
+                  onClick={() =>
+                    isCameraStreaming
+                      ? handleCaptureAndAdd(0)
+                      : handleAddData(0)
+                  }
                   className="bg-sky-600 hover:bg-sky-500 text-white font-bold py-3 px-4 rounded transition-colors text-lg focus:outline-none focus:ring-2 focus:ring-sky-400"
                 >
                   Add as '0'
                 </button>
                 <button
-                  onClick={() => (isCameraStreaming ? handleCaptureAndAdd(1) : handleAddData(1))}
+                  onClick={() =>
+                    isCameraStreaming
+                      ? handleCaptureAndAdd(1)
+                      : handleAddData(1)
+                  }
                   className="bg-amber-500 hover:bg-amber-400 text-white font-bold py-3 px-4 rounded transition-colors text-lg focus:outline-none focus:ring-2 focus:ring-amber-300"
                 >
                   Add as '1'
