@@ -1,18 +1,25 @@
-import React, { useState, useRef, useCallback } from "react";
+import React, { useState, useRef, useCallback, useImperativeHandle, forwardRef } from "react";
+
+export interface CameraCaptureHandle {
+  capture: () => { imageData: ImageData; canvas: HTMLCanvasElement } | null;
+}
 
 interface CameraCaptureProps {
   onImageCapture: (imageData: ImageData, canvas: HTMLCanvasElement) => void;
   onError?: (error: string) => void;
+  onStreamingChange?: (streaming: boolean) => void;
   width?: number;
   height?: number;
 }
 
-export const CameraCapture: React.FC<CameraCaptureProps> = ({
+export const CameraCapture = forwardRef<CameraCaptureHandle, CameraCaptureProps>( (
+  {
   onImageCapture,
   onError,
+  onStreamingChange,
   width = 280,
   height = 280,
-}) => {
+}, ref) => {
   const [isStreaming, setIsStreaming] = useState(false);
   const [hasPermission, setHasPermission] = useState<boolean | null>(null);
   const [error, setError] = useState<string>("");
@@ -52,6 +59,7 @@ export const CameraCapture: React.FC<CameraCaptureProps> = ({
         streamRef.current = stream;
         setIsStreaming(true);
         setHasPermission(true);
+        onStreamingChange?.(true);
       }
     } catch (err: any) {
       console.error("Camera access error:", err);
@@ -80,12 +88,13 @@ export const CameraCapture: React.FC<CameraCaptureProps> = ({
       videoRef.current.srcObject = null;
     }
     setIsStreaming(false);
+    onStreamingChange?.(false);
   }, []);
 
-  const captureImage = useCallback(() => {
+  const captureImage = useCallback((): { imageData: ImageData; canvas: HTMLCanvasElement } | null => {
     if (!videoRef.current || !canvasRef.current) {
       handleError("Camera or canvas not ready");
-      return;
+      return null;
     }
 
     const video = videoRef.current;
@@ -109,7 +118,12 @@ export const CameraCapture: React.FC<CameraCaptureProps> = ({
 
     // Call the callback with the captured image
     onImageCapture(imageData, canvas);
+    return { imageData, canvas };
   }, [width, height, onImageCapture, handleError]);
+
+  useImperativeHandle(ref, () => ({
+    capture: captureImage,
+  }));
 
   // Cleanup on unmount
   React.useEffect(() => {
@@ -319,4 +333,4 @@ export const CameraCapture: React.FC<CameraCaptureProps> = ({
       </div>
     </div>
   );
-};
+});
