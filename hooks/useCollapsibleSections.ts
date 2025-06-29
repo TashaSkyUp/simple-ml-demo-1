@@ -152,6 +152,11 @@ export const createResponsiveSectionDefaults = (
         "training-prediction": true,
         "gpu-performance": false,
         "neural-network-visualization": false,
+        "inference-input": true,
+        "inference-results": true,
+        "audio-alerts": false,
+        "inference-visualization": false,
+        "inference-performance": false,
       };
     case "tablet":
       return {
@@ -160,6 +165,11 @@ export const createResponsiveSectionDefaults = (
         "training-prediction": true,
         "gpu-performance": false,
         "neural-network-visualization": true,
+        "inference-input": true,
+        "inference-results": true,
+        "audio-alerts": true,
+        "inference-visualization": true,
+        "inference-performance": false,
       };
     case "desktop":
       return {
@@ -168,6 +178,11 @@ export const createResponsiveSectionDefaults = (
         "training-prediction": true,
         "gpu-performance": true,
         "neural-network-visualization": true,
+        "inference-input": true,
+        "inference-results": true,
+        "audio-alerts": true,
+        "inference-visualization": true,
+        "inference-performance": true,
       };
     case "wide":
       return {
@@ -176,6 +191,11 @@ export const createResponsiveSectionDefaults = (
         "training-prediction": true,
         "gpu-performance": true,
         "neural-network-visualization": true,
+        "inference-input": true,
+        "inference-results": true,
+        "audio-alerts": true,
+        "inference-visualization": true,
+        "inference-performance": true,
       };
     default:
       return {};

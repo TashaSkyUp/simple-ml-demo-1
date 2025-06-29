@@ -25,6 +25,7 @@ interface TrainingTabProps {
   onAugmentTranslateChange: (value: boolean) => void;
   liveCameraMode: boolean;
   onLiveCameraModeChange: (enabled: boolean) => void;
+  onCameraStreamingChange?: (streaming: boolean) => void;
   predictFromCanvas: (grid: number[][][]) => Promise<void>;
 
   // Training props
@@ -79,6 +80,7 @@ export const TrainingTab: React.FC<TrainingTabProps> = ({
   onAugmentTranslateChange,
   liveCameraMode,
   onLiveCameraModeChange,
+  onCameraStreamingChange,
   predictFromCanvas,
 
   // Training
@@ -212,6 +214,7 @@ export const TrainingTab: React.FC<TrainingTabProps> = ({
               onAugmentTranslateChange={onAugmentTranslateChange}
               liveCameraMode={liveCameraMode}
               onLiveCameraModeChange={onLiveCameraModeChange}
+              onCameraStreamingChange={onCameraStreamingChange}
               inferenceMode={false}
             />
           </CollapsibleSection>

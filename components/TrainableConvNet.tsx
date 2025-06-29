@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from "react";
-import type { LayerConfig, TrainingDataPoint, PredictionState } from "../types";
+import type { LayerConfig, TrainingDataPoint } from "../types";
 import { LayerType, ActivationFunction, PoolingType } from "../types";
 // import { imageToGrid, drawGridToCanvas } from '../utils/cnnUtils'; // drawGridToCanvas not used here
 import { TabbedInterface } from "./TabbedInterface";
@@ -558,7 +558,8 @@ export const TrainableConvNet: React.FC = () => {
           augmentTranslate={augmentTranslate}
           onAugmentTranslateChange={setAugmentTranslate}
           liveCameraMode={liveCameraMode}
-          onLiveCameraModeChange={setIsCameraStreaming}
+          onLiveCameraModeChange={setLiveCameraMode}
+          onCameraStreamingChange={setIsCameraStreaming}
           predictFromCanvas={predictFromDataCollectionCanvas}
           // Training props
           numEpochs={numEpochs}
@@ -605,6 +606,7 @@ export const TrainableConvNet: React.FC = () => {
           onPredictFromCanvas={predictFromDataCollectionCanvas}
           liveCameraMode={liveCameraMode}
           onLiveCameraModeChange={setLiveCameraMode}
+          onCameraStreamingChange={setIsCameraStreaming}
           isCameraStreaming={isCameraStreaming}
           liveLayerOutputs={liveLayerOutputs}
           fcWeightsViz={fcWeightsViz}

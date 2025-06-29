@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { PredictionState, LiveLayerOutput } from "../types";
 import { CollapsibleSection } from "./CollapsibleSection";
 import { PredictionDisplay } from "./PredictionDisplay";
@@ -14,6 +14,7 @@ interface InferenceTabProps {
   onPredictFromCanvas: (grid: number[][][]) => Promise<void>;
   liveCameraMode: boolean;
   onLiveCameraModeChange: (enabled: boolean) => void;
+  onCameraStreamingChange?: (streaming: boolean) => void;
   isCameraStreaming: boolean;
 
   // Pipeline visualization
@@ -34,6 +35,7 @@ export const InferenceTab: React.FC<InferenceTabProps> = ({
   onPredictFromCanvas,
   liveCameraMode,
   onLiveCameraModeChange,
+  onCameraStreamingChange,
   isCameraStreaming,
   liveLayerOutputs,
   fcWeightsViz,
@@ -43,6 +45,47 @@ export const InferenceTab: React.FC<InferenceTabProps> = ({
   isSectionOpen,
   toggleSection,
 }) => {
+  // Audio alerts state
+  const [audioEnabled, setAudioEnabled] = useState(false);
+  const [class0ChimeUrl, setClass0ChimeUrl] = useState("");
+  const [class1ChimeUrl, setClass1ChimeUrl] = useState("");
+  const [volume, setVolume] = useState(0.5);
+  const [lastPlayedPrediction, setLastPlayedPrediction] = useState<
+    string | null
+  >(null);
+  const audioRef = useRef<HTMLAudioElement>(null);
+
+  // Play chime when prediction changes
+  useEffect(() => {
+    if (!audioEnabled || !modelReady || prediction.confidence < 0.7) return;
+
+    const currentPrediction = prediction.label;
+    if (currentPrediction === lastPlayedPrediction || currentPrediction === "?")
+      return;
+
+    let chimeUrl = "";
+    if (currentPrediction === "Class 0" && class0ChimeUrl) {
+      chimeUrl = class0ChimeUrl;
+    } else if (currentPrediction === "Class 1" && class1ChimeUrl) {
+      chimeUrl = class1ChimeUrl;
+    }
+
+    if (chimeUrl && audioRef.current) {
+      audioRef.current.src = chimeUrl;
+      audioRef.current.volume = volume;
+      audioRef.current.play().catch(console.error);
+      setLastPlayedPrediction(currentPrediction);
+    }
+  }, [
+    prediction.label,
+    prediction.confidence,
+    audioEnabled,
+    class0ChimeUrl,
+    class1ChimeUrl,
+    volume,
+    lastPlayedPrediction,
+    modelReady,
+  ]);
   return (
     <div className="space-y-6">
       {/* Inference Tab Header */}
@@ -145,6 +188,7 @@ export const InferenceTab: React.FC<InferenceTabProps> = ({
                 onAugmentTranslateChange={() => {}}
                 liveCameraMode={liveCameraMode}
                 onLiveCameraModeChange={onLiveCameraModeChange}
+                onCameraStreamingChange={onCameraStreamingChange}
                 inferenceMode={true}
               />
 
@@ -233,52 +277,194 @@ export const InferenceTab: React.FC<InferenceTabProps> = ({
           </CollapsibleSection>
         </div>
 
-        {/* Inference Tips */}
+        {/* Audio Alerts */}
         <div>
           <CollapsibleSection
-            title="Inference Tips"
-            icon="💡"
-            sectionId="inference-tips"
-            isOpen={isSectionOpen("inference-tips")}
+            title="Audio Alerts"
+            icon="🔊"
+            badge={audioEnabled ? "ON" : "OFF"}
+            sectionId="audio-alerts"
+            isOpen={isSectionOpen("audio-alerts")}
             onToggle={toggleSection}
             className="h-fit hover-lift"
           >
             <div className="space-y-4">
-              <div className="bg-blue-900 border border-blue-600 rounded-lg p-4">
-                <h3 className="text-lg font-semibold text-blue-300 mb-2">
-                  🎯 Getting Best Results
-                </h3>
-                <ul className="text-sm text-blue-200 space-y-1">
-                  <li>• Draw clearly and consistently with training data</li>
-                  <li>• Use similar stroke thickness and style</li>
-                  <li>• Center your drawings in the canvas</li>
-                  <li>• Try different angles if confidence is low</li>
-                </ul>
+              {/* Master Enable */}
+              <div className="bg-gray-800 border border-gray-600 rounded-lg p-4">
+                <div className="flex items-center justify-between mb-3">
+                  <h3 className="text-lg font-semibold text-gray-300">
+                    🔊 Enable Audio Alerts
+                  </h3>
+                  <button
+                    onClick={() => setAudioEnabled(!audioEnabled)}
+                    className={`px-4 py-2 rounded-lg font-medium transition-colors ${
+                      audioEnabled
+                        ? "bg-green-600 hover:bg-green-500 text-white"
+                        : "bg-gray-600 hover:bg-gray-500 text-gray-300"
+                    }`}
+                  >
+                    {audioEnabled ? "ON" : "OFF"}
+                  </button>
+                </div>
+                <p className="text-sm text-gray-400">
+                  Play custom sounds when classes are detected with high
+                  confidence (≥70%)
+                </p>
               </div>
 
-              <div className="bg-purple-900 border border-purple-600 rounded-lg p-4">
-                <h3 className="text-lg font-semibold text-purple-300 mb-2">
-                  📹 Live Camera Tips
-                </h3>
-                <ul className="text-sm text-purple-200 space-y-1">
-                  <li>• Ensure good lighting for best results</li>
-                  <li>• Hold objects steady in camera view</li>
-                  <li>• Position subjects in center of frame</li>
-                  <li>• Camera processes ~10-30 FPS automatically</li>
-                </ul>
-              </div>
+              {/* Volume Control */}
+              {audioEnabled && (
+                <div className="bg-blue-900 border border-blue-600 rounded-lg p-4">
+                  <h3 className="text-lg font-semibold text-blue-300 mb-3">
+                    🎚️ Volume Control
+                  </h3>
+                  <div className="flex items-center gap-3">
+                    <span className="text-sm text-blue-200 min-w-[40px]">
+                      🔈
+                    </span>
+                    <input
+                      type="range"
+                      min="0"
+                      max="1"
+                      step="0.1"
+                      value={volume}
+                      onChange={(e) => setVolume(parseFloat(e.target.value))}
+                      className="flex-1 accent-blue-500"
+                    />
+                    <span className="text-sm text-blue-200 min-w-[40px]">
+                      🔊
+                    </span>
+                    <span className="text-sm text-blue-200 min-w-[40px]">
+                      {Math.round(volume * 100)}%
+                    </span>
+                  </div>
+                </div>
+              )}
 
-              <div className="bg-green-900 border border-green-600 rounded-lg p-4">
-                <h3 className="text-lg font-semibold text-green-300 mb-2">
-                  🔍 Understanding Predictions
-                </h3>
-                <ul className="text-sm text-green-200 space-y-1">
-                  <li>• Confidence above 70% indicates strong prediction</li>
-                  <li>• Low confidence may mean ambiguous input</li>
-                  <li>• Multiple similar classes may show close scores</li>
-                  <li>• Visualization shows how model "sees" input</li>
-                </ul>
-              </div>
+              {/* Class 0 Chime */}
+              {audioEnabled && (
+                <div className="bg-green-900 border border-green-600 rounded-lg p-4">
+                  <h3 className="text-lg font-semibold text-green-300 mb-3">
+                    🎵 Class 0 Chime
+                  </h3>
+                  <div className="space-y-3">
+                    <input
+                      type="url"
+                      placeholder="Enter URL for Class 0 sound (mp3, wav, ogg)"
+                      value={class0ChimeUrl}
+                      onChange={(e) => setClass0ChimeUrl(e.target.value)}
+                      className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:border-green-500 focus:outline-none"
+                    />
+                    <div className="flex gap-2">
+                      <button
+                        onClick={() => {
+                          if (class0ChimeUrl && audioRef.current) {
+                            audioRef.current.src = class0ChimeUrl;
+                            audioRef.current.volume = volume;
+                            audioRef.current.play().catch(console.error);
+                          }
+                        }}
+                        disabled={!class0ChimeUrl}
+                        className="px-3 py-1 bg-green-600 hover:bg-green-500 disabled:bg-gray-600 disabled:text-gray-400 text-white rounded text-sm transition-colors"
+                      >
+                        Test
+                      </button>
+                      <button
+                        onClick={() => setClass0ChimeUrl("")}
+                        className="px-3 py-1 bg-red-600 hover:bg-red-500 text-white rounded text-sm transition-colors"
+                      >
+                        Clear
+                      </button>
+                    </div>
+                    <p className="text-xs text-green-200">
+                      Example:
+                      https://www.soundjay.com/misc/sounds/bell-ringing-05.wav
+                    </p>
+                  </div>
+                </div>
+              )}
+
+              {/* Class 1 Chime */}
+              {audioEnabled && (
+                <div className="bg-purple-900 border border-purple-600 rounded-lg p-4">
+                  <h3 className="text-lg font-semibold text-purple-300 mb-3">
+                    🎶 Class 1 Chime
+                  </h3>
+                  <div className="space-y-3">
+                    <input
+                      type="url"
+                      placeholder="Enter URL for Class 1 sound (mp3, wav, ogg)"
+                      value={class1ChimeUrl}
+                      onChange={(e) => setClass1ChimeUrl(e.target.value)}
+                      className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:border-purple-500 focus:outline-none"
+                    />
+                    <div className="flex gap-2">
+                      <button
+                        onClick={() => {
+                          if (class1ChimeUrl && audioRef.current) {
+                            audioRef.current.src = class1ChimeUrl;
+                            audioRef.current.volume = volume;
+                            audioRef.current.play().catch(console.error);
+                          }
+                        }}
+                        disabled={!class1ChimeUrl}
+                        className="px-3 py-1 bg-purple-600 hover:bg-purple-500 disabled:bg-gray-600 disabled:text-gray-400 text-white rounded text-sm transition-colors"
+                      >
+                        Test
+                      </button>
+                      <button
+                        onClick={() => setClass1ChimeUrl("")}
+                        className="px-3 py-1 bg-red-600 hover:bg-red-500 text-white rounded text-sm transition-colors"
+                      >
+                        Clear
+                      </button>
+                    </div>
+                    <p className="text-xs text-purple-200">
+                      Example:
+                      https://www.soundjay.com/misc/sounds/chime-sound.wav
+                    </p>
+                  </div>
+                </div>
+              )}
+
+              {/* Status Info */}
+              {audioEnabled && (
+                <div className="bg-yellow-900 border border-yellow-600 rounded-lg p-4">
+                  <h3 className="text-lg font-semibold text-yellow-300 mb-2">
+                    📊 Alert Status
+                  </h3>
+                  <div className="grid grid-cols-2 gap-4 text-sm">
+                    <div>
+                      <span className="text-yellow-200">Class 0 Sound:</span>
+                      <div
+                        className={`font-medium ${class0ChimeUrl ? "text-green-400" : "text-red-400"}`}
+                      >
+                        {class0ChimeUrl ? "Configured" : "Not set"}
+                      </div>
+                    </div>
+                    <div>
+                      <span className="text-yellow-200">Class 1 Sound:</span>
+                      <div
+                        className={`font-medium ${class1ChimeUrl ? "text-green-400" : "text-red-400"}`}
+                      >
+                        {class1ChimeUrl ? "Configured" : "Not set"}
+                      </div>
+                    </div>
+                    <div>
+                      <span className="text-yellow-200">Last Played:</span>
+                      <div className="text-cyan-400 font-medium">
+                        {lastPlayedPrediction || "None"}
+                      </div>
+                    </div>
+                    <div>
+                      <span className="text-yellow-200">
+                        Trigger Threshold:
+                      </span>
+                      <div className="text-green-400 font-medium">≥70%</div>
+                    </div>
+                  </div>
+                </div>
+              )}
             </div>
           </CollapsibleSection>
         </div>
@@ -381,6 +567,9 @@ export const InferenceTab: React.FC<InferenceTabProps> = ({
           </div>
         </div>
       </CollapsibleSection>
+
+      {/* Hidden audio element for playing chimes */}
+      <audio ref={audioRef} preload="none" />
     </div>
   );
 };

@@ -18,6 +18,7 @@ interface DataCollectionProps {
   onAugmentTranslateChange: (value: boolean) => void;
   liveCameraMode?: boolean;
   onLiveCameraModeChange?: (enabled: boolean) => void;
+  onCameraStreamingChange?: (streaming: boolean) => void;
   inferenceMode?: boolean;
 }
 
@@ -30,6 +31,7 @@ export const DataCollection: React.FC<DataCollectionProps> = ({
   onAugmentTranslateChange,
   liveCameraMode = false,
   onLiveCameraModeChange,
+  onCameraStreamingChange,
   inferenceMode = false,
 }) => {
   // Function to predict from canvas drawing
@@ -93,6 +95,14 @@ export const DataCollection: React.FC<DataCollectionProps> = ({
       onLiveCameraModeChange?.(enabled);
     },
     [onLiveCameraModeChange],
+  );
+
+  const handleStreamingChange = useCallback(
+    (streaming: boolean) => {
+      setIsCameraStreaming(streaming);
+      onCameraStreamingChange?.(streaming);
+    },
+    [onCameraStreamingChange],
   );
 
   const addGridData = useCallback(
@@ -362,7 +372,7 @@ export const DataCollection: React.FC<DataCollectionProps> = ({
           <CameraCapture
             ref={cameraRef}
             onImageCapture={handleCameraCapture}
-            onStreamingChange={setIsCameraStreaming}
+            onStreamingChange={handleStreamingChange}
             onLiveModeChange={handleLiveModeChange}
             liveModeEnabled={liveCameraMode}
             onError={(error) => console.error("Camera error:", error)}
