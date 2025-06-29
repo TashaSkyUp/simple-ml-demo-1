@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, useCallback } from "react";
 import { PredictionState, LiveLayerOutput } from "../types";
 import { CollapsibleSection } from "./CollapsibleSection";
 import { PredictionDisplay } from "./PredictionDisplay";
@@ -53,28 +53,117 @@ export const InferenceTab: React.FC<InferenceTabProps> = ({
   const [lastPlayedPrediction, setLastPlayedPrediction] = useState<
     string | null
   >(null);
+  const [audioContextInitialized, setAudioContextInitialized] = useState(false);
   const audioRef = useRef<HTMLAudioElement>(null);
+
+  // Built-in test tones (simple sine wave data URLs)
+  const builtInTones = {
+    highBeep:
+      "data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1fdJivrJBhNjVgodDbq2EcBj+a2/LDciUFLIHO8tiJNwgZaLvt559NEAxQp+PwtmMcBjiR1/LMeSwFJHfH8N2QQAoUXrTp66hVFApGn+DyvmISBUCb3+3CayABJXfH8N2QQAoUXrTp66hVFApGn+DyvmISBUCb3+3CayABJXfH8N2QQAoUXrTp66hVFApGn+DyvmISBUCb3+3CayABJXfH8N2QQAoUXrTp66hVFApGn+DyvmISBUCb3+3CayABJXfH8N2QQAoUXrTp66hVFApGn+DyvmISBUCb3+3CayABJXfH8N2QQAoUXrTp66hVFApGn+DyvmISBUCb3+3CayABJXfH8N2QQAoUXrTp66hVFApGn+DyvmISBUCb3+3CayABJXfH8N2QQAoUXrTp66hVFApGn+DyvmISBUCb3+3CayABJXfH8N2QQAoUXrTp66hVFApGn+DyvmISBUCb3+3CayABJXfH8N2QQAoUXrTp66hVFApGn+DyvmISBUCb3+3CayABJXfH8N2QQAoUXrTp66hVFApGn+DyvmISBUCb3+3CayABJXfH8N2QQAoUXrTp66hVFApGn+DyvmISBUCb3+3CayABJXfH8N2QQAoUXrTp66hVFApGn+DyvmISBUCb3+3CayABJXfH8N2QQAoUXrTp66hVFApGn+DyvmISBUCb3+3CayABJXfH8N2QQAoUXrTp66hVFApGn+DyvmISBUCb3+3CayABJXfH8N2QQAoUXrTp66hVFApGn+DyvmISBUCb3+3CayABJXfH8N2QQAoUXrTp66hVFApGn+DyvmISBUCb3+3CayABJXfH8N2QQAoUXrTp66hVFApGn+DyvmISBUCb3+3CayAB",
+    lowBeep:
+      "data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1fdJivrJBhNjVgodDbq2EcBj+a2/LDciUFLIHO8tiJNwgZaLvt559NEAxQp+PwtmMcBjiR1/LMeSwFJHfH8N2QQAoUXrTp66hVFApGn+DyvmISBUCb3+3CayABJXfH8N2QQAoUXrTp66hVFApGn+DyvmISBUCb3+3CayABJXfH8N2QQAoUXrTp66hVFApGn+DyvmISBUCb3+3CayABJXfH8N2QQAoUXrTp66hVFApGn+DyvmISBUCb3+3CayABJXfH8N2QQAoUXrTp66hVFApGn+DyvmISBUCb3+3CayABJXfH8N2QQAoUXrTp66hVFApGn+DyvmISBUCb3+3CayABJXfH8N2QQAoUXrTp66hVFApGn+DyvmISBUCb3+3CayABJXfH8N2QQAoUXrTp66hVFApGn+DyvmISBUCb3+3CayABJXfH8N2QQAoUXrTp66hVFApGn+DyvmISBUCb3+3CayABJXfH8N2QQAoUXrTp66hVFApGn+DyvmISBUCb3+3CayABJXfH8N2QQAoUXrTp66hVFApGn+DyvmISBUCb3+3CayABJXfH8N2QQAoUXrTp66hVFApGn+DyvmISBUCb3+3CayABJXfH8N2QQAoUXrTp66hVFApGn+DyvmISBUCb3+3CayABJXfH8N2QQAoUXrTp66hVFApGn+DyvmISBUCb3+3CayABJXfH8N2QQAoUXrTp66hVFApGn+DyvmISBUCb3+3CayABJXfH8N2QQAoUXrTp66hVFApGn+DyvmISBUCb3+3CayABJXfH8N2QQAoUXrTp66hVFApGn+DyvmISBUCb3+3CayAB",
+  };
+
+  // Initialize audio context on first user interaction
+  const initializeAudioContext = useCallback(() => {
+    if (!audioContextInitialized && audioRef.current) {
+      // Try to play a silent sound to unlock audio context
+      audioRef.current.volume = 0;
+      audioRef.current
+        .play()
+        .then(() => {
+          console.log("🔓 Audio context initialized");
+          setAudioContextInitialized(true);
+          audioRef.current!.volume = volume;
+        })
+        .catch(() => {
+          console.log("🔒 Audio context still locked");
+        });
+    }
+  }, [audioContextInitialized, volume]);
 
   // Play chime when prediction changes
   useEffect(() => {
-    if (!audioEnabled || !modelReady || prediction.confidence < 0.7) return;
+    console.log("🎵 Audio chime check:", {
+      audioEnabled,
+      modelReady,
+      prediction: prediction.label,
+      confidence: prediction.confidence,
+      lastPlayed: lastPlayedPrediction,
+      class0Url: class0ChimeUrl ? "set" : "empty",
+      class1Url: class1ChimeUrl ? "set" : "empty",
+      audioContextInitialized,
+    });
+
+    if (!audioEnabled) {
+      console.log("🔇 Audio disabled");
+      return;
+    }
+
+    if (!modelReady) {
+      console.log("🤖 Model not ready");
+      return;
+    }
+
+    if (prediction.confidence < 0.7) {
+      console.log("📊 Confidence too low:", prediction.confidence);
+      return;
+    }
 
     const currentPrediction = prediction.label;
-    if (currentPrediction === lastPlayedPrediction || currentPrediction === "?")
+    if (currentPrediction === lastPlayedPrediction) {
+      console.log("🔄 Same prediction as last played:", currentPrediction);
       return;
+    }
+
+    if (currentPrediction === "?") {
+      console.log("❓ No prediction available");
+      return;
+    }
 
     let chimeUrl = "";
-    if (currentPrediction === "Class 0" && class0ChimeUrl) {
+    if (currentPrediction === "0" && class0ChimeUrl) {
       chimeUrl = class0ChimeUrl;
-    } else if (currentPrediction === "Class 1" && class1ChimeUrl) {
+      console.log("🔔 Playing Class 0 chime");
+    } else if (currentPrediction === "1" && class1ChimeUrl) {
       chimeUrl = class1ChimeUrl;
+      console.log("🔔 Playing Class 1 chime");
+    } else {
+      console.log(
+        "🚫 No chime URL configured for prediction:",
+        currentPrediction,
+      );
     }
 
     if (chimeUrl && audioRef.current) {
+      console.log("🎵 Attempting to play:", chimeUrl);
+
+      // Reset audio element
+      audioRef.current.pause();
+      audioRef.current.currentTime = 0;
+
+      // Set new source and volume
       audioRef.current.src = chimeUrl;
       audioRef.current.volume = volume;
-      audioRef.current.play().catch(console.error);
-      setLastPlayedPrediction(currentPrediction);
+
+      // Load and play
+      audioRef.current.load();
+      audioRef.current
+        .play()
+        .then(() => {
+          console.log("✅ Audio played successfully");
+          setLastPlayedPrediction(currentPrediction);
+        })
+        .catch((error) => {
+          console.error("❌ Audio play failed:", error);
+          // Try to enable audio context if blocked
+          if (error.name === "NotAllowedError") {
+            console.log("🔐 Audio blocked - user interaction required");
+            setAudioContextInitialized(false);
+          }
+        });
+    } else {
+      console.log("🚫 No audio element or chime URL");
     }
   }, [
     prediction.label,
@@ -296,7 +385,13 @@ export const InferenceTab: React.FC<InferenceTabProps> = ({
                     🔊 Enable Audio Alerts
                   </h3>
                   <button
-                    onClick={() => setAudioEnabled(!audioEnabled)}
+                    onClick={() => {
+                      const newState = !audioEnabled;
+                      setAudioEnabled(newState);
+                      if (newState) {
+                        initializeAudioContext();
+                      }
+                    }}
                     className={`px-4 py-2 rounded-lg font-medium transition-colors ${
                       audioEnabled
                         ? "bg-green-600 hover:bg-green-500 text-white"
@@ -309,6 +404,11 @@ export const InferenceTab: React.FC<InferenceTabProps> = ({
                 <p className="text-sm text-gray-400">
                   Play custom sounds when classes are detected with high
                   confidence (≥70%)
+                  {audioEnabled && !audioContextInitialized && (
+                    <span className="block text-yellow-400 mt-1">
+                      ⚠️ Click anywhere to enable audio
+                    </span>
+                  )}
                 </p>
               </div>
 
@@ -355,19 +455,38 @@ export const InferenceTab: React.FC<InferenceTabProps> = ({
                       onChange={(e) => setClass0ChimeUrl(e.target.value)}
                       className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:border-green-500 focus:outline-none"
                     />
-                    <div className="flex gap-2">
+                    <div className="flex gap-2 flex-wrap">
                       <button
                         onClick={() => {
                           if (class0ChimeUrl && audioRef.current) {
+                            console.log(
+                              "🧪 Testing Class 0 chime:",
+                              class0ChimeUrl,
+                            );
+                            initializeAudioContext();
+                            audioRef.current.pause();
+                            audioRef.current.currentTime = 0;
                             audioRef.current.src = class0ChimeUrl;
                             audioRef.current.volume = volume;
-                            audioRef.current.play().catch(console.error);
+                            audioRef.current.load();
+                            audioRef.current.play().catch((error) => {
+                              console.error("❌ Test play failed:", error);
+                              alert(
+                                "Failed to play sound. Check URL and browser permissions.",
+                              );
+                            });
                           }
                         }}
                         disabled={!class0ChimeUrl}
                         className="px-3 py-1 bg-green-600 hover:bg-green-500 disabled:bg-gray-600 disabled:text-gray-400 text-white rounded text-sm transition-colors"
                       >
                         Test
+                      </button>
+                      <button
+                        onClick={() => setClass0ChimeUrl(builtInTones.highBeep)}
+                        className="px-3 py-1 bg-blue-600 hover:bg-blue-500 text-white rounded text-sm transition-colors"
+                      >
+                        High Beep
                       </button>
                       <button
                         onClick={() => setClass0ChimeUrl("")}
@@ -377,7 +496,9 @@ export const InferenceTab: React.FC<InferenceTabProps> = ({
                       </button>
                     </div>
                     <p className="text-xs text-green-200">
-                      Example:
+                      Try:
+                      https://www2.cs.uic.edu/~i101/SoundFiles/BabyElephantWalk60.wav
+                      or
                       https://www.soundjay.com/misc/sounds/bell-ringing-05.wav
                     </p>
                   </div>
@@ -398,19 +519,38 @@ export const InferenceTab: React.FC<InferenceTabProps> = ({
                       onChange={(e) => setClass1ChimeUrl(e.target.value)}
                       className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:border-purple-500 focus:outline-none"
                     />
-                    <div className="flex gap-2">
+                    <div className="flex gap-2 flex-wrap">
                       <button
                         onClick={() => {
                           if (class1ChimeUrl && audioRef.current) {
+                            console.log(
+                              "🧪 Testing Class 1 chime:",
+                              class1ChimeUrl,
+                            );
+                            initializeAudioContext();
+                            audioRef.current.pause();
+                            audioRef.current.currentTime = 0;
                             audioRef.current.src = class1ChimeUrl;
                             audioRef.current.volume = volume;
-                            audioRef.current.play().catch(console.error);
+                            audioRef.current.load();
+                            audioRef.current.play().catch((error) => {
+                              console.error("❌ Test play failed:", error);
+                              alert(
+                                "Failed to play sound. Check URL and browser permissions.",
+                              );
+                            });
                           }
                         }}
                         disabled={!class1ChimeUrl}
                         className="px-3 py-1 bg-purple-600 hover:bg-purple-500 disabled:bg-gray-600 disabled:text-gray-400 text-white rounded text-sm transition-colors"
                       >
                         Test
+                      </button>
+                      <button
+                        onClick={() => setClass1ChimeUrl(builtInTones.lowBeep)}
+                        className="px-3 py-1 bg-blue-600 hover:bg-blue-500 text-white rounded text-sm transition-colors"
+                      >
+                        Low Beep
                       </button>
                       <button
                         onClick={() => setClass1ChimeUrl("")}
@@ -420,8 +560,9 @@ export const InferenceTab: React.FC<InferenceTabProps> = ({
                       </button>
                     </div>
                     <p className="text-xs text-purple-200">
-                      Example:
-                      https://www.soundjay.com/misc/sounds/chime-sound.wav
+                      Try:
+                      https://www2.cs.uic.edu/~i101/SoundFiles/CantinaBand60.wav
+                      or https://www.soundjay.com/misc/sounds/chime-sound.wav
                     </p>
                   </div>
                 </div>
@@ -569,7 +710,16 @@ export const InferenceTab: React.FC<InferenceTabProps> = ({
       </CollapsibleSection>
 
       {/* Hidden audio element for playing chimes */}
-      <audio ref={audioRef} preload="none" />
+      <audio
+        ref={audioRef}
+        preload="none"
+        onCanPlay={() => console.log("🎵 Audio ready to play")}
+        onError={(e) => console.error("🚫 Audio element error:", e)}
+        onLoadStart={() => console.log("🔄 Audio loading started")}
+        onLoadedData={() => console.log("✅ Audio data loaded")}
+        onClick={initializeAudioContext}
+        src="data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1fdJivrJBhNjVgodDbq2EcBj+a2/LDciUFLIHO8tiJNwgZaLvt559NEAxQp+PwtmMcBjiR1/LMeSwFJHfH8N2QQAoUXrTp66hVFApGn+DyvmISBUCb3+3CayABJXfH8N2QQAoUXrTp66hVFApGn+DyvmISBUCb3+3CayABJXfH8N2QQAoUXrTp66hVFApGn+DyvmISBUCb3+3CayABJXfH8N2QQAoUXrTp66hVFApGn+DyvmISBUCb3+3CayABJXfH8N2QQAoUXrTp66hVFApGn+DyvmISBUCb3+3CayABJXfH8N2QQAoUXrTp66hVFApGn+DyvmISBUCb3+3CayABJXfH8N2QQAoUXrTp66hVFApGn+DyvmISBUCb3+3CayABJXfH8N2QQAoUXrTp66hVFApGn+DyvmISBUCb3+3CayABJXfH8N2QQAoUXrTp66hVFApGn+DyvmISBUCb3+3CayABJXfH8N2QQAoUXrTp66hVFApGn+DyvmISBUCb3+3CayABJXfH8N2QQAoUXrTp66hVFApGn+DyvmISBUCb3+3CayABJXfH8N2QQAoUXrTp66hVFApGn+DyvmISBUCb3+3CayABJXfH8N2QQAoUXrTp66hVFApGn+DyvmISBUCb3+3CayABJXfH8N2QQAoUXrTp66hVFApGn+DyvmISBUCb3+3CayABJXfH8N2QQAoUXrTp66hVFApGn+DyvmISBUCb3+3CayAB"
+      />
     </div>
   );
 };

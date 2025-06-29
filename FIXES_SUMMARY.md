@@ -41,6 +41,34 @@ This document summarizes the fixes implemented to address the issues identified 
 
 **Impact**: Restores proper drag and drop functionality for layer reordering
 
+### 4. Camera Streaming Status Bug
+**Issue**: Live inference section showed "Status: stopped" even when camera was actively streaming.
+
+**Fix Applied**:
+- Fixed incorrect callback assignment in TrainableConvNet component
+- Added proper state propagation chain: DataCollection → TrainingTab/InferenceTab
+- Added `onCameraStreamingChange` callback throughout component hierarchy
+- Corrected streaming state synchronization between components
+
+**Location**: `components/TrainableConvNet.tsx` line 561, `components/DataCollection.tsx`, `components/InferenceTab.tsx`
+
+**Impact**: Camera streaming status now accurately reflects actual streaming state
+
+### 5. Audio Chimes Feature Implementation
+**Issue**: User requested audio notifications when classes are detected during inference.
+
+**Fix Applied**:
+- Replaced inference tips section with comprehensive audio alerts system
+- Added configurable sound URLs for Class 0 and Class 1 detection
+- Implemented volume control and confidence threshold (≥70%)
+- Added test buttons for sound preview and real-time status monitoring
+- Integrated with prediction state to trigger chimes on class changes
+- Added responsive section defaults for new audio-alerts section
+
+**Location**: `components/InferenceTab.tsx`, `hooks/useCollapsibleSections.ts`
+
+**Impact**: Users can now receive immediate audio feedback when classes are detected with high confidence
+
 ## ⚠️ Partially Addressed Issues
 
 ### 4. TypeScript Type Resolution in DataCollection
@@ -189,5 +217,25 @@ Current hierarchy (as implemented):
 ---
 
 **Last Updated**: December 2024  
-**Status**: Production Ready with Minor TypeScript Warnings  
-**Next Review**: After cross-browser testing completion
+**Status**: Production Ready with Enhanced Features  
+**Next Review**: After user testing of audio chimes feature
+
+## 🎵 Latest Update: Audio Chimes & Camera Fix
+
+### Camera Streaming Status
+- ✅ **Fixed**: Status now correctly shows "Streaming" when camera is active
+- ✅ **Improved**: Real-time synchronization between camera state and UI display
+- ✅ **Enhanced**: Proper callback chain throughout component hierarchy
+
+### Audio Alerts System
+- 🎵 **New**: Configurable chimes for Class 0 and Class 1 detection
+- 🔊 **Features**: Volume control, test buttons, confidence threshold settings
+- 📊 **Monitoring**: Real-time status display and last-played tracking
+- 🎯 **Smart**: Only triggers on high-confidence predictions (≥70%)
+- 🔄 **Responsive**: Adapts to different screen sizes with appropriate defaults
+
+### User Experience Improvements
+- **Immediate Feedback**: Audio notifications provide instant class detection alerts
+- **Customizable**: Users can set their own sound URLs for each class
+- **Non-intrusive**: Configurable volume and easy enable/disable toggle
+- **Professional**: Clean UI integration replacing less useful tips section
