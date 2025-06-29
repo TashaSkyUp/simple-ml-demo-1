@@ -297,3 +297,210 @@ select:focus {
         box-shadow: 0 0 20px rgba(220, 38, 38, 0.6);
     }
 }
+
+/* Collapsible section animations */
+.animate-fade-in {
+    animation: fade-in 0.3s ease-out;
+}
+
+@keyframes fade-in {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Section control panel styles */
+.section-control-panel {
+    background: linear-gradient(135deg, #1f2937 0%, #374151 100%);
+    border: 1px solid #4b5563;
+}
+
+.section-status-indicator {
+    transition: all 0.3s ease;
+    position: relative;
+    overflow: hidden;
+}
+
+.section-status-indicator::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(
+        90deg,
+        transparent,
+        rgba(255, 255, 255, 0.1),
+        transparent
+    );
+    transition: left 0.6s ease;
+}
+
+.section-status-indicator:hover::before {
+    left: 100%;
+}
+
+/* Responsive grid improvements */
+@media (min-width: 1280px) {
+    .xl-grid-optimize {
+        grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) minmax(0, 1fr);
+    }
+}
+
+@media (min-width: 1536px) {
+    .xxl-grid-optimize {
+        grid-template-columns: 1fr 1fr 1fr;
+        gap: 2rem;
+    }
+}
+
+/* Keyboard shortcut indicator */
+.keyboard-hint {
+    background: rgba(59, 130, 246, 0.1);
+    border: 1px solid rgba(59, 130, 246, 0.2);
+    color: #60a5fa;
+    font-family: "Monaco", "Menlo", "Ubuntu Mono", monospace;
+}
+
+/* Section toggle button improvements */
+.section-toggle-btn {
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    backdrop-filter: blur(4px);
+}
+
+.section-toggle-btn:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.section-toggle-btn:active {
+    transform: translateY(0);
+}
+
+/* Improved focus styles for accessibility */
+.focus-visible {
+    outline: 2px solid #06b6d4;
+    outline-offset: 2px;
+    border-radius: 4px;
+}
+
+/* Status bar improvements */
+.status-bar {
+    background: linear-gradient(90deg, #111827 0%, #1f2937 50%, #111827 100%);
+    border-top: 1px solid #374151;
+}
+
+.status-indicator {
+    position: relative;
+    overflow: hidden;
+}
+
+.status-indicator.training::after {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(
+        90deg,
+        transparent,
+        rgba(59, 130, 246, 0.1),
+        transparent
+    );
+    animation: status-pulse 2s ease-in-out infinite;
+}
+
+@keyframes status-pulse {
+    0%,
+    100% {
+        transform: translateX(-100%);
+    }
+    50% {
+        transform: translateX(100%);
+    }
+}
+
+/* Widescreen layout optimizations */
+@media (min-width: 1920px) {
+    .ultra-wide-container {
+        max-width: 1800px;
+        margin: 0 auto;
+    }
+
+    .ultra-wide-grid {
+        grid-template-columns: 1fr 1fr 1fr 1fr;
+        gap: 3rem;
+    }
+}
+
+/* Enhanced hover effects */
+.hover-lift {
+    transition:
+        transform 0.2s ease,
+        box-shadow 0.2s ease;
+}
+
+.hover-lift:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+}
+
+/* Section header improvements */
+.section-header {
+    background: linear-gradient(135deg, #374151 0%, #4b5563 100%);
+    border-bottom: 1px solid #6b7280;
+}
+
+.section-header:hover {
+    background: linear-gradient(135deg, #4b5563 0%, #6b7280 100%);
+}
+
+/* Badge animations */
+.badge-pulse {
+    animation: badge-pulse 2s ease-in-out infinite;
+}
+
+@keyframes badge-pulse {
+    0%,
+    100% {
+        box-shadow: 0 0 0 0 rgba(6, 182, 212, 0.4);
+    }
+    50% {
+        box-shadow: 0 0 0 8px rgba(6, 182, 212, 0);
+    }
+}
+
+/* Mobile improvements */
+@media (max-width: 768px) {
+    .mobile-section-controls {
+        flex-direction: column;
+        gap: 1rem;
+    }
+
+    .mobile-section-badges {
+        justify-content: center;
+    }
+
+    .mobile-compact {
+        padding: 1rem;
+    }
+}
+
+/* Dark mode enhancements */
+.dark-glass {
+    background: rgba(17, 24, 39, 0.8);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(75, 85, 99, 0.3);
+}
+
+.dark-glass:hover {
+    background: rgba(31, 41, 55, 0.9);
+    border-color: rgba(107, 114, 128, 0.5);
+}
