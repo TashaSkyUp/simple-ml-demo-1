@@ -115,38 +115,107 @@ const initializeGPUAcceleration = async () => {
   // Log detailed availability report
   console.log("📊 Backend Availability Report:");
   if (availability.webgpu) {
-    console.log("  🌟 WebGPU: Next-generation GPU API available");
+    console.log(
+      "  🌟 WebGPU: Next-generation GPU API available (experimental)",
+    );
   }
   if (availability.webgl) {
     console.log("  🔥 WebGL: Standard GPU acceleration available");
   }
   console.log("  💻 CPU: Always available as fallback");
 
-  // Prioritize WebGPU if available, then WebGL, then CPU
+  // Backend selection with stability prioritization
   let selectedBackend = "cpu";
-  if (availability.webgpu) {
-    selectedBackend = "webgpu";
-    console.log(
-      "🌟 Selecting WebGPU as default backend (next-generation performance)",
-    );
-  } else if (availability.webgl) {
+  let backendReason = "fallback";
+
+  // For now, prioritize WebGL over WebGPU for stability
+  if (availability.webgl) {
     selectedBackend = "webgl";
-    console.log("🔥 Selecting WebGL as default backend (GPU acceleration)");
+    backendReason = "stable GPU acceleration";
+    console.log(
+      "🔥 Selecting WebGL as default backend (stable GPU acceleration)",
+    );
+  } else if (availability.webgpu) {
+    selectedBackend = "webgpu";
+    backendReason = "experimental next-gen performance";
+    console.log(
+      "🌟 Selecting WebGPU as fallback backend (experimental - may have issues)",
+    );
   } else {
     console.log("💻 Falling back to CPU backend");
   }
 
-  // Set the selected backend
-  try {
-    await tf.setBackend(selectedBackend);
-    console.log(
-      `✅ TensorFlow.js using ${selectedBackend} backend (default prioritization)`,
-    );
+  // Set the selected backend with robust error handling
+  const trySetBackend = async (
+    backend: string,
+    retries = 3,
+  ): Promise<boolean> => {
+    for (let i = 0; i < retries; i++) {
+      try {
+        await tf.setBackend(backend);
+        await tf.ready();
 
-    // Configure backend-specific optimizations
+        // Verify backend actually switched
+        if (tf.getBackend() !== backend) {
+          throw new Error(
+            `Backend switch failed: expected ${backend}, got ${tf.getBackend()}`,
+          );
+        }
+
+        // Test with a simple operation
+        const testTensor = tf.zeros([2, 2]);
+        await testTensor.data();
+        testTensor.dispose();
+
+        console.log(
+          `✅ TensorFlow.js using ${backend} backend (${backendReason})`,
+        );
+        return true;
+      } catch (error) {
+        console.warn(
+          `Attempt ${i + 1}/${retries} failed for ${backend}:`,
+          error,
+        );
+        if (i < retries - 1) {
+          await new Promise((resolve) => setTimeout(resolve, 500));
+        }
+      }
+    }
+    return false;
+  };
+
+  // Try to set the selected backend with fallbacks
+  let backendSet = false;
+  const fallbackOrder =
+    selectedBackend === "webgpu"
+      ? ["webgpu", "webgl", "cpu"]
+      : selectedBackend === "webgl"
+        ? ["webgl", "cpu"]
+        : ["cpu"];
+
+  for (const backend of fallbackOrder) {
+    if (availability[backend]) {
+      console.log(`🔄 Attempting to initialize ${backend} backend...`);
+      backendSet = await trySetBackend(backend);
+      if (backendSet) {
+        selectedBackend = backend;
+        break;
+      }
+    }
+  }
+
+  if (!backendSet) {
+    console.error("❌ Failed to initialize any backend, forcing CPU");
+    await tf.setBackend("cpu");
+    await tf.ready();
+    selectedBackend = "cpu";
+  }
+
+  // Configure backend-specific optimizations
+  try {
     if (selectedBackend === "webgpu") {
-      console.log("🌟 WebGPU backend configured for optimal performance");
-      // WebGPU optimizations can be added here when available
+      console.log("🌟 WebGPU backend configured (experimental)");
+      // WebGPU is still experimental, minimal config
     } else if (selectedBackend === "webgl") {
       // Conservative settings for better compatibility
       tf.env().set("WEBGL_PACK", true);
@@ -172,19 +241,18 @@ const initializeGPUAcceleration = async () => {
     const warmupTensor = tf.zeros([1, 1]);
     await warmupTensor.data();
     warmupTensor.dispose();
+
+    // Additional stabilization wait
+    await new Promise((resolve) => setTimeout(resolve, 200));
   } catch (error) {
-    console.warn(
-      `❌ Failed to initialize optimal backend, falling back to CPU:`,
-      error,
-    );
-    await tf.setBackend("cpu");
+    console.warn("Backend configuration error:", error);
   }
 
-  console.log(`🚀 Backend initialized with WebGPU prioritization`);
+  console.log(`🚀 Backend initialized: ${selectedBackend.toUpperCase()}`);
 };
 
-// Initialize GPU acceleration
-initializeGPUAcceleration();
+// GPU acceleration will be initialized on-demand during model initialization
+let gpuInitialized = false;
 
 interface UseTFModelProps {
   initialLayers: LayerConfig[];
@@ -560,7 +628,31 @@ export const useTFModel = ({
       status === "initializing"
     )
       return modelRef.current;
+
     setStatus("initializing");
+
+    // Initialize GPU acceleration if not already done
+    if (!gpuInitialized) {
+      try {
+        console.log("🔄 Initializing GPU acceleration...");
+        await initializeGPUAcceleration();
+        gpuInitialized = true;
+        console.log("✅ GPU acceleration initialized successfully");
+      } catch (error) {
+        console.error("❌ GPU acceleration initialization failed:", error);
+        console.log("🔄 Falling back to CPU backend...");
+        try {
+          await tf.setBackend("cpu");
+          await tf.ready();
+          gpuInitialized = true;
+        } catch (fallbackError) {
+          console.error("❌ CPU fallback failed:", fallbackError);
+          setStatus("error");
+          return null;
+        }
+      }
+    }
+
     return await buildAndCompileModel();
   }, [buildAndCompileModel, status]);
 

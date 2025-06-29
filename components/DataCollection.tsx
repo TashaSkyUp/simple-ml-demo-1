@@ -32,6 +32,20 @@ export const DataCollection: React.FC<DataCollectionProps> = ({
   onLiveCameraModeChange,
   inferenceMode = false,
 }) => {
+  // Function to predict from canvas drawing
+  const handleDrawingPredict = async () => {
+    if (!canvasRef.current || !predictFromCanvas) return;
+
+    const canvas = canvasRef.current;
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return;
+
+    const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+    const grid = imageDataToRGBGrid(imageData, 28, 28);
+
+    await predictFromCanvas(grid);
+  };
+
   const { canvasRef, clearCanvas } = useDrawingCanvas({
     onDrawEnd: (grid) => {
       // Clear captured image data when drawing
@@ -89,10 +103,8 @@ export const DataCollection: React.FC<DataCollectionProps> = ({
       gridsToSubmit.push(grid);
 
       if (augmentFlip && augmentTranslate) {
-        // @ts-ignore - Type assertion needed for augmentation functions
-        const flippedGrid: number[][][] = flipRGBGridHorizontal(
-          grid as number[][][],
-        );
+        // @ts-ignore - TypeScript incorrectly resolves to grayscale function, but runtime uses correct RGB function
+        const flippedGrid: number[][][] = flipRGBGridHorizontal(grid as any);
         gridsToSubmit.push(flippedGrid);
 
         for (let i = 0; i < NUM_TRANSLATIONS_PER_BASE; i++) {
@@ -103,9 +115,9 @@ export const DataCollection: React.FC<DataCollectionProps> = ({
             dy = Math.floor(Math.random() * 5) - 2;
           } while (dx === 0 && dy === 0);
 
-          // @ts-ignore - Type assertion needed for augmentation functions
+          // @ts-ignore - TypeScript incorrectly resolves to grayscale function, but runtime uses correct RGB function
           const translatedGrid: number[][][] = translateRGBGrid(
-            grid as number[][][],
+            grid as any,
             dx,
             dy,
           );
@@ -120,19 +132,17 @@ export const DataCollection: React.FC<DataCollectionProps> = ({
             dy = Math.floor(Math.random() * 5) - 2;
           } while (dx === 0 && dy === 0);
 
-          // @ts-ignore - Type assertion needed for augmentation functions
+          // @ts-ignore - TypeScript incorrectly resolves to grayscale function, but runtime uses correct RGB function
           const translatedFlippedGrid: number[][][] = translateRGBGrid(
-            flippedGrid as number[][][],
+            flippedGrid as any,
             dx,
             dy,
           );
           gridsToSubmit.push(translatedFlippedGrid);
         }
       } else if (augmentFlip) {
-        // @ts-ignore - Type assertion needed for augmentation functions
-        const flippedGrid: number[][][] = flipRGBGridHorizontal(
-          grid as number[][][],
-        );
+        // @ts-ignore - TypeScript incorrectly resolves to grayscale function, but runtime uses correct RGB function
+        const flippedGrid: number[][][] = flipRGBGridHorizontal(grid as any);
         gridsToSubmit.push(flippedGrid);
       } else if (augmentTranslate) {
         for (let i = 0; i < NUM_TRANSLATIONS_PER_BASE; i++) {
@@ -143,9 +153,9 @@ export const DataCollection: React.FC<DataCollectionProps> = ({
             dy = Math.floor(Math.random() * 5) - 2;
           } while (dx === 0 && dy === 0);
 
-          // @ts-ignore - Type assertion needed for augmentation functions
+          // @ts-ignore - TypeScript incorrectly resolves to grayscale function, but runtime uses correct RGB function
           const translatedGrid: number[][][] = translateRGBGrid(
-            grid as number[][][],
+            grid as any,
             dx,
             dy,
           );

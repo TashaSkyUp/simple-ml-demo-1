@@ -98,7 +98,7 @@ export const ArchitectureDefinition: React.FC<ArchitectureDefinitionProps> = ({
 
   const handleDragEnd = () => {
     setDraggedIndex(null);
-    setDragOverIndex(null);
+    setHoverIndex(null);
   };
 
   const handleDragOver = (

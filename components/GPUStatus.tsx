@@ -121,10 +121,14 @@ export const GPUStatus: React.FC<GPUStatusProps> = ({
             if (navigator.gpu) {
               const adapter = await navigator.gpu.requestAdapter();
               if (adapter) {
-                const info = adapter.info || (adapter as any);
-                if (info.vendor) gpuVendor = info.vendor;
-                if (info.device) gpuRenderer = info.device;
-                if (info.description) gpuRenderer = info.description;
+                // WebGPU adapter.info is experimental and may not be available
+                const info = (adapter as any).info || adapter;
+                if (info.vendor) gpuVendor = String(info.vendor);
+                if (info.device) gpuRenderer = String(info.device);
+                if (info.description) gpuRenderer = String(info.description);
+                // Fallback for basic adapter info
+                if (!gpuVendor && info.architecture)
+                  gpuVendor = String(info.architecture);
               }
             }
           } catch (error) {
