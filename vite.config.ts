@@ -11,6 +11,7 @@ export default defineConfig(({ mode }) => {
 
   return {
     plugins: [react()],
+    base: "/simple-ml-demo-1/",
     define: {
       "process.env.API_KEY": JSON.stringify(safeApiKey),
       "process.env.GEMINI_API_KEY": JSON.stringify(safeApiKey),
@@ -27,6 +28,17 @@ export default defineConfig(({ mode }) => {
     server: {
       hmr: true,
       port: 5173,
+    },
+    build: {
+      outDir: "dist",
+      assetsDir: "assets",
+      rollupOptions: {
+        output: {
+          manualChunks: {
+            tensorflow: ["@tensorflow/tfjs"],
+          },
+        },
+      },
     },
   };
 });
