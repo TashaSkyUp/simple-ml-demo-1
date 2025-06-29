@@ -272,7 +272,9 @@ export const DataCollection: React.FC<DataCollectionProps> = ({
 
       {/* Input Mode Selection */}
       <div className="mb-6">
-        <h3 className="text-lg font-semibold mb-3 text-gray-300">Input Method</h3>
+        <h3 className="text-lg font-semibold mb-3 text-gray-300">
+          Input Method
+        </h3>
         <div className="flex space-x-4">
           <button
             onClick={() => setInputMode("draw")}
@@ -333,98 +335,98 @@ export const DataCollection: React.FC<DataCollectionProps> = ({
         <div>
           <h3 className="text-lg font-semibold mb-2 text-gray-300">
             Drawing & Generation Canvas
-          </h3></div_text>
-      <div className="flex flex-col items-center mb-4">
-        {" "}
-        {/* Reduced mb for AI section */}
-        <canvas
-          ref={canvasRef}
-          className="bg-gray-900 rounded-lg shadow-inner cursor-crosshair touch-none border-2 border-gray-700 w-[280px] h-[280px]"
-          aria-label="Drawing canvas for image samples"
-        />
-        <div className="w-full max-w-[280px] mt-3 space-y-2">
-          <div className="flex items-center justify-start gap-x-4">
-            <label className="flex items-center text-sm text-gray-300 cursor-pointer">
-              <input
-                type="checkbox"
-                checked={augmentFlip}
-                onChange={(e) => onAugmentFlipChange(e.target.checked)}
-                className="form-checkbox h-4 w-4 text-cyan-500 bg-gray-800 border-gray-600 rounded focus:ring-cyan-600"
-              />
-              <span className="ml-2">Augment: Flip</span>
-            </label>
-            <label className="flex items-center text-sm text-gray-300 cursor-pointer">
-              <input
-                type="checkbox"
-                checked={augmentTranslate}
-                onChange={(e) => onAugmentTranslateChange(e.target.checked)}
-                className="form-checkbox h-4 w-4 text-cyan-500 bg-gray-800 border-gray-600 rounded focus:ring-cyan-600"
-              />
-              <span className="ml-2">Augment: Translate</span>
-            </label>
+          </h3>
+          <div className="flex flex-col items-center mb-4">
+            {" "}
+            {/* Reduced mb for AI section */}
+            <canvas
+              ref={canvasRef}
+              className="bg-gray-900 rounded-lg shadow-inner cursor-crosshair touch-none border-2 border-gray-700 w-[280px] h-[280px]"
+              aria-label="Drawing canvas for image samples"
+            />
+            <div className="w-full max-w-[280px] mt-3 space-y-2">
+              <div className="flex items-center justify-start gap-x-4">
+                <label className="flex items-center text-sm text-gray-300 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={augmentFlip}
+                    onChange={(e) => onAugmentFlipChange(e.target.checked)}
+                    className="form-checkbox h-4 w-4 text-cyan-500 bg-gray-800 border-gray-600 rounded focus:ring-cyan-600"
+                  />
+                  <span className="ml-2">Augment: Flip</span>
+                </label>
+                <label className="flex items-center text-sm text-gray-300 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={augmentTranslate}
+                    onChange={(e) => onAugmentTranslateChange(e.target.checked)}
+                    className="form-checkbox h-4 w-4 text-cyan-500 bg-gray-800 border-gray-600 rounded focus:ring-cyan-600"
+                  />
+                  <span className="ml-2">Augment: Translate</span>
+                </label>
+              </div>
+              <button
+                onClick={clearCanvas}
+                className="w-full bg-slate-600 hover:bg-slate-500 text-white font-semibold py-2 px-4 rounded-md transition-colors text-base focus:outline-none focus:ring-2 focus:ring-slate-400 focus:ring-offset-2 focus:ring-offset-gray-800"
+              >
+                Clear Canvas
+              </button>
+            </div>
+            <div className="w-full max-w-[280px] grid grid-cols-2 gap-4 mt-3">
+              <button
+                onClick={() => handleAddData(0)}
+                className="bg-sky-600 hover:bg-sky-500 text-white font-bold py-3 px-4 rounded transition-colors text-lg focus:outline-none focus:ring-2 focus:ring-sky-400"
+                aria-label="Add canvas content as sample for class 0"
+              >
+                Add Canvas as '0'
+              </button>
+              <button
+                onClick={() => handleAddData(1)}
+                className="bg-amber-500 hover:bg-amber-400 text-white font-bold py-3 px-4 rounded transition-colors text-lg focus:outline-none focus:ring-2 focus:ring-amber-300"
+                aria-label="Add canvas content as sample for class 1"
+              >
+                Add Canvas as '1'
+              </button>
+            </div>
           </div>
-          <button
-            onClick={clearCanvas}
-            className="w-full bg-slate-600 hover:bg-slate-500 text-white font-semibold py-2 px-4 rounded-md transition-colors text-base focus:outline-none focus:ring-2 focus:ring-slate-400 focus:ring-offset-2 focus:ring-offset-gray-800"
-          >
-            Clear Canvas
-          </button>
-        </div>
-        <div className="w-full max-w-[280px] grid grid-cols-2 gap-4 mt-3">
-          <button
-            onClick={() => handleAddData(0)}
-            className="bg-sky-600 hover:bg-sky-500 text-white font-bold py-3 px-4 rounded transition-colors text-lg focus:outline-none focus:ring-2 focus:ring-sky-400"
-            aria-label="Add canvas content as sample for class 0"
-          >
-            Add Canvas as '0'
-          </button>
-          <button
-            onClick={() => handleAddData(1)}
-            className="bg-amber-500 hover:bg-amber-400 text-white font-bold py-3 px-4 rounded transition-colors text-lg focus:outline-none focus:ring-2 focus:ring-amber-300"
-            aria-label="Add canvas content as sample for class 1"
-          >
-            Add Canvas as '1'
-          </button>
-        </div>
-      </div>
 
-      {/* AI Generation Section - Controls */}
-      <hr className="border-gray-700 my-6" />
-      <h3 className="text-lg font-semibold mb-2 text-gray-300">
-        Generate Sample via AI (onto Canvas)
-      </h3>
-      <div className="flex flex-col items-center space-y-3">
-        <div className="w-full max-w-md">
-          <label
-            htmlFor="ai-prompt"
-            className="block text-sm font-medium text-gray-400 mb-1"
-          >
-            Image Prompt
-          </label>
-          <input
-            type="text"
-            id="ai-prompt"
-            value={aiPrompt}
-            onChange={(e) => setAiPrompt(e.target.value)}
-            placeholder="e.g., a simple line drawing of the number 1"
-            className="w-full bg-gray-800 text-white p-2 rounded-md border border-gray-600 focus:ring-cyan-500 focus:border-cyan-500"
-          />
-        </div>
-        <button
-          onClick={handleGenerateImage}
-          disabled={isGenerating}
-          className="w-full max-w-md bg-teal-600 hover:bg-teal-500 text-white font-semibold py-2 px-4 rounded-md transition-colors text-base focus:outline-none focus:ring-2 focus:ring-teal-400 disabled:bg-gray-500 disabled:cursor-wait"
-        >
-          {isGenerating ? "Generating..." : "Generate & Draw on Canvas"}
-        </button>
-        {generationError && (
-          <p className="text-red-400 text-sm mt-2 w-full max-w-md text-center">
-            {generationError}
-          </p>
-        )}
+          {/* AI Generation Section - Controls */}
+          <hr className="border-gray-700 my-6" />
+          <h3 className="text-lg font-semibold mb-2 text-gray-300">
+            Generate Sample via AI (onto Canvas)
+          </h3>
+          <div className="flex flex-col items-center space-y-3">
+            <div className="w-full max-w-md">
+              <label
+                htmlFor="ai-prompt"
+                className="block text-sm font-medium text-gray-400 mb-1"
+              >
+                Image Prompt
+              </label>
+              <input
+                type="text"
+                id="ai-prompt"
+                value={aiPrompt}
+                onChange={(e) => setAiPrompt(e.target.value)}
+                placeholder="e.g., a simple line drawing of the number 1"
+                className="w-full bg-gray-800 text-white p-2 rounded-md border border-gray-600 focus:ring-cyan-500 focus:border-cyan-500"
+              />
+            </div>
+            <button
+              onClick={handleGenerateImage}
+              disabled={isGenerating}
+              className="w-full max-w-md bg-teal-600 hover:bg-teal-500 text-white font-semibold py-2 px-4 rounded-md transition-colors text-base focus:outline-none focus:ring-2 focus:ring-teal-400 disabled:bg-gray-500 disabled:cursor-wait"
+            >
+              {isGenerating ? "Generating..." : "Generate & Draw on Canvas"}
+            </button>
+            {generationError && (
+              <p className="text-red-400 text-sm mt-2 w-full max-w-md text-center">
+                {generationError}
+              </p>
+            )}
 
-        {/* Removed separate generated image display and add buttons */}
-      </div>
+            {/* Removed separate generated image display and add buttons */}
+          </div>
         </div>
       )}
     </div>
