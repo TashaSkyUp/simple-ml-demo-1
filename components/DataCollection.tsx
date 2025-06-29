@@ -5,7 +5,7 @@ import {
   flipGridHorizontal,
   translateGrid,
 } from "../utils/cnnUtils"; // base64ToGrid no longer needed here
-import { GoogleGenAI } from "@google/genai"; // Import for Gemini API
+// import { GoogleGenAI } from "@google/genai"; // Import for Gemini API - Disabled for compatibility
 
 interface DataCollectionProps {
   onAddData: (grid: number[][], label: 0 | 1) => void;
@@ -109,6 +109,13 @@ export const DataCollection: React.FC<DataCollectionProps> = ({
     }
 
     try {
+      // Google Gemini AI generation temporarily disabled for deployment compatibility
+      setGenerationError(
+        "AI image generation is temporarily disabled. Please use the drawing canvas to create training data manually.",
+      );
+      return;
+
+      /*
       if (
         !process.env.API_KEY ||
         process.env.API_KEY === "your_gemini_api_key_here" ||
@@ -116,7 +123,6 @@ export const DataCollection: React.FC<DataCollectionProps> = ({
         process.env.API_KEY === "PLACEHOLDER_API_KEY" ||
         process.env.API_KEY === "API_KEY_NOT_CONFIGURED"
       ) {
-        setIsGenerating(false);
         setGenerationError(
           "Gemini API key not configured. Please set your API key in .env.local to use AI image generation. Get your key from: https://makersuite.google.com/app/apikey",
         );
@@ -167,16 +173,12 @@ export const DataCollection: React.FC<DataCollectionProps> = ({
       } else {
         throw new Error("No image data received from API.");
       }
+      */
     } catch (error: any) {
       console.error("Error generating image:", error);
       setGenerationError(
         error.message || "Failed to generate image. Check console for details.",
       );
-      // If error occurs, canvas might be clear, ensure prediction reflects this
-      if (predictFromCanvas && canvasRef.current) {
-        const grid = imageToGrid(canvasRef.current); // Likely an empty grid
-        predictFromCanvas(grid);
-      }
     } finally {
       setIsGenerating(false);
     }
