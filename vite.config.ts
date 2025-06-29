@@ -23,7 +23,7 @@ export default defineConfig(({ mode }) => {
       },
     },
     optimizeDeps: {
-      include: ["react", "react-dom", "@tensorflow/tfjs"],
+      include: ["react", "react-dom"],
     },
     server: {
       hmr: true,
@@ -32,13 +32,6 @@ export default defineConfig(({ mode }) => {
     build: {
       outDir: "dist",
       assetsDir: "assets",
-      rollupOptions: {
-        output: {
-          manualChunks: {
-            tensorflow: ["@tensorflow/tfjs"],
-          },
-        },
-      },
     },
   };
 });
