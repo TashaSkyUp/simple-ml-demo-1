@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from "react";
+import React, { useState, useCallback, useRef } from "react";
 import { useDrawingCanvas } from "../hooks/useDrawingCanvas";
 import {
   imageToRGBGrid,
@@ -6,7 +6,7 @@ import {
   flipRGBGridHorizontal,
   translateRGBGrid,
 } from "../utils/cnnUtils"; // base64ToGrid no longer needed here
-import { CameraCapture } from "./CameraCapture";
+import { CameraCapture, CameraCaptureHandle } from "./CameraCapture";
 // import { GoogleGenAI } from "@google/genai"; // Import for Gemini API - Disabled for compatibility
 
 interface DataCollectionProps {
@@ -50,6 +50,9 @@ export const DataCollection: React.FC<DataCollectionProps> = ({
   const [lastCapturedData, setLastCapturedData] = useState<
     number[][][] | null
   >(null);
+  const [isCameraStreaming, setIsCameraStreaming] = useState<boolean>(false);
+
+  const cameraRef = useRef<CameraCaptureHandle | null>(null);
 
   const handleCameraCapture = useCallback(
     (imageData: ImageData, canvas: HTMLCanvasElement) => {
@@ -62,6 +65,86 @@ export const DataCollection: React.FC<DataCollectionProps> = ({
       }
     },
     [predictFromCanvas],
+  );
+
+  const handleCaptureAndAdd = useCallback(
+    (label: 0 | 1) => {
+      if (!cameraRef.current) {
+        alert("Camera not ready");
+        return;
+      }
+      const result = cameraRef.current.capture();
+      if (!result) {
+        alert("Capture failed");
+        return;
+      }
+      const { imageData } = result;
+      const grid = imageDataToRGBGrid(imageData, 28, 28);
+      setLastCapturedData(grid);
+      if (predictFromCanvas) {
+        predictFromCanvas(grid);
+      }
+      addGridData(grid, label);
+    },
+    [addGridData, predictFromCanvas],
+  );
+
+  const addGridData = useCallback(
+    (grid: number[][][], label: 0 | 1) => {
+      const gridsToSubmit: number[][][] = [];
+      const NUM_TRANSLATIONS_PER_BASE = 2;
+
+      gridsToSubmit.push(grid);
+
+      if (augmentFlip && augmentTranslate) {
+        const flippedGrid = flipRGBGridHorizontal(grid);
+        gridsToSubmit.push(flippedGrid);
+
+        for (let i = 0; i < NUM_TRANSLATIONS_PER_BASE; i++) {
+          let dx = 0,
+            dy = 0;
+          do {
+            dx = Math.floor(Math.random() * 5) - 2;
+            dy = Math.floor(Math.random() * 5) - 2;
+          } while (dx === 0 && dy === 0);
+
+          const translatedGrid = translateRGBGrid(grid, dx, dy);
+          gridsToSubmit.push(translatedGrid);
+        }
+
+        for (let i = 0; i < NUM_TRANSLATIONS_PER_BASE; i++) {
+          let dx = 0,
+            dy = 0;
+          do {
+            dx = Math.floor(Math.random() * 5) - 2;
+            dy = Math.floor(Math.random() * 5) - 2;
+          } while (dx === 0 && dy === 0);
+
+          const translatedFlippedGrid = translateRGBGrid(flippedGrid, dx, dy);
+          gridsToSubmit.push(translatedFlippedGrid);
+        }
+      } else if (augmentFlip) {
+        const flippedGrid = flipRGBGridHorizontal(grid);
+        gridsToSubmit.push(flippedGrid);
+      } else if (augmentTranslate) {
+        for (let i = 0; i < NUM_TRANSLATIONS_PER_BASE; i++) {
+          let dx = 0,
+            dy = 0;
+          do {
+            dx = Math.floor(Math.random() * 5) - 2;
+            dy = Math.floor(Math.random() * 5) - 2;
+          } while (dx === 0 && dy === 0);
+
+          const translatedGrid = translateRGBGrid(grid, dx, dy);
+          gridsToSubmit.push(translatedGrid);
+        }
+      }
+
+      for (const g of gridsToSubmit) {
+        onAddData(g, label);
+      }
+    },
+    [augmentFlip, augmentTranslate, onAddDataonAddData],
   );
 
   const handleAddData = (label: 0 | 1) => {
@@ -92,58 +175,7 @@ export const DataCollection: React.FC<DataCollectionProps> = ({
       return;
     }
 
-    const gridsToSubmit: number[][][] = [];
-    const NUM_TRANSLATIONS_PER_BASE = 2;
-
-    gridsToSubmit.push(originalGrid);
-
-    if (augmentFlip && augmentTranslate) {
-      const flippedGrid = flipRGBGridHorizontal(originalGrid);
-      gridsToSubmit.push(flippedGrid);
-
-      for (let i = 0; i < NUM_TRANSLATIONS_PER_BASE; i++) {
-        let dx = 0,
-          dy = 0;
-        do {
-          dx = Math.floor(Math.random() * 5) - 2;
-          dy = Math.floor(Math.random() * 5) - 2;
-        } while (dx === 0 && dy === 0);
-
-        const translatedGrid = translateRGBGrid(originalGrid, dx, dy);
-        gridsToSubmit.push(translatedGrid);
-      }
-
-      for (let i = 0; i < NUM_TRANSLATIONS_PER_BASE; i++) {
-        let dx = 0,
-          dy = 0;
-        do {
-          dx = Math.floor(Math.random() * 5) - 2;
-          dy = Math.floor(Math.random() * 5) - 2;
-        } while (dx === 0 && dy === 0);
-
-        const translatedFlippedGrid = translateRGBGrid(flippedGrid, dx, dy);
-        gridsToSubmit.push(translatedFlippedGrid);
-      }
-    } else if (augmentFlip) {
-      const flippedGrid = flipRGBGridHorizontal(originalGrid);
-      gridsToSubmit.push(flippedGrid);
-    } else if (augmentTranslate) {
-      for (let i = 0; i < NUM_TRANSLATIONS_PER_BASE; i++) {
-        let dx = 0,
-          dy = 0;
-        do {
-          dx = Math.floor(Math.random() * 5) - 2;
-          dy = Math.floor(Math.random() * 5) - 2;
-        } while (dx === 0 && dy === 0);
-
-        const translatedGrid = translateRGBGrid(originalGrid, dx, dy);
-        gridsToSubmit.push(translatedGrid);
-      }
-    }
-
-    for (const grid of gridsToSubmit) {
-      onAddData(grid, label);
-    }
+    addGridData(originalGrid, label);
 
     if (inputMode === "draw") {
       clearCanvas();
@@ -280,27 +312,37 @@ export const DataCollection: React.FC<DataCollectionProps> = ({
             Camera Capture
           </h3>
           <CameraCapture
+            ref={cameraRef}
             onImageCapture={handleCameraCapture}
             onError={(error) => console.error("Camera error:", error)}
+            onStreamingChange={setIsCameraStreaming}
             width={280}
             height={280}
           />
-          {lastCapturedData && (
+          {(isCameraStreaming || lastCapturedData) && (
             <div className="w-full max-w-[280px] mx-auto mt-4">
-              <div className="bg-green-900/30 border border-green-600 rounded-lg p-3 mb-3">
-                <p className="text-green-300 text-sm text-center">
-                  ✅ Photo captured! Add it as a training sample:
-                </p>
-              </div>
+              {isCameraStreaming ? (
+                <div className="bg-blue-900/30 border border-blue-600 rounded-lg p-3 mb-3">
+                  <p className="text-blue-300 text-sm text-center">
+                    📸 Camera active - press a button to capture
+                  </p>
+                </div>
+              ) : (
+                <div className="bg-green-900/30 border border-green-600 rounded-lg p-3 mb-3">
+                  <p className="text-green-300 text-sm text-center">
+                    ✅ Photo captured! Add it as a training sample:
+                  </p>
+                </div>
+              )}
               <div className="grid grid-cols-2 gap-4">
                 <button
-                  onClick={() => handleAddData(0)}
+                  onClick={() => (isCameraStreaming ? handleCaptureAndAdd(0) : handleAddData(0))}
                   className="bg-sky-600 hover:bg-sky-500 text-white font-bold py-3 px-4 rounded transition-colors text-lg focus:outline-none focus:ring-2 focus:ring-sky-400"
                 >
                   Add as '0'
                 </button>
                 <button
-                  onClick={() => handleAddData(1)}
+                  onClick={() => (isCameraStreaming ? handleCaptureAndAdd(1) : handleAddData(1))}
                   className="bg-amber-500 hover:bg-amber-400 text-white font-bold py-3 px-4 rounded transition-colors text-lg focus:outline-none focus:ring-2 focus:ring-amber-300"
                 >
                   Add as '1'

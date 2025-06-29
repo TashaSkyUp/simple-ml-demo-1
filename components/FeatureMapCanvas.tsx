@@ -18,8 +18,12 @@ export const FeatureMapCanvas: React.FC<FeatureMapCanvasProps> = ({ mapData, siz
         const ctx = canvas.getContext('2d');
         if (!ctx) return;
 
-        // Check if we have RGB data (3D array)
-        const isRGB = Array.isArray(mapData) && Array.isArray(mapData[0]) && Array.isArray(mapData[0][0]);
+        // Determine if mapData is [H][W][3] RGB image or [C][H][W] feature maps
+        const is3D = Array.isArray(mapData) && Array.isArray(mapData[0]) && Array.isArray(mapData[0][0]);
+        const isRGB =
+            is3D &&
+            !Array.isArray((mapData as number[][][])[0][0][0]) &&
+            (mapData as number[][][])[0][0].length === 3;
 
         if (isRGB) {
             // Handle RGB data - draw full color image
@@ -40,6 +44,51 @@ export const FeatureMapCanvas: React.FC<FeatureMapCanvasProps> = ({ mapData, siz
                     ctx.fillStyle = `rgb(${r255}, ${g255}, ${b255})`;
                     ctx.fillRect(x * cellSize, y * cellSize, cellSize + 1, cellSize + 1);
                 }
+            }
+        } else if (is3D) {
+            // Handle multi-channel feature maps
+            const maps = mapData as number[][][];
+            const displayMap =
+                maps[channelIndexToDisplay] || maps[0] || [];
+
+            if (!displayMap || displayMap.length === 0 || !displayMap[0]) {
+                ctx.fillStyle = '#1f2937';
+                ctx.fillRect(0, 0, size, size);
+                if (label) {
+                    ctx.fillStyle = '#6b7280';
+                    ctx.font = '10px sans-serif';
+                    ctx.textAlign = 'center';
+                    ctx.fillText(label, size / 2, size / 2);
+                }
+                return;
+            }
+
+            const gridSize = displayMap.length;
+            const cellSize = size / gridSize;
+
+            const flatData = displayMap.flat();
+            const maxAbsVal = Math.max(...flatData.map(val => Math.abs(val)), 1e-6);
+
+            ctx.fillStyle = '#1f2937';
+            ctx.fillRect(0, 0, size, size);
+
+            for (let y = 0; y < gridSize; y++) {
+                for (let x = 0; x < displayMap[y].length; x++) {
+                    const val = displayMap[y][x];
+                    if (Math.abs(val) > 1e-4) {
+                        const intensity = Math.min(1, Math.abs(val) / maxAbsVal);
+                        ctx.fillStyle = val > 0
+                            ? `rgba(56, 189, 248, ${intensity})`
+                            : `rgba(239, 68, 68, ${intensity})`;
+                        ctx.fillRect(x * cellSize, y * cellSize, cellSize, cellSize);
+                    }
+                }
+            }
+            if (label) {
+                ctx.fillStyle = '#9ca3af';
+                ctx.font = 'bold 10px sans-serif';
+                ctx.textAlign = 'center';
+                ctx.fillText(label, size / 2, size - 5);
             }
         } else {
             // Handle grayscale data
