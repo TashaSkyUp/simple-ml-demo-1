@@ -1,5 +1,15 @@
+/*
+ * Interactive CNN Trainer with TensorFlow.js
+ * © 2024 Hopping Mad Games, LLC. All Rights Reserved.
+ *
+ * PROPRIETARY SOFTWARE - NOT FOR COMMERCIAL USE
+ * This code is proprietary and confidential. Unauthorized copying,
+ * distribution, or use is strictly prohibited.
+ */
+
 import React from "react";
 import { TrainableConvNet } from "./components/TrainableConvNet";
+import { Footer } from "./components/Footer";
 
 const App: React.FC = () => (
   <div className="bg-gray-900 text-white min-h-screen font-sans">
@@ -35,6 +45,7 @@ const App: React.FC = () => (
     <main className="ultra-wide-container max-w-7xl mx-auto p-4 md:p-6 lg:p-8 xl:p-10">
       <TrainableConvNet />
     </main>
+    <Footer />
   </div>
 );
 

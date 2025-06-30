@@ -1,3 +1,12 @@
+/*
+ * Interactive CNN Trainer with TensorFlow.js - Main Component
+ * © 2024 Hopping Mad Games, LLC. All Rights Reserved.
+ *
+ * PROPRIETARY SOFTWARE - NOT FOR COMMERCIAL USE
+ * This code is proprietary and confidential. Unauthorized copying,
+ * distribution, or use is strictly prohibited.
+ */
+
 import React, { useState, useEffect, useCallback } from "react";
 import type { LayerConfig, TrainingDataPoint } from "../types";
 import { LayerType, ActivationFunction, PoolingType } from "../types";

@@ -1,3 +1,12 @@
+/*
+ * Training Web Worker - Background TensorFlow.js Processing
+ * © 2024 Hopping Mad Games, LLC. All Rights Reserved.
+ *
+ * PROPRIETARY SOFTWARE - NOT FOR COMMERCIAL USE
+ * This code is proprietary and confidential. Unauthorized copying,
+ * distribution, or use is strictly prohibited.
+ */
+
 // Training Web Worker - Runs training in background thread
 // This prevents browser tab throttling from pausing training
 
