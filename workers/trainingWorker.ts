@@ -37,16 +37,36 @@ const initializeTensorFlow = async () => {
     await tf.ready();
     console.log("🔧 TensorFlow.js initialized in worker");
 
-    // Try to use WebGL backend in worker if available
-    const webglVersion = tf.ENV.get("WEBGL_VERSION");
-    if (typeof webglVersion === "number" && webglVersion > 0) {
-      await tf.setBackend("webgl");
-      console.log("🚀 Worker using WebGL backend");
-    } else {
-      await tf.setBackend("cpu");
-      console.log("💻 Worker using CPU backend");
+    // Try backends in order of preference: WebGPU > WebGL > CPU
+    try {
+      await tf.setBackend("webgpu");
+      await tf.ready();
+      if (tf.getBackend() === "webgpu") {
+        console.log("🌟 Worker using WebGPU backend (best performance)");
+        return true;
+      }
+    } catch (webgpuError) {
+      console.log("⚠️ WebGPU not available in worker, trying WebGL...");
     }
 
+    // Fallback to WebGL
+    try {
+      const webglVersion = tf.ENV.get("WEBGL_VERSION");
+      if (typeof webglVersion === "number" && webglVersion > 0) {
+        await tf.setBackend("webgl");
+        await tf.ready();
+        if (tf.getBackend() === "webgl") {
+          console.log("🚀 Worker using WebGL backend");
+          return true;
+        }
+      }
+    } catch (webglError) {
+      console.log("⚠️ WebGL not available in worker, using CPU...");
+    }
+
+    // Final fallback to CPU
+    await tf.setBackend("cpu");
+    console.log("💻 Worker using CPU backend");
     return true;
   } catch (error) {
     console.error("❌ Failed to initialize TensorFlow.js in worker:", error);

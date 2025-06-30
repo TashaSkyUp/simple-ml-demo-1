@@ -145,22 +145,20 @@ const initializeGPUAcceleration = async () => {
   }
   console.log("  💻 CPU: Always available as fallback");
 
-  // Backend selection with stability prioritization
+  // Backend selection with WebGPU prioritization
   let selectedBackend = "cpu";
   let backendReason = "fallback";
 
-  // For now, prioritize WebGL over WebGPU for stability
-  if (availability.webgl) {
+  // Prioritize WebGPU for best performance when available
+  if (availability.webgpu) {
+    selectedBackend = "webgpu";
+    backendReason = "next-generation GPU performance";
+    console.log("🌟 Selecting WebGPU as primary backend (best performance)");
+  } else if (availability.webgl) {
     selectedBackend = "webgl";
     backendReason = "stable GPU acceleration";
     console.log(
-      "🔥 Selecting WebGL as default backend (stable GPU acceleration)",
-    );
-  } else if (availability.webgpu) {
-    selectedBackend = "webgpu";
-    backendReason = "experimental next-gen performance";
-    console.log(
-      "🌟 Selecting WebGPU as fallback backend (experimental - may have issues)",
+      "🔥 Selecting WebGL as fallback backend (stable GPU acceleration)",
     );
   } else {
     console.log("💻 Falling back to CPU backend");
