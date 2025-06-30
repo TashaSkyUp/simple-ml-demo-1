@@ -48,7 +48,7 @@ export const CameraCapture = forwardRef<
     const streamRef = useRef<MediaStream | null>(null);
     const liveIntervalRef = useRef<NodeJS.Timeout | null>(null);
 
-    const handleError: = useCallback(
+    const handleError = useCallback(
       (errorMessage: string) => {
         setError(errorMessage);
         onError?.(errorMessage);
@@ -242,7 +242,7 @@ export const CameraCapture = forwardRef<
                       d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
                     />
                   </svg>
-                  <span>Camera Capture</span>
+                  <span> Capture</span>
                 </button>
                 <div className="flex space-x-2">
                   <button
@@ -275,7 +275,7 @@ export const CameraCapture = forwardRef<
                         />
                       )}
                     </svg>
-                    <span>{isLiveMode ? " Stop Live" : "🟣 Go Live"}</span>
+                    <span>{isLiveMode ? "🔴 Stop Live" : "🟣 Go Live"}</span>
                   </button>
                   <button
                     onClick={stopCamera}
@@ -357,7 +357,7 @@ export const CameraCapture = forwardRef<
             {/* Live Mode Indicator */}
             {isLiveMode && (
               <div className="absolute top-2 right-2 bg-red-600 text-white px-2 py-1 rounded-full text-xs font-bold live-indicator">
-                 LIVE
+                🔴 LIVE
               </div>
             )}
           </div>
@@ -370,7 +370,7 @@ export const CameraCapture = forwardRef<
             height={height}
           />
 
-          {/* Error: Display */}
+          {/* Error Display */}
           {error && (
             <div className="bg-red-900/50 border border-red-600 rounded-lg p-3 max-w-md">
               <div className="flex items-center space-x-2">
@@ -430,7 +430,7 @@ export const CameraCapture = forwardRef<
 
           {isLiveMode && (
             <div className="text-center text-red-400 text-sm max-w-md bg-red-900/20 p-3 rounded-lg border border-red-600 live-pulse">
-              <p className="font-semibold"> Live Pipeline Mode</p>
+              <p className="font-semibold">🔴 Live Pipeline Mode</p>
               <p className="mt-1">
                 CNN pipeline is updating in real-time with camera feed
               </p>
@@ -439,7 +439,7 @@ export const CameraCapture = forwardRef<
 
           {!isStreaming && (
             <div className="text-center text-gray-400 text-sm max-w-md">
-              <p>Camera Capture photos to use as training samples</p>
+              <p> Capture photos to use as training samples</p>
               <p className="mt-1">
                  Make sure your subject is well-lit and clearly visible
               </p>

@@ -128,7 +128,7 @@ const mapActivationFunction = (activation?: ActivationFunction): string => {
       return "sigmoid";
     case ActivationFunction.Tanh:
       return "tanh";
-    case ActivationFunction.Softmax:
+    case ActivationFunction.SoftMax:
       return "softmax";
     default:
       return "relu";

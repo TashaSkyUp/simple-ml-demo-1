@@ -459,9 +459,9 @@ export const TrainableConvNet: React.FC = () => {
 
       alert(message);
     } catch (error) {
-      console.error("Error: saving session:", error);
+      console.error("Error saving session:", error);
       alert(
-        `Failed to save session data: ${error instanceof Error: ? error.message : "Unknown error"}`,
+        `Failed to save session data: ${error instanceof Error ? error.message : "Unknown error"}`,
       );
     } finally {
       // Restore button state
@@ -530,14 +530,14 @@ export const TrainableConvNet: React.FC = () => {
               throw new Error("Failed to read file content as string.");
             }
           } catch (error: any) {
-            console.error("Error: loading session data:", error);
+            console.error("Error loading session data:", error);
             alert(
               `Failed to load session data: ${error.message || "Unknown error"}`,
             );
           }
         };
         reader.onerror = () => {
-          alert("Error: reading file.");
+          alert("Error reading file.");
         };
         reader.readAsText(file);
       }
