@@ -1403,7 +1403,7 @@ export const useTFModel = ({
     gpuBenchmark,
     initializeModel,
     runPrediction,
-    startTraining,
+    startTraining: startTrainingLogic,
     resetModelTrainingState,
     runGPUBenchmark,
     saveModelWeights,
