@@ -10,6 +10,7 @@
 import React from "react";
 import { TrainableConvNet } from "./components/TrainableConvNet";
 import { Footer } from "./components/Footer";
+import { DebugTestPanel } from "./components/DebugTestPanel";
 
 const App: React.FC = () => (
   <div className="bg-gray-900 text-white min-h-screen font-sans">
@@ -46,6 +47,7 @@ const App: React.FC = () => (
       <TrainableConvNet />
     </main>
     <Footer />
+    <DebugTestPanel />
   </div>
 );
 
