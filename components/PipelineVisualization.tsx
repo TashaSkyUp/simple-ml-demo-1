@@ -80,7 +80,7 @@ export const PipelineVisualization: React.FC<PipelineVisualizationProps> = ({
               <span
                 className={`text-xs px-2 py-1 rounded-full ${isCameraStreaming ? "bg-red-600 text-white live-indicator" : "bg-yellow-600 text-white"}`}
               >
-                {isCameraStreaming ? "🔴 LIVE" : "⏸️ Paused"}
+                {isCameraStreaming ? " LIVE" : " Paused"}
               </span>
             )}
           </div>

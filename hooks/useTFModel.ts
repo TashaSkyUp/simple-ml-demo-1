@@ -99,13 +99,13 @@ const compareBackendPerformance = async (): Promise<{
   let recommendation = fastest.name;
 
   if (fastest.name === "webgpu") {
-    console.log(`🌟 WebGPU is fastest at ${fastest.speed.toFixed(1)} ops/sec`);
+    console.log(` WebGPU is fastest at ${fastest.speed.toFixed(1)} ops/sec`);
   } else if (fastest.name === "webgl") {
     const ratio = webglSpeed / cpuSpeed;
-    console.log(`🚀 WebGL is ${ratio.toFixed(1)}x faster - using GPU`);
+    console.log(` WebGL is ${ratio.toFixed(1)}x faster - using GPU`);
   } else {
     const webglRatio = cpuSpeed / (webglSpeed || 1);
-    console.log(`⚡ CPU is ${webglRatio.toFixed(1)}x faster - using CPU`);
+    console.log(` CPU is ${webglRatio.toFixed(1)}x faster - using CPU`);
   }
 
   return { webglSpeed, cpuSpeed, webgpuSpeed, recommendation };
@@ -116,7 +116,7 @@ const initializeGPUAcceleration = async () => {
   await tf.ready();
 
   // Check all backend availability
-  console.log("🔍 Checking backend availability...");
+  console.log(" Checking backend availability...");
 
   const backends = ["webgpu", "webgl", "cpu"];
   const availability: { [key: string]: boolean } = {};
@@ -126,24 +126,24 @@ const initializeGPUAcceleration = async () => {
       await tf.setBackend(backend);
       await tf.ready();
       availability[backend] = tf.getBackend() === backend;
-      console.log(`✅ ${backend.toUpperCase()}: Available`);
+      console.log(`Success ${backend.toUpperCase()}: Available`);
     } catch (error) {
       availability[backend] = false;
-      console.log(`❌ ${backend.toUpperCase()}: Not available - ${error}`);
+      console.log(`Error ${backend.toUpperCase()}: Not available - ${error}`);
     }
   }
 
   // Log detailed availability report
-  console.log("📊 Backend Availability Report:");
+  console.log(" Backend Availability Report:");
   if (availability.webgpu) {
     console.log(
-      "  🌟 WebGPU: Next-generation GPU API available (experimental)",
+      "   WebGPU: Next-generation GPU API available (experimental)",
     );
   }
   if (availability.webgl) {
-    console.log("  🔥 WebGL: Standard GPU acceleration available");
+    console.log("   WebGL: Standard GPU acceleration available");
   }
-  console.log("  💻 CPU: Always available as fallback");
+  console.log("   CPU: Always available as fallback");
 
   // Backend selection with WebGPU prioritization
   let selectedBackend = "cpu";
@@ -153,15 +153,15 @@ const initializeGPUAcceleration = async () => {
   if (availability.webgpu) {
     selectedBackend = "webgpu";
     backendReason = "next-generation GPU performance";
-    console.log("🌟 Selecting WebGPU as primary backend (best performance)");
+    console.log(" Selecting WebGPU as primary backend (best performance)");
   } else if (availability.webgl) {
     selectedBackend = "webgl";
     backendReason = "stable GPU acceleration";
     console.log(
-      "🔥 Selecting WebGL as fallback backend (stable GPU acceleration)",
+      " Selecting WebGL as fallback backend (stable GPU acceleration)",
     );
   } else {
-    console.log("💻 Falling back to CPU backend");
+    console.log(" Falling back to CPU backend");
   }
 
   // Set the selected backend with robust error handling
@@ -187,7 +187,7 @@ const initializeGPUAcceleration = async () => {
         testTensor.dispose();
 
         console.log(
-          `✅ TensorFlow.js using ${backend} backend (${backendReason})`,
+          `Success TensorFlow.js using ${backend} backend (${backendReason})`,
         );
         return true;
       } catch (error) {
@@ -214,7 +214,7 @@ const initializeGPUAcceleration = async () => {
 
   for (const backend of fallbackOrder) {
     if (availability[backend]) {
-      console.log(`🔄 Attempting to initialize ${backend} backend...`);
+      console.log(` Attempting to initialize ${backend} backend...`);
       backendSet = await trySetBackend(backend);
       if (backendSet) {
         selectedBackend = backend;
@@ -224,7 +224,7 @@ const initializeGPUAcceleration = async () => {
   }
 
   if (!backendSet) {
-    console.error("❌ Failed to initialize any backend, forcing CPU");
+    console.error("Error Failed to initialize any backend, forcing CPU");
     await tf.setBackend("cpu");
     await tf.ready();
     selectedBackend = "cpu";
@@ -233,7 +233,7 @@ const initializeGPUAcceleration = async () => {
   // Configure backend-specific optimizations
   try {
     if (selectedBackend === "webgpu") {
-      console.log("🌟 WebGPU backend configured (experimental)");
+      console.log(" WebGPU backend configured (experimental)");
       // WebGPU is still experimental, minimal config
     } else if (selectedBackend === "webgl") {
       // Conservative settings for better compatibility
@@ -245,7 +245,7 @@ const initializeGPUAcceleration = async () => {
       try {
         const gpuInfo = await (tf.backend() as any).getGPGPUContext?.();
         if (gpuInfo) {
-          console.log("🔥 GPU acceleration active");
+          console.log(" GPU acceleration active");
           console.log("GPU Info:", {
             vendor: gpuInfo.gl?.getParameter(gpuInfo.gl.VENDOR),
             renderer: gpuInfo.gl?.getParameter(gpuInfo.gl.RENDERER),
@@ -267,7 +267,7 @@ const initializeGPUAcceleration = async () => {
     console.warn("Backend configuration error:", error);
   }
 
-  console.log(`🚀 Backend initialized: ${selectedBackend.toUpperCase()}`);
+  console.log(` Backend initialized: ${selectedBackend.toUpperCase()}`);
 };
 
 // GPU acceleration will be initialized on-demand during model initialization
@@ -437,15 +437,15 @@ export const useTFModel = ({
 
       if (fastest.name === "webgpu") {
         console.log(
-          `🌟 WebGPU is fastest at ${fastest.speed.toFixed(1)} ops/sec`,
+          ` WebGPU is fastest at ${fastest.speed.toFixed(1)} ops/sec`,
         );
       } else if (fastest.name === "webgl") {
         const ratio = webglSpeed / cpuSpeed;
-        console.log(`🚀 WebGL is ${ratio.toFixed(1)}x faster than CPU`);
+        console.log(` WebGL is ${ratio.toFixed(1)}x faster than CPU`);
       } else {
         const webglRatio = cpuSpeed / (webglSpeed || 1);
         console.log(
-          `⚡ CPU is ${webglRatio.toFixed(1)}x faster - recommend CPU`,
+          ` CPU is ${webglRatio.toFixed(1)}x faster - recommend CPU`,
         );
       }
 
@@ -453,7 +453,7 @@ export const useTFModel = ({
       if (currentBackend !== optimalBackend) {
         await tf.setBackend(optimalBackend);
         console.log(
-          `🔄 Switched to ${optimalBackend} backend for better performance`,
+          ` Switched to ${optimalBackend} backend for better performance`,
         );
       }
 
@@ -493,7 +493,7 @@ export const useTFModel = ({
             metrics: ["accuracy"],
           });
           console.log(
-            `🔄 Model recompiled with new learning rate: ${learningRate}`,
+            ` Model recompiled with new learning rate: ${learningRate}`,
           );
         } catch (error) {
           console.error(
@@ -660,19 +660,19 @@ export const useTFModel = ({
     // Initialize GPU acceleration if not already done
     if (!gpuInitialized) {
       try {
-        console.log("🔄 Initializing GPU acceleration...");
+        console.log(" Initializing GPU acceleration...");
         await initializeGPUAcceleration();
         gpuInitialized = true;
-        console.log("✅ GPU acceleration initialized successfully");
+        console.log("Success GPU acceleration initialized successfully");
       } catch (error) {
-        console.error("❌ GPU acceleration initialization failed:", error);
-        console.log("🔄 Falling back to CPU backend...");
+        console.error("Error GPU acceleration initialization failed:", error);
+        console.log(" Falling back to CPU backend...");
         try {
           await tf.setBackend("cpu");
           await tf.ready();
           gpuInitialized = true;
         } catch (fallbackError) {
-          console.error("❌ CPU fallback failed:", fallbackError);
+          console.error("Error CPU fallback failed:", fallbackError);
           setStatus("error");
           return null;
         }
@@ -1011,7 +1011,7 @@ export const useTFModel = ({
 
     try {
       setWorkerStatus("initializing");
-      console.log("🔧 Initializing training worker...");
+      console.log(" Initializing training worker...");
 
       workerRef.current = new Worker(
         new URL("../workers/trainingWorker.ts", import.meta.url),
@@ -1026,7 +1026,7 @@ export const useTFModel = ({
 
         switch (type) {
           case "MODEL_READY":
-            console.log("✅ Training worker model ready");
+            console.log("Success Training worker model ready");
             setWorkerStatus("ready");
             setIsUsingWorker(true);
             break;
@@ -1043,7 +1043,7 @@ export const useTFModel = ({
             break;
 
           case "TRAINING_COMPLETE":
-            console.log("🎉 Training completed in worker");
+            console.log("Complete Training completed in worker");
             setStatus("success");
             setIsUsingWorker(false);
             break;
@@ -1053,7 +1053,7 @@ export const useTFModel = ({
             break;
 
           case "TRAINING_ERROR":
-            console.error("❌ Training worker error:", payload.error);
+            console.error("Error Training worker error:", payload.error);
             setStatus("error");
             setIsUsingWorker(false);
             break;
@@ -1062,7 +1062,7 @@ export const useTFModel = ({
 
       // Handle worker errors
       workerRef.current.onerror = (error) => {
-        console.error("❌ Worker error:", error);
+        console.error("Error Worker error:", error);
         setWorkerStatus("error");
         setIsUsingWorker(false);
       };
@@ -1078,7 +1078,7 @@ export const useTFModel = ({
 
       workerRef.current.postMessage(message);
     } catch (error) {
-      console.error("❌ Failed to initialize training worker:", error);
+      console.error("Error Failed to initialize training worker:", error);
       setWorkerStatus("error");
       // Continue with main thread training
     }
@@ -1092,7 +1092,7 @@ export const useTFModel = ({
     ) => {
       // Try Web Worker first if enabled
       if (useWebWorker && workerRef.current && workerStatus === "ready") {
-        console.log("🚀 Starting background training with Web Worker");
+        console.log(" Starting background training with Web Worker");
         setStatus("training");
         setEpochsRun(0);
         setLossHistory([]);
@@ -1112,7 +1112,7 @@ export const useTFModel = ({
       }
 
       // Fallback to main thread training
-      console.log("🔄 Using main thread training (worker not available)");
+      console.log(" Using main thread training (worker not available)");
       let activeModel = modelRef.current;
       if (
         !activeModel ||

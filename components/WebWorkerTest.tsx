@@ -161,16 +161,16 @@ export const WebWorkerTest: React.FC = () => {
 
   const getStatusIcon = (status: TestResult["status"]) => {
     switch (status) {
-      case "pass": return "✅";
-      case "fail": return "❌";
-      case "pending": return "⏳";
+      case "pass": return "Success";
+      case "fail": return "Error";
+      case "pending": return "";
     }
   };
 
   return (
     <div className="bg-gray-800 border border-gray-600 rounded-lg p-6 max-w-4xl mx-auto">
       <div className="mb-6">
-        <h2 className="text-2xl font-bold text-cyan-400 mb-2">🧪 Web Worker Test Suite</h2>
+        <h2 className="text-2xl font-bold text-cyan-400 mb-2"> Web Worker Test Suite</h2>
         <p className="text-gray-300 text-sm mb-4">
           This test verifies that the Web Worker training implementation is working correctly.
           Run this test to diagnose any issues with background training.
@@ -231,10 +231,10 @@ export const WebWorkerTest: React.FC = () => {
       </div>
 
       <div className="mt-6 p-4 bg-gray-700 rounded-lg">
-        <h3 className="font-medium text-white mb-2">💡 Debugging Tips:</h3>
+        <h3 className="font-medium text-white mb-2"> Debugging Tips:</h3>
         <ul className="text-sm text-gray-300 space-y-1">
           <li>• Open browser DevTools Console to see detailed logs</li>
-          <li>• Look for messages like "🔧 TensorFlow.js initialized in worker"</li>
+          <li>• Look for messages like " TensorFlow.js initialized in worker"</li>
           <li>• If tests fail, try refreshing the page and running again</li>
           <li>• Web Workers require HTTPS in production (GitHub Pages provides this)</li>
           <li>• Check Network tab for worker file loading issues</li>

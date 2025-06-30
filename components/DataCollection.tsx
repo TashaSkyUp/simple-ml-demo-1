@@ -319,7 +319,7 @@ export const DataCollection: React.FC<DataCollectionProps> = ({
       }
       */
     } catch (error: any) {
-      console.error("Error generating image:", error);
+      console.error("Error: generating image:", error);
       setGenerationError(
         error.message || "Failed to generate image. Check console for details.",
       );
@@ -348,7 +348,7 @@ export const DataCollection: React.FC<DataCollectionProps> = ({
                 : "bg-gray-700 text-gray-300 hover:bg-gray-600"
             }`}
           >
-            ✏️ Draw
+            Draw
           </button>
           <button
             onClick={() => setInputMode("camera")}
@@ -358,7 +358,7 @@ export const DataCollection: React.FC<DataCollectionProps> = ({
                 : "bg-gray-700 text-gray-300 hover:bg-gray-600"
             }`}
           >
-            📸 Camera
+            Camera
           </button>
         </div>
       </div>
@@ -384,7 +384,7 @@ export const DataCollection: React.FC<DataCollectionProps> = ({
               {isCameraStreaming ? (
                 <div className="bg-blue-900/30 border border-blue-600 rounded-lg p-3 mb-3">
                   <p className="text-blue-300 text-sm text-center">
-                    📸 Camera active -{" "}
+                    Camera active -{" "}
                     {inferenceMode
                       ? "live inference running"
                       : "press a button to capture"}
@@ -394,7 +394,7 @@ export const DataCollection: React.FC<DataCollectionProps> = ({
                 !inferenceMode && (
                   <div className="bg-green-900/30 border border-green-600 rounded-lg p-3 mb-3">
                     <p className="text-green-300 text-sm text-center">
-                      ✅ Photo captured! Add it as a training sample:
+                      Photo captured! Add it as a training sample:
                     </p>
                   </div>
                 )
@@ -496,7 +496,7 @@ export const DataCollection: React.FC<DataCollectionProps> = ({
                   onClick={handleDrawingPredict}
                   className="w-full bg-purple-600 hover:bg-purple-700 text-white font-bold py-2 px-4 rounded transition-colors"
                 >
-                  🔍 Predict Drawing
+                  Predict Drawing
                 </button>
               </div>
             )}
@@ -532,7 +532,7 @@ export const DataCollection: React.FC<DataCollectionProps> = ({
                 >
                   {isGenerating ? "Generating..." : "Generate & Draw on Canvas"}
                 </button>
-                {generationError && (
+                {generationError: && (
                   <p className="text-red-400 text-sm mt-2 w-full max-w-md text-center">
                     {generationError}
                   </p>

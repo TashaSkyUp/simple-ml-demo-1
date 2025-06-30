@@ -188,7 +188,7 @@ export const TrainingControls: React.FC<TrainingControlsProps> = ({
       <div className="mt-3 p-3 bg-gray-800 rounded-md">
         <div className="text-sm text-gray-300">
           <div className="flex items-center gap-2 mb-2">
-            <span className="text-blue-400">💾</span>
+            <span className="text-blue-400">Save</span>
             <span className="font-medium">Session Management</span>
           </div>
           <div className="space-y-1 text-xs">

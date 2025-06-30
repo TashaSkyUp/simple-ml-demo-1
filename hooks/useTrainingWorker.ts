@@ -68,7 +68,7 @@ export const useTrainingWorker = ({
 
         switch (type) {
           case 'MODEL_READY':
-            console.log('✅ Training worker model ready');
+            console.log('Success Training worker model ready');
             setStatus("ready");
             break;
 
@@ -79,7 +79,7 @@ export const useTrainingWorker = ({
             break;
 
           case 'TRAINING_COMPLETE':
-            console.log('🎉 Training completed in worker');
+            console.log('Complete Training completed in worker');
             setStatus("ready");
             setCurrentProgress(null);
             onTrainingComplete?.(payload.modelWeights);
@@ -90,7 +90,7 @@ export const useTrainingWorker = ({
             break;
 
           case 'TRAINING_ERROR':
-            console.error('❌ Training worker error:', payload.error);
+            console.error('Error Training worker error:', payload.error);
             setStatus("error");
             setCurrentProgress(null);
             onError?.(payload.error);
@@ -103,7 +103,7 @@ export const useTrainingWorker = ({
 
       // Handle worker errors
       workerRef.current.onerror = (error) => {
-        console.error('❌ Worker error:', error);
+        console.error('Error Worker error:', error);
         setStatus("error");
         onError?.(`Worker error: ${error.message}`);
       };
@@ -117,7 +117,7 @@ export const useTrainingWorker = ({
       workerRef.current.postMessage(message);
 
     } catch (error) {
-      console.error('❌ Failed to initialize training worker:', error);
+      console.error('Error Failed to initialize training worker:', error);
       setStatus("error");
       onError?.(`Failed to initialize worker: ${error}`);
     }
@@ -135,7 +135,7 @@ export const useTrainingWorker = ({
       return;
     }
 
-    console.log(`🚀 Starting background training: ${numEpochs} epochs`);
+    console.log(` Starting background training: ${numEpochs} epochs`);
     setStatus("training");
 
     const message: TrainingWorkerMessage = {
@@ -155,7 +155,7 @@ export const useTrainingWorker = ({
   const stopTraining = useCallback(() => {
     if (!workerRef.current) return;
 
-    console.log('⏹️ Stopping background training');
+    console.log(' Stopping background training');
 
     const message: TrainingWorkerMessage = {
       type: 'STOP_TRAINING',

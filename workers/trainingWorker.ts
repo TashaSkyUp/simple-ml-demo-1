@@ -44,18 +44,18 @@ let shouldStop = false;
 const initializeTensorFlow = async () => {
   try {
     await tf.ready();
-    console.log("🔧 TensorFlow.js initialized in worker");
+    console.log(" TensorFlow.js initialized in worker");
 
     // Try backends in order of preference: WebGPU > WebGL > CPU
     try {
       await tf.setBackend("webgpu");
       await tf.ready();
       if (tf.getBackend() === "webgpu") {
-        console.log("🌟 Worker using WebGPU backend (best performance)");
+        console.log(" Worker using WebGPU backend (best performance)");
         return true;
       }
     } catch (webgpuError) {
-      console.log("⚠️ WebGPU not available in worker, trying WebGL...");
+      console.log(" WebGPU not available in worker, trying WebGL...");
     }
 
     // Fallback to WebGL
@@ -65,20 +65,20 @@ const initializeTensorFlow = async () => {
         await tf.setBackend("webgl");
         await tf.ready();
         if (tf.getBackend() === "webgl") {
-          console.log("🚀 Worker using WebGL backend");
+          console.log(" Worker using WebGL backend");
           return true;
         }
       }
     } catch (webglError) {
-      console.log("⚠️ WebGL not available in worker, using CPU...");
+      console.log(" WebGL not available in worker, using CPU...");
     }
 
     // Final fallback to CPU
     await tf.setBackend("cpu");
-    console.log("💻 Worker using CPU backend");
+    console.log(" Worker using CPU backend");
     return true;
   } catch (error) {
-    console.error("❌ Failed to initialize TensorFlow.js in worker:", error);
+    console.error("Error Failed to initialize TensorFlow.js in worker:", error);
     return false;
   }
 };
@@ -306,7 +306,7 @@ self.onmessage = async (event: MessageEvent<TrainingWorkerMessage>) => {
   try {
     switch (type) {
       case "INIT_TRAINING":
-        console.log("🔧 Initializing training worker...");
+        console.log(" Initializing training worker...");
 
         const initialized = await initializeTensorFlow();
         if (!initialized) {
@@ -331,13 +331,13 @@ self.onmessage = async (event: MessageEvent<TrainingWorkerMessage>) => {
         }
 
         console.log(
-          `🚀 Starting training: ${numEpochs} epochs, batch size: ${batchSize}`,
+          ` Starting training: ${numEpochs} epochs, batch size: ${batchSize}`,
         );
         await trainModel(trainingData, numEpochs, batchSize);
         break;
 
       case "STOP_TRAINING":
-        console.log("⏹️ Stopping training...");
+        console.log(" Stopping training...");
         shouldStop = true;
         isTraining = false;
         break;
@@ -347,7 +347,7 @@ self.onmessage = async (event: MessageEvent<TrainingWorkerMessage>) => {
         break;
 
       case "DISPOSE":
-        console.log("🗑️ Disposing worker resources...");
+        console.log(" Disposing worker resources...");
         if (model) {
           model.dispose();
           model = null;
@@ -360,7 +360,7 @@ self.onmessage = async (event: MessageEvent<TrainingWorkerMessage>) => {
         throw new Error(`Unknown message type: ${type}`);
     }
   } catch (error) {
-    console.error("❌ Worker error:", error);
+    console.error("Error Worker error:", error);
     self.postMessage({
       type: "TRAINING_ERROR",
       payload: {

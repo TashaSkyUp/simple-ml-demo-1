@@ -127,7 +127,7 @@ export const InferenceTab: React.FC<InferenceTabProps> = ({
       setTimeout(() => generateTone(784, 0.3, "sine"), 300); // G5
     },
     success: async () => {
-      // Success sound with cheerful progression
+      // Successfully sound with cheerful progression
       await generateTone(523, 0.15, "sine"); // C5
       setTimeout(() => generateTone(659, 0.15, "sine"), 120); // E5
       setTimeout(() => generateTone(784, 0.15, "sine"), 240); // G5
@@ -177,7 +177,7 @@ export const InferenceTab: React.FC<InferenceTabProps> = ({
           setAudioContextInitialized(true);
         }
       } catch (error) {
-        console.error("❌ Failed to initialize audio context:", error);
+        console.error("Error: Failed to initialize audio context:", error);
       }
     }
   }, [audioContextInitialized]);
@@ -187,7 +187,7 @@ export const InferenceTab: React.FC<InferenceTabProps> = ({
     const currentTime = Date.now();
     const currentPrediction = prediction.label;
 
-    console.log("🎵 Audio chime evaluation:", {
+    console.log(" Audio chime evaluation:", {
       audioEnabled,
       modelReady,
       prediction: currentPrediction,
@@ -221,7 +221,7 @@ export const InferenceTab: React.FC<InferenceTabProps> = ({
     // Confidence check
     if (prediction.confidence < confidenceThreshold) {
       console.log(
-        `📊 Confidence ${prediction.confidence} below threshold ${confidenceThreshold}`,
+        ` Confidence ${prediction.confidence} below threshold ${confidenceThreshold}`,
       );
       return;
     }
@@ -234,11 +234,11 @@ export const InferenceTab: React.FC<InferenceTabProps> = ({
 
     // Class-specific check
     if (currentPrediction === "0" && !enabledForClass0) {
-      console.log("🚫 Class 0 chimes disabled");
+      console.log(" Class 0 chimes disabled");
       return;
     }
     if (currentPrediction === "1" && !enabledForClass1) {
-      console.log("🚫 Class 1 chimes disabled");
+      console.log(" Class 1 chimes disabled");
       return;
     }
 
@@ -248,7 +248,7 @@ export const InferenceTab: React.FC<InferenceTabProps> = ({
       case "change":
         shouldPlay = currentPrediction !== lastPlayedPrediction;
         console.log(
-          `🔄 Change mode: ${shouldPlay ? "different" : "same"} prediction`,
+          ` Change mode: ${shouldPlay ? "different" : "same"} prediction`,
         );
         break;
       case "every":
@@ -258,7 +258,7 @@ export const InferenceTab: React.FC<InferenceTabProps> = ({
       case "threshold":
         shouldPlay = prediction.confidence >= confidenceThreshold;
         console.log(
-          `🎯 Threshold mode: confidence ${prediction.confidence} >= ${confidenceThreshold}`,
+          ` Threshold mode: confidence ${prediction.confidence} >= ${confidenceThreshold}`,
         );
         break;
     }
@@ -270,7 +270,7 @@ export const InferenceTab: React.FC<InferenceTabProps> = ({
     // Delay check
     if (triggerDelay > 0 && currentTime - lastPlayTime < triggerDelay * 1000) {
       console.log(
-        `⏱️ Trigger delay: ${currentTime - lastPlayTime}ms < ${triggerDelay * 1000}ms`,
+        ` Trigger delay: ${currentTime - lastPlayTime}ms < ${triggerDelay * 1000}ms`,
       );
       return;
     }
@@ -279,13 +279,13 @@ export const InferenceTab: React.FC<InferenceTabProps> = ({
     let chimeIdentifier = "";
     if (currentPrediction === "0" && class0ChimeUrl) {
       chimeIdentifier = class0ChimeUrl;
-      console.log("🔔 Playing Class 0 chime");
+      console.log(" Playing Class 0 chime");
     } else if (currentPrediction === "1" && class1ChimeUrl) {
       chimeIdentifier = class1ChimeUrl;
-      console.log("🔔 Playing Class 1 chime");
+      console.log(" Playing Class 1 chime");
     } else {
       console.log(
-        `🚫 No chime configured for prediction: ${currentPrediction}`,
+        ` No chime configured for prediction: ${currentPrediction}`,
       );
       return;
     }
@@ -296,7 +296,7 @@ export const InferenceTab: React.FC<InferenceTabProps> = ({
     const playSound = async () => {
       if (chimeSource) {
         console.log(
-          "🎵 Attempting to play:",
+          " Attempting to play:",
           typeof chimeSource === "function"
             ? `built-in tone (${chimeIdentifier})`
             : chimeSource,
@@ -306,11 +306,11 @@ export const InferenceTab: React.FC<InferenceTabProps> = ({
         if (typeof chimeSource === "function") {
           try {
             await chimeSource();
-            console.log("✅ Built-in tone played successfully");
+            console.log("Successfully Built-in tone played successfully");
             setLastPlayedPrediction(currentPrediction);
             setLastPlayTime(currentTime);
           } catch (error: any) {
-            console.error("❌ Built-in tone play failed:", error);
+            console.error("Error: Built-in tone play failed:", error);
           }
         } else if (typeof chimeSource === "string" && chimeSource.length > 0) {
           // Handle URL-based audio
@@ -320,25 +320,25 @@ export const InferenceTab: React.FC<InferenceTabProps> = ({
             audio.volume = volume;
 
             await audio.play();
-            console.log("✅ Audio played successfully");
+            console.log("Successfully Audio played successfully");
             setLastPlayedPrediction(currentPrediction);
             setLastPlayTime(currentTime);
           } catch (error: any) {
-            console.error("❌ Audio play failed:", error);
+            console.error("Error: Audio play failed:", error);
             if (error.name === "NotAllowedError") {
-              console.log("🔐 Audio blocked - user interaction required");
+              console.log(" Audio blocked - user interaction required");
               setAudioContextInitialized(false);
             }
           }
         } else {
           console.log(
-            "🚫 Invalid chime source:",
+            " Invalid chime source:",
             typeof chimeSource,
             chimeSource,
           );
         }
       } else {
-        console.log("🚫 No chime configured");
+        console.log(" No chime configured");
       }
     };
 
@@ -367,7 +367,7 @@ export const InferenceTab: React.FC<InferenceTabProps> = ({
       <div className="bg-gray-800 rounded-lg p-4 border border-gray-700">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <span className="text-2xl">🔍</span>
+            <span className="text-2xl">Predict</span>
             <div>
               <h2 className="text-xl font-semibold text-gray-100">
                 Live Inference
@@ -411,7 +411,7 @@ export const InferenceTab: React.FC<InferenceTabProps> = ({
       {!modelReady && (
         <div className="bg-yellow-900 border border-yellow-600 rounded-lg p-4">
           <div className="flex items-center gap-3">
-            <span className="text-2xl">⚠️</span>
+            <span className="text-2xl">Warning</span>
             <div>
               <h3 className="text-lg font-semibold text-yellow-300">
                 Model Not Ready
@@ -441,7 +441,7 @@ export const InferenceTab: React.FC<InferenceTabProps> = ({
         <div className="space-y-6">
           <CollapsibleSection
             title="Input & Prediction"
-            icon="🎯"
+            icon=""
             badge={
               prediction.confidence > 0
                 ? `${Math.round(prediction.confidence * 100)}%`
@@ -501,7 +501,7 @@ export const InferenceTab: React.FC<InferenceTabProps> = ({
           {/* Prediction Results */}
           <CollapsibleSection
             title="Prediction Results"
-            icon="📊"
+            icon=""
             badge={prediction.label !== "?" ? prediction.label : undefined}
             sectionId="inference-results"
             isOpen={isSectionOpen("inference-results")}
@@ -556,7 +556,7 @@ export const InferenceTab: React.FC<InferenceTabProps> = ({
         <div>
           <CollapsibleSection
             title="Audio Alerts"
-            icon="🔊"
+            icon=""
             badge={audioEnabled ? "ON" : "OFF"}
             sectionId="audio-alerts"
             isOpen={isSectionOpen("audio-alerts")}
@@ -568,7 +568,7 @@ export const InferenceTab: React.FC<InferenceTabProps> = ({
               <div className="bg-gray-800 border border-gray-600 rounded-lg p-4">
                 <div className="flex items-center justify-between mb-3">
                   <h3 className="text-lg font-semibold text-gray-300">
-                    🔊 Enable Audio Alerts
+                     Enable Audio Alerts
                   </h3>
                   <button
                     onClick={() => {
@@ -592,7 +592,7 @@ export const InferenceTab: React.FC<InferenceTabProps> = ({
                   confidence (≥70%)
                   {audioEnabled && !audioContextInitialized && (
                     <span className="block text-yellow-400 mt-1">
-                      ⚠️ Click anywhere to enable audio
+                      Warning Click anywhere to enable audio
                     </span>
                   )}
                 </p>
@@ -602,7 +602,7 @@ export const InferenceTab: React.FC<InferenceTabProps> = ({
               {audioEnabled && (
                 <div className="bg-indigo-900 border border-indigo-600 rounded-lg p-4">
                   <h3 className="text-lg font-semibold text-indigo-300 mb-3">
-                    ⚙️ Trigger Configuration
+                     Trigger Configuration
                   </h3>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
@@ -711,7 +711,7 @@ export const InferenceTab: React.FC<InferenceTabProps> = ({
               {audioEnabled && (
                 <div className="bg-blue-900 border border-blue-600 rounded-lg p-4">
                   <h3 className="text-lg font-semibold text-blue-300 mb-3">
-                    🎚️ Volume Control
+                     Volume Control
                   </h3>
                   <div className="flex items-center gap-3">
                     <span className="text-sm text-blue-200 min-w-[40px]">
@@ -727,7 +727,7 @@ export const InferenceTab: React.FC<InferenceTabProps> = ({
                       className="flex-1 accent-blue-500"
                     />
                     <span className="text-sm text-blue-200 min-w-[40px]">
-                      🔊
+                      
                     </span>
                     <span className="text-sm text-blue-200 min-w-[40px]">
                       {Math.round(volume * 100)}%
@@ -740,7 +740,7 @@ export const InferenceTab: React.FC<InferenceTabProps> = ({
               {audioEnabled && (
                 <div className="bg-green-900 border border-green-600 rounded-lg p-4">
                   <h3 className="text-lg font-semibold text-green-300 mb-3">
-                    🎵 Class 0 Chime
+                     Class 0 Chime
                   </h3>
                   <div className="space-y-3">
                     <input
@@ -759,7 +759,7 @@ export const InferenceTab: React.FC<InferenceTabProps> = ({
                         onClick={() => {
                           if (class0ChimeUrl) {
                             console.log(
-                              "🧪 Testing Class 0 chime:",
+                              " Testing Class 0 chime:",
                               class0ChimeUrl,
                             );
                             initializeAudioContext();
@@ -768,7 +768,7 @@ export const InferenceTab: React.FC<InferenceTabProps> = ({
                               resolveChimeSource(class0ChimeUrl);
                             if (typeof chimeSource === "function") {
                               chimeSource().catch((error) => {
-                                console.error("❌ Test play failed:", error);
+                                console.error("Error: Test play failed:", error);
                                 alert(
                                   "Failed to play built-in sound. Check browser permissions.",
                                 );
@@ -777,7 +777,7 @@ export const InferenceTab: React.FC<InferenceTabProps> = ({
                               const audio = new Audio(chimeSource);
                               audio.volume = volume;
                               audio.play().catch((error) => {
-                                console.error("❌ Test play failed:", error);
+                                console.error("Error: Test play failed:", error);
                                 alert(
                                   "Failed to play sound. Check URL and browser permissions.",
                                 );
@@ -826,7 +826,7 @@ export const InferenceTab: React.FC<InferenceTabProps> = ({
               {audioEnabled && (
                 <div className="bg-purple-900 border border-purple-600 rounded-lg p-4">
                   <h3 className="text-lg font-semibold text-purple-300 mb-3">
-                    🎶 Class 1 Chime
+                     Class 1 Chime
                   </h3>
                   <div className="space-y-3">
                     <input
@@ -845,7 +845,7 @@ export const InferenceTab: React.FC<InferenceTabProps> = ({
                         onClick={() => {
                           if (class1ChimeUrl) {
                             console.log(
-                              "🧪 Testing Class 1 chime:",
+                              " Testing Class 1 chime:",
                               class1ChimeUrl,
                             );
                             initializeAudioContext();
@@ -854,7 +854,7 @@ export const InferenceTab: React.FC<InferenceTabProps> = ({
                               resolveChimeSource(class1ChimeUrl);
                             if (typeof chimeSource === "function") {
                               chimeSource().catch((error) => {
-                                console.error("❌ Test play failed:", error);
+                                console.error("Error: Test play failed:", error);
                                 alert(
                                   "Failed to play built-in sound. Check browser permissions.",
                                 );
@@ -863,7 +863,7 @@ export const InferenceTab: React.FC<InferenceTabProps> = ({
                               const audio = new Audio(chimeSource);
                               audio.volume = volume;
                               audio.play().catch((error) => {
-                                console.error("❌ Test play failed:", error);
+                                console.error("Error: Test play failed:", error);
                                 alert(
                                   "Failed to play sound. Check URL and browser permissions.",
                                 );
@@ -914,7 +914,7 @@ export const InferenceTab: React.FC<InferenceTabProps> = ({
               {audioEnabled && (
                 <div className="bg-yellow-900 border border-yellow-600 rounded-lg p-4">
                   <h3 className="text-lg font-semibold text-yellow-300 mb-2">
-                    📊 Alert Status
+                     Alert Status
                   </h3>
                   <div className="grid grid-cols-2 gap-4 text-sm">
                     <div>
@@ -976,7 +976,7 @@ export const InferenceTab: React.FC<InferenceTabProps> = ({
       {/* Neural Network Visualization - Full Width */}
       <CollapsibleSection
         title="Neural Network Visualization"
-        icon="🧠"
+        icon=""
         badge={
           liveLayerOutputs.length > 0
             ? `${liveLayerOutputs.length} layers`
@@ -1000,7 +1000,7 @@ export const InferenceTab: React.FC<InferenceTabProps> = ({
             </div>
           ) : liveLayerOutputs.length === 0 ? (
             <div className="text-center py-8">
-              <span className="text-6xl mb-4 block">🎯</span>
+              <span className="text-6xl mb-4 block"></span>
               <h3 className="text-xl font-semibold text-gray-300 mb-2">
                 Make a Prediction to See Visualization
               </h3>
@@ -1028,7 +1028,7 @@ export const InferenceTab: React.FC<InferenceTabProps> = ({
       {/* Performance Monitor */}
       <CollapsibleSection
         title="Performance Monitor"
-        icon="⚡"
+        icon=""
         sectionId="inference-performance"
         isOpen={isSectionOpen("inference-performance")}
         onToggle={toggleSection}
@@ -1037,7 +1037,7 @@ export const InferenceTab: React.FC<InferenceTabProps> = ({
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           <div className="bg-gray-800 rounded-lg p-4 border border-gray-700">
             <h3 className="text-lg font-semibold text-cyan-400 mb-2">
-              ⚡ Inference Speed
+               Inference Speed
             </h3>
             <div className="text-2xl font-bold text-white mb-1">
               {liveCameraMode ? "~30ms" : "< 100ms"}
@@ -1047,7 +1047,7 @@ export const InferenceTab: React.FC<InferenceTabProps> = ({
 
           <div className="bg-gray-800 rounded-lg p-4 border border-gray-700">
             <h3 className="text-lg font-semibold text-green-400 mb-2">
-              🧠 Model Complexity
+               Model Complexity
             </h3>
             <div className="text-2xl font-bold text-white mb-1">
               {liveLayerOutputs.length}
@@ -1057,7 +1057,7 @@ export const InferenceTab: React.FC<InferenceTabProps> = ({
 
           <div className="bg-gray-800 rounded-lg p-4 border border-gray-700">
             <h3 className="text-lg font-semibold text-purple-400 mb-2">
-              📊 Accuracy
+               Accuracy
             </h3>
             <div className="text-2xl font-bold text-white mb-1">
               {prediction.confidence > 0
@@ -1075,10 +1075,10 @@ export const InferenceTab: React.FC<InferenceTabProps> = ({
       <audio
         ref={audioRef}
         preload="none"
-        onCanPlay={() => console.log("🎵 Audio ready to play")}
-        onError={(e) => console.error("🚫 Audio element error:", e)}
-        onLoadStart={() => console.log("🔄 Audio loading started")}
-        onLoadedData={() => console.log("✅ Audio data loaded")}
+        onCanPlay={() => console.log(" Audio ready to play")}
+        onError={(e) => console.error(" Audio element error:", e)}
+        onLoadStart={() => console.log(" Audio loading started")}
+        onLoadedData={() => console.log("Successfully Audio data loaded")}
         onClick={initializeAudioContext}
         src="data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1fdJivrJBhNjVgodDbq2EcBj+a2/LDciUFLIHO8tiJNwgZaLvt559NEAxQp+PwtmMcBjiR1/LMeSwFJHfH8N2QQAoUXrTp66hVFApGn+DyvmISBUCb3+3CayABJXfH8N2QQAoUXrTp66hVFApGn+DyvmISBUCb3+3CayABJXfH8N2QQAoUXrTp66hVFApGn+DyvmISBUCb3+3CayABJXfH8N2QQAoUXrTp66hVFApGn+DyvmISBUCb3+3CayABJXfH8N2QQAoUXrTp66hVFApGn+DyvmISBUCb3+3CayABJXfH8N2QQAoUXrTp66hVFApGn+DyvmISBUCb3+3CayABJXfH8N2QQAoUXrTp66hVFApGn+DyvmISBUCb3+3CayABJXfH8N2QQAoUXrTp66hVFApGn+DyvmISBUCb3+3CayABJXfH8N2QQAoUXrTp66hVFApGn+DyvmISBUCb3+3CayABJXfH8N2QQAoUXrTp66hVFApGn+DyvmISBUCb3+3CayABJXfH8N2QQAoUXrTp66hVFApGn+DyvmISBUCb3+3CayABJXfH8N2QQAoUXrTp66hVFApGn+DyvmISBUCb3+3CayABJXfH8N2QQAoUXrTp66hVFApGn+DyvmISBUCb3+3CayABJXfH8N2QQAoUXrTp66hVFApGn+DyvmISBUCb3+3CayABJXfH8N2QQAoUXrTp66hVFApGn+DyvmISBUCb3+3CayAB"
       />

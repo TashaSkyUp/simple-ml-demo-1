@@ -140,7 +140,7 @@ class SessionManagerTest {
         }
       }
 
-      console.log('✅ Session data validation passed');
+      console.log('Success Session data validation passed');
       return true;
     } catch (error) {
       console.error('Session validation error:', error);
@@ -196,36 +196,36 @@ class SessionManagerTest {
   }
 
   static runTests(): void {
-    console.log('🧪 Running Session Management Tests...\n');
+    console.log('Test Running Session Management Tests...\n');
 
     // Test 1: Validate example session
     console.log('Test 1: Validating example session');
     const isValid = this.validateSessionData(exampleSession);
-    console.log(`Result: ${isValid ? '✅ PASS' : '❌ FAIL'}\n`);
+    console.log(`Result: ${isValid ? 'Success PASS' : 'Error FAIL'}\n`);
 
     // Test 2: Serialize and deserialize
     console.log('Test 2: Serialize/Deserialize cycle');
     try {
       const serialized = this.serializeSession(exampleSession);
       const deserialized = this.deserializeSession(serialized);
-      console.log('Result: ✅ PASS - Serialize/deserialize successful\n');
+      console.log('Result: Success PASS - Serialize/deserialize successful\n');
     } catch (error) {
-      console.log('Result: ❌ FAIL - Serialize/deserialize failed:', error, '\n');
+      console.log('Result: Error FAIL - Serialize/deserialize failed:', error, '\n');
     }
 
     // Test 3: Calculate session statistics
     console.log('Test 3: Session statistics');
     const stats = this.calculateSessionSize(exampleSession);
     console.log('Session Statistics:', stats);
-    console.log('Result: ✅ PASS - Statistics calculated\n');
+    console.log('Result: Success PASS - Statistics calculated\n');
 
     // Test 4: Invalid session handling
     console.log('Test 4: Invalid session handling');
     const invalidSession = { layers: null, trainingData: [] } as any;
     const invalidResult = this.validateSessionData(invalidSession);
-    console.log(`Result: ${!invalidResult ? '✅ PASS' : '❌ FAIL'} - Invalid session properly rejected\n`);
+    console.log(`Result: ${!invalidResult ? 'Success PASS' : 'Error FAIL'} - Invalid session properly rejected\n`);
 
-    console.log('🎉 Session Management Tests Complete!');
+    console.log('Complete Session Management Tests Complete!');
   }
 }
 

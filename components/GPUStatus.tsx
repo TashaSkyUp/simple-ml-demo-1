@@ -51,7 +51,7 @@ export const GPUStatus: React.FC<GPUStatusProps> = ({
     setSwitching(true);
     try {
       await tf.setBackend(targetBackend);
-      console.log(`🔄 Switched to ${targetBackend} backend`);
+      console.log(` Switched to ${targetBackend} backend`);
       // Refresh GPU info after switch
       const newBackend = tf.getBackend();
       setGpuInfo((prev) =>
@@ -85,12 +85,12 @@ export const GPUStatus: React.FC<GPUStatusProps> = ({
           try {
             const adapter = await navigator.gpu.requestAdapter();
             webgpuSupported = !!adapter;
-            console.log("🌟 WebGPU adapter detected:", !!adapter);
+            console.log(" WebGPU adapter detected:", !!adapter);
           } catch (error) {
             console.warn("WebGPU detection failed:", error);
           }
         } else {
-          console.log("❌ navigator.gpu not available");
+          console.log("Error: navigator.gpu not available");
         }
 
         let gpuVendor: string | undefined;
@@ -147,7 +147,7 @@ export const GPUStatus: React.FC<GPUStatusProps> = ({
           memoryInfo,
         });
       } catch (error) {
-        console.error("Error detecting GPU info:", error);
+        console.error("Error: detecting GPU info:", error);
         setGpuInfo({
           backend: "unknown",
           isGPUAccelerated: false,
@@ -204,9 +204,9 @@ export const GPUStatus: React.FC<GPUStatusProps> = ({
   };
 
   const getStatusIcon = () => {
-    if (gpuInfo.backend === "webgpu") return "🌟";
-    if (gpuInfo.isGPUAccelerated) return "🔥";
-    return "⚡";
+    if (gpuInfo.backend === "webgpu") return "";
+    if (gpuInfo.isGPUAccelerated) return "";
+    return "";
   };
 
   const getBackendDisplayName = (backend: string) => {
@@ -441,10 +441,10 @@ export const GPUStatus: React.FC<GPUStatusProps> = ({
             <div className="pt-2 border-t border-gray-700">
               <div className="text-gray-400 text-xs">
                 {gpuInfo.backend === "webgpu"
-                  ? "✅ Training will use next-generation WebGPU acceleration"
+                  ? "Training will use next-generation WebGPU acceleration"
                   : gpuInfo.isGPUAccelerated
-                    ? "✅ Training will use GPU acceleration"
-                    : "⚠️ Training will use CPU (slower but still functional)"}
+                    ? "Training will use GPU acceleration"
+                    : "Training will use CPU (slower but still functional)"}
               </div>
               {(benchmarkData?.webgpuSpeed || benchmarkData?.webglSpeed) &&
                 benchmarkData?.cpuSpeed && (
@@ -455,11 +455,11 @@ export const GPUStatus: React.FC<GPUStatusProps> = ({
                       const cpuSpeed = benchmarkData.cpuSpeed || 0;
 
                       if (webgpuSpeed > cpuSpeed && webgpuSpeed > webglSpeed) {
-                        return "🌟 WebGPU provides the best performance for your system";
+                        return " WebGPU provides the best performance for your system";
                       } else if (webglSpeed > cpuSpeed) {
-                        return "🚀 WebGL acceleration is beneficial for your system";
+                        return " WebGL acceleration is beneficial for your system";
                       } else {
-                        return "💡 Tip: Your CPU outperforms GPU for small models";
+                        return " Tip: Your CPU outperforms GPU for small models";
                       }
                     })()}
                   </div>

@@ -113,7 +113,7 @@ export const TrainingTab: React.FC<TrainingTabProps> = ({
       <div className="bg-gray-800 rounded-lg p-4 border border-gray-700">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <span className="text-2xl">🎯</span>
+            <span className="text-2xl"></span>
             <div>
               <h2 className="text-xl font-semibold text-gray-100">
                 Training Mode
@@ -154,7 +154,7 @@ export const TrainingTab: React.FC<TrainingTabProps> = ({
         <div className="xl:col-span-1">
           <CollapsibleSection
             title="Network Architecture"
-            icon="🏗️"
+            icon=""
             badge={layers.length}
             sectionId="training-architecture"
             isOpen={isSectionOpen("training-architecture")}
@@ -174,7 +174,7 @@ export const TrainingTab: React.FC<TrainingTabProps> = ({
           <div className="mt-6">
             <CollapsibleSection
               title="GPU Performance"
-              icon="⚡"
+              icon=""
               badge={
                 gpuBenchmark.currentBackend?.toUpperCase() ||
                 (gpuBenchmark.opsPerSecond > 0
@@ -198,7 +198,7 @@ export const TrainingTab: React.FC<TrainingTabProps> = ({
         <div className="xl:col-span-1">
           <CollapsibleSection
             title="Data Collection"
-            icon="📊"
+            icon=""
             badge={trainingData.length}
             sectionId="training-data-collection"
             isOpen={isSectionOpen("training-data-collection")}
@@ -224,7 +224,7 @@ export const TrainingTab: React.FC<TrainingTabProps> = ({
         <div className="xl:col-span-1 lg:col-span-2 xl:col-span-1">
           <CollapsibleSection
             title="Training & Session Management"
-            icon="🧠"
+            icon=""
             badge={
               trainingStatus === "training"
                 ? `Training ${epochsRun}/${numEpochs}`
@@ -270,7 +270,7 @@ export const TrainingTab: React.FC<TrainingTabProps> = ({
       {/* Training Tips Section */}
       <CollapsibleSection
         title="Training Tips & Best Practices"
-        icon="💡"
+        icon=""
         sectionId="training-tips"
         isOpen={isSectionOpen("training-tips")}
         onToggle={toggleSection}
@@ -279,7 +279,7 @@ export const TrainingTab: React.FC<TrainingTabProps> = ({
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           <div className="bg-gray-800 rounded-lg p-4 border border-gray-700">
             <h3 className="text-lg font-semibold text-cyan-400 mb-2">
-              🎯 Data Collection
+               Data Collection
             </h3>
             <ul className="text-sm text-gray-300 space-y-1">
               <li>• Collect varied samples for each class</li>
@@ -291,7 +291,7 @@ export const TrainingTab: React.FC<TrainingTabProps> = ({
 
           <div className="bg-gray-800 rounded-lg p-4 border border-gray-700">
             <h3 className="text-lg font-semibold text-green-400 mb-2">
-              🏗️ Architecture Design
+               Architecture Design
             </h3>
             <ul className="text-sm text-gray-300 space-y-1">
               <li>• Start simple, add complexity gradually</li>
@@ -303,7 +303,7 @@ export const TrainingTab: React.FC<TrainingTabProps> = ({
 
           <div className="bg-gray-800 rounded-lg p-4 border border-gray-700">
             <h3 className="text-lg font-semibold text-purple-400 mb-2">
-              🧠 Training Strategy
+               Training Strategy
             </h3>
             <ul className="text-sm text-gray-300 space-y-1">
               <li>• Start with default learning rate (0.001)</li>
