@@ -177,16 +177,18 @@ export const TrainableConvNet: React.FC = () => {
     gpuBenchmark,
     initializeModel, // To explicitly build/compile
     runPrediction,
-    startTrainingLogic,
+    startTraining, // Function to start the training logic
     resetModelTrainingState,
     runGPUBenchmark,
     saveModelWeights,
     loadModelWeights,
+    setEpochsRun,
+    setLossHistory,
   } = useTFModel({
     initialLayers: layers,
     learningRate,
     useWebWorker: true, // Enable Web Worker for background training
-    // numEpochs and batchSize are passed directly to startTrainingLogic
+    // numEpochs and batchSize are passed directly to startTraining
   });
 
   useEffect(() => {
@@ -338,7 +340,7 @@ export const TrainableConvNet: React.FC = () => {
       alert("Please add training examples for both class '0' and class '1'.");
       return;
     }
-    await startTrainingLogic(trainingData, numEpochs, batchSize);
+    await startTraining(trainingData, numEpochs, batchSize);
   };
 
   const handleClearTrainingData = () => {
@@ -509,37 +511,79 @@ export const TrainableConvNet: React.FC = () => {
                 Array.isArray(parsedData.layers) &&
                 Array.isArray(parsedData.trainingData)
               ) {
-                // Load layers and training data first
+                // First, reset the model to ensure clean state
+                resetModelTrainingState();
+
+                // Load architecture and training data
                 setLayers(parsedData.layers);
                 setTrainingData(parsedData.trainingData);
 
-                // Wait a moment for model to re-initialize, then load weights
-                setTimeout(async () => {
-                  let message = `Session loaded successfully!\n• Architecture: ${parsedData.layers.length} layers\n• Training data: ${parsedData.trainingData.length} samples`;
+                // Restore training state immediately
+                if (parsedData.epochsRun) {
+                  setEpochsRun(parsedData.epochsRun);
+                }
+                if (
+                  parsedData.lossHistory &&
+                  Array.isArray(parsedData.lossHistory)
+                ) {
+                  setLossHistory(parsedData.lossHistory);
+                }
 
-                  if (
-                    parsedData.modelWeights &&
-                    parsedData.modelWeights.length > 0
-                  ) {
-                    const success = await loadModelWeights(
-                      parsedData.modelWeights,
-                    );
-                    if (success) {
-                      message += `\n• Trained weights: Restored (${parsedData.modelWeights.length} layers)`;
-                      if (parsedData.epochsRun) {
-                        message += `\n• Previous training: ${parsedData.epochsRun} epochs`;
+                let message = `Session loaded successfully!\n• Architecture: ${parsedData.layers.length} layers\n• Training data: ${parsedData.trainingData.length} samples`;
+
+                // Handle model weights loading with proper timing
+                if (
+                  parsedData.modelWeights &&
+                  parsedData.modelWeights.length > 0
+                ) {
+                  // Wait for model to be ready, then load weights
+                  const waitForModelAndLoadWeights = async () => {
+                    let attempts = 0;
+                    const maxAttempts = 50; // 5 seconds max wait
+
+                    while (attempts < maxAttempts) {
+                      if (tfStatus === "ready") {
+                        try {
+                          const success = await loadModelWeights(
+                            parsedData.modelWeights,
+                          );
+                          if (success) {
+                            message += `\n• Trained weights: Restored (${parsedData.modelWeights.length} layers)`;
+                            if (parsedData.epochsRun) {
+                              message += `\n• Previous training: ${parsedData.epochsRun} epochs`;
+                            }
+                            alert(message);
+                            return;
+                          } else {
+                            message +=
+                              "\n• Trained weights: Failed to restore (using random weights)";
+                            alert(message);
+                            return;
+                          }
+                        } catch (error) {
+                          console.error("Error loading weights:", error);
+                          message +=
+                            "\n• Trained weights: Error during restore (using random weights)";
+                          alert(message);
+                          return;
+                        }
                       }
-                    } else {
-                      message +=
-                        "\n• Trained weights: Failed to restore (using random weights)";
+                      await new Promise((resolve) => setTimeout(resolve, 100));
+                      attempts++;
                     }
-                  } else {
-                    message +=
-                      "\n• Trained weights: None found (using random weights)";
-                  }
 
+                    // Timeout reached
+                    message +=
+                      "\n• Trained weights: Model not ready, using random weights";
+                    alert(message);
+                  };
+
+                  waitForModelAndLoadWeights();
+                } else {
+                  message +=
+                    "\n• Trained weights: None found (using random weights)";
                   alert(message);
-                }, 1000); // Give model time to initialize
+                }
               } else {
                 throw new Error("Invalid session file structure.");
               }

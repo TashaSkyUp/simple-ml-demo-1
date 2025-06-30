@@ -1403,11 +1403,13 @@ export const useTFModel = ({
     gpuBenchmark,
     initializeModel,
     runPrediction,
-    startTrainingLogic,
+    startTraining,
     resetModelTrainingState,
     runGPUBenchmark,
     saveModelWeights,
     loadModelWeights,
+    setEpochsRun,
+    setLossHistory,
     isUsingWorker, // New: indicates if background training is active
   };
 };
