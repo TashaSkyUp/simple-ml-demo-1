@@ -19,6 +19,27 @@ import {
 } from "../types"; // Renamed to avoid tf.ActivationFunction
 import { createMatrix } from "../utils/cnnUtils"; // For FC weights viz
 
+// Web Worker integration
+interface TrainingWorkerMessage {
+  type:
+    | "INIT_TRAINING"
+    | "START_TRAINING"
+    | "STOP_TRAINING"
+    | "PREDICT"
+    | "DISPOSE";
+  payload?: any;
+}
+
+interface TrainingWorkerResponse {
+  type:
+    | "TRAINING_PROGRESS"
+    | "TRAINING_COMPLETE"
+    | "TRAINING_ERROR"
+    | "PREDICTION_RESULT"
+    | "MODEL_READY";
+  payload?: any;
+}
+
 // Backend performance comparison
 const compareBackendPerformance = async (): Promise<{
   webglSpeed: number;
@@ -257,6 +278,7 @@ let gpuInitialized = false;
 interface UseTFModelProps {
   initialLayers: LayerConfig[];
   learningRate: number;
+  useWebWorker?: boolean; // Enable Web Worker for background training
   // numEpochs and batchSizeProp will be passed directly to startTrainingLogic
 }
 
@@ -284,9 +306,14 @@ const mapActivation = (
 export const useTFModel = ({
   initialLayers,
   learningRate,
+  useWebWorker = true,
 }: UseTFModelProps) => {
   const modelRef = useRef<tf.Sequential | null>(null);
+  const workerRef = useRef<Worker | null>(null);
   const [status, setStatus] = useState<ModelStatus>("uninitialized");
+  const [workerStatus, setWorkerStatus] = useState<
+    "uninitialized" | "initializing" | "ready" | "error"
+  >("uninitialized");
   const [prediction, setPrediction] = useState<PredictionState>({
     label: "?",
     confidence: 0,
@@ -297,6 +324,7 @@ export const useTFModel = ({
     [],
   );
   const [fcWeightsViz, setFcWeightsViz] = useState<number[][] | null>(null);
+  const [isUsingWorker, setIsUsingWorker] = useState<boolean>(false);
   const [gpuBenchmark, setGpuBenchmark] = useState<{
     opsPerSecond: number;
     isRunning: boolean;
@@ -979,12 +1007,114 @@ export const useTFModel = ({
     [initializeModel, status, generateLiveLayerOutputs],
   );
 
+  // Initialize Web Worker
+  const initializeWorker = useCallback(async () => {
+    if (!useWebWorker || workerRef.current) return;
+
+    try {
+      setWorkerStatus("initializing");
+      console.log("🔧 Initializing training worker...");
+
+      workerRef.current = new Worker(
+        new URL("../workers/trainingWorker.ts", import.meta.url),
+        { type: "module" },
+      );
+
+      // Set up message handler
+      workerRef.current.onmessage = (
+        event: MessageEvent<TrainingWorkerResponse>,
+      ) => {
+        const { type, payload } = event.data;
+
+        switch (type) {
+          case "MODEL_READY":
+            console.log("✅ Training worker model ready");
+            setWorkerStatus("ready");
+            setIsUsingWorker(true);
+            break;
+
+          case "TRAINING_PROGRESS":
+            setEpochsRun(payload.epoch);
+            setLossHistory((prev) => [
+              ...prev.slice(0, payload.epoch - 1),
+              payload.loss,
+            ]);
+            console.log(
+              `Epoch ${payload.epoch}/${payload.totalEpochs} - Loss: ${payload.loss.toFixed(4)}`,
+            );
+            break;
+
+          case "TRAINING_COMPLETE":
+            console.log("🎉 Training completed in worker");
+            setStatus("success");
+            setIsUsingWorker(false);
+            break;
+
+          case "PREDICTION_RESULT":
+            setPrediction(payload);
+            break;
+
+          case "TRAINING_ERROR":
+            console.error("❌ Training worker error:", payload.error);
+            setStatus("error");
+            setIsUsingWorker(false);
+            break;
+        }
+      };
+
+      // Handle worker errors
+      workerRef.current.onerror = (error) => {
+        console.error("❌ Worker error:", error);
+        setWorkerStatus("error");
+        setIsUsingWorker(false);
+      };
+
+      // Initialize the model in the worker
+      const message: TrainingWorkerMessage = {
+        type: "INIT_TRAINING",
+        payload: {
+          layers: currentLayersConfigRef.current,
+          learningRate: currentLearningRateRef.current,
+        },
+      };
+
+      workerRef.current.postMessage(message);
+    } catch (error) {
+      console.error("❌ Failed to initialize training worker:", error);
+      setWorkerStatus("error");
+      // Continue with main thread training
+    }
+  }, [useWebWorker]);
+
   const startTrainingLogic = useCallback(
     async (
       trainingData: TrainingDataPoint[],
       numEpochsToRun: number,
       batchSize: number,
     ) => {
+      // Try Web Worker first if enabled
+      if (useWebWorker && workerRef.current && workerStatus === "ready") {
+        console.log("🚀 Starting background training with Web Worker");
+        setStatus("training");
+        setEpochsRun(0);
+        setLossHistory([]);
+
+        const message: TrainingWorkerMessage = {
+          type: "START_TRAINING",
+          payload: {
+            trainingData,
+            numEpochs: numEpochsToRun,
+            batchSize,
+            learningRate: currentLearningRateRef.current,
+          },
+        };
+
+        workerRef.current.postMessage(message);
+        return;
+      }
+
+      // Fallback to main thread training
+      console.log("🔄 Using main thread training (worker not available)");
       let activeModel = modelRef.current;
       if (
         !activeModel ||
@@ -1153,6 +1283,15 @@ export const useTFModel = ({
   );
 
   const resetModelTrainingState = useCallback(async () => {
+    // Clean up worker
+    if (workerRef.current) {
+      const message: TrainingWorkerMessage = { type: "DISPOSE" };
+      workerRef.current.postMessage(message);
+      workerRef.current.terminate();
+      workerRef.current = null;
+    }
+    setIsUsingWorker(false);
+
     if (modelRef.current) {
       modelRef.current.dispose();
       modelRef.current = null;
@@ -1227,6 +1366,28 @@ export const useTFModel = ({
     }
   }, [status, initializeModel]);
 
+  // Initialize worker when model is ready
+  useEffect(() => {
+    if (
+      status === "ready" &&
+      useWebWorker &&
+      workerStatus === "uninitialized"
+    ) {
+      initializeWorker();
+    }
+  }, [status, useWebWorker, workerStatus, initializeWorker]);
+
+  // Cleanup worker on unmount
+  useEffect(() => {
+    return () => {
+      if (workerRef.current) {
+        const message: TrainingWorkerMessage = { type: "DISPOSE" };
+        workerRef.current.postMessage(message);
+        workerRef.current.terminate();
+      }
+    };
+  }, []);
+
   return {
     model: modelRef.current,
     status,
@@ -1243,5 +1404,6 @@ export const useTFModel = ({
     runGPUBenchmark,
     saveModelWeights,
     loadModelWeights,
+    isUsingWorker, // New: indicates if background training is active
   };
 };

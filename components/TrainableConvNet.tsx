@@ -175,6 +175,7 @@ export const TrainableConvNet: React.FC = () => {
   } = useTFModel({
     initialLayers: layers,
     learningRate,
+    useWebWorker: true, // Enable Web Worker for background training
     // numEpochs and batchSize are passed directly to startTrainingLogic
   });
 
