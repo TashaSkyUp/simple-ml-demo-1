@@ -191,12 +191,29 @@ export const TrainableConvNet: React.FC = () => {
 
   useEffect(() => {
     try {
-      localStorage.setItem(
-        LOCAL_STORAGE_KEY_TRAINING_DATA,
-        JSON.stringify(trainingData),
-      );
+      const dataToStore = JSON.stringify(trainingData);
+      const dataSizeInBytes = new Blob([dataToStore]).size;
+      const maxSizeInBytes = 4 * 1024 * 1024; // 4MB limit to be safe
+
+      if (dataSizeInBytes > maxSizeInBytes) {
+        console.warn(
+          `Training data too large for localStorage (${Math.round(dataSizeInBytes / 1024 / 1024)}MB). Skipping save.`,
+        );
+        return;
+      }
+
+      localStorage.setItem(LOCAL_STORAGE_KEY_TRAINING_DATA, dataToStore);
     } catch (error) {
-      console.error("Failed to save training data to localStorage:", error);
+      if (
+        error instanceof DOMException &&
+        error.name === "QuotaExceededError"
+      ) {
+        console.warn(
+          "localStorage quota exceeded. Training data not saved locally.",
+        );
+      } else {
+        console.error("Failed to save training data to localStorage:", error);
+      }
     }
   }, [trainingData]);
 

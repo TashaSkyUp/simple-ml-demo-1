@@ -136,9 +136,7 @@ const initializeGPUAcceleration = async () => {
   // Log detailed availability report
   console.log(" Backend Availability Report:");
   if (availability.webgpu) {
-    console.log(
-      "   WebGPU: Next-generation GPU API available (experimental)",
-    );
+    console.log("   WebGPU: Next-generation GPU API available (experimental)");
   }
   if (availability.webgl) {
     console.log("   WebGL: Standard GPU acceleration available");
@@ -444,9 +442,7 @@ export const useTFModel = ({
         console.log(` WebGL is ${ratio.toFixed(1)}x faster than CPU`);
       } else {
         const webglRatio = cpuSpeed / (webglSpeed || 1);
-        console.log(
-          ` CPU is ${webglRatio.toFixed(1)}x faster - recommend CPU`,
-        );
+        console.log(` CPU is ${webglRatio.toFixed(1)}x faster - recommend CPU`);
       }
 
       // Switch to optimal backend if different
@@ -1068,6 +1064,16 @@ export const useTFModel = ({
       };
 
       // Initialize the model in the worker
+      console.log("Sending layers to worker:", currentLayersConfigRef.current);
+      console.log(
+        "Layer types being sent:",
+        currentLayersConfigRef.current.map((l) => ({
+          id: l.id,
+          type: l.type,
+          typeOf: typeof l.type,
+        })),
+      );
+
       const message: TrainingWorkerMessage = {
         type: "INIT_TRAINING",
         payload: {

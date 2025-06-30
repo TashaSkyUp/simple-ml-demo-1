@@ -85,7 +85,16 @@ const initializeTensorFlow = async () => {
 
 // Convert layer config to TensorFlow.js layer
 const createTFLayer = (layerConfig: LayerConfig): tf.layers.Layer => {
-  switch (layerConfig.type) {
+  // Debug logging to understand the serialization issue
+  console.log("Creating layer with config:", layerConfig);
+  console.log("Layer type received:", layerConfig.type);
+  console.log("LayerType enum values:", LayerType);
+
+  // Normalize the layer type to handle serialization issues
+  const normalizedType = normalizeLayerType(layerConfig.type);
+  console.log("Normalized layer type:", normalizedType);
+
+  switch (normalizedType) {
     case LayerType.Conv:
       return tf.layers.conv2d({
         filters: layerConfig.numFilters || 8,
@@ -115,8 +124,48 @@ const createTFLayer = (layerConfig: LayerConfig): tf.layers.Layer => {
       });
 
     default:
-      throw new Error(`Unsupported layer type: ${layerConfig.type}`);
+      throw new Error(
+        `Unsupported layer type: ${layerConfig.type} (normalized: ${normalizedType})`,
+      );
   }
+};
+
+// Helper function to normalize layer types from serialization
+const normalizeLayerType = (type: any): LayerType => {
+  // Handle both string and enum values
+  if (typeof type === "string") {
+    // Convert string to lowercase and map to enum
+    const lowerType = type.toLowerCase();
+    switch (lowerType) {
+      case "conv":
+        return LayerType.Conv;
+      case "activation":
+        return LayerType.Activation;
+      case "pool":
+        return LayerType.Pool;
+      case "dropout":
+        return LayerType.Dropout;
+      case "flatten":
+        return LayerType.Flatten;
+      case "dense":
+        return LayerType.Dense;
+      case "reshape":
+        return LayerType.Reshape;
+      default:
+        // If it's already the correct enum value, return it
+        if (Object.values(LayerType).includes(type as LayerType)) {
+          return type as LayerType;
+        }
+        throw new Error(`Unknown layer type string: ${type}`);
+    }
+  }
+
+  // If it's already a LayerType enum value, return it
+  if (Object.values(LayerType).includes(type)) {
+    return type;
+  }
+
+  throw new Error(`Invalid layer type: ${type}`);
 };
 
 // Map activation functions
@@ -142,10 +191,13 @@ const buildModel = (layers: LayerConfig[]): tf.Sequential => {
   // Add input layer for 28x28x3 images
   let isFirstLayer = true;
 
+  console.log("Building model with layers:", layers);
+
   for (const layerConfig of layers) {
     const layer = createTFLayer(layerConfig);
+    const normalizedType = normalizeLayerType(layerConfig.type);
 
-    if (isFirstLayer && layerConfig.type === LayerType.Conv) {
+    if (isFirstLayer && normalizedType === LayerType.Conv) {
       model.add(
         tf.layers.conv2d({
           filters: layerConfig.numFilters || 8,
