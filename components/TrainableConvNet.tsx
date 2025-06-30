@@ -5,6 +5,7 @@ import { LayerType, ActivationFunction, PoolingType } from "../types";
 import { TabbedInterface } from "./TabbedInterface";
 import { TrainingTab } from "./TrainingTab";
 import { InferenceTab } from "./InferenceTab";
+import { WebWorkerTest } from "./WebWorkerTest";
 import { useTFModel, ModelStatus as TFModelStatus } from "../hooks/useTFModel"; // The new TensorFlow.js hook
 import {
   useCollapsibleSections,
@@ -618,6 +619,12 @@ export const TrainableConvNet: React.FC = () => {
           toggleSection={toggleSection}
         />
       ),
+    },
+    {
+      id: "test",
+      label: "Web Worker Test",
+      icon: "🧪",
+      content: <WebWorkerTest />,
     },
   ];
 
