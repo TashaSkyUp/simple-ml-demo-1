@@ -115,22 +115,40 @@ const compareBackendPerformance = async (): Promise<{
 const initializeGPUAcceleration = async () => {
   await tf.ready();
 
-  // Check all backend availability
+  // Check all backend availability without changing current backend
   console.log(" Checking backend availability...");
 
-  const backends = ["webgpu", "webgl", "cpu"];
-  const availability: { [key: string]: boolean } = {};
+  const availability: { [key: string]: boolean } = {
+    webgpu: false,
+    webgl: false,
+    cpu: true, // CPU is always available
+  };
 
-  for (const backend of backends) {
-    try {
-      await tf.setBackend(backend);
-      await tf.ready();
-      availability[backend] = tf.getBackend() === backend;
-      console.log(`Success ${backend.toUpperCase()}: Available`);
-    } catch (error) {
-      availability[backend] = false;
-      console.log(`Error ${backend.toUpperCase()}: Not available - ${error}`);
+  // Check WebGPU availability
+  try {
+    if (typeof navigator !== "undefined" && "gpu" in navigator) {
+      availability.webgpu = true;
+      console.log(`Success WEBGPU: Available`);
+    } else {
+      console.log(`Info WEBGPU: Not supported by browser`);
     }
+  } catch (error) {
+    console.log(`Error WEBGPU: Not available - ${error}`);
+  }
+
+  // Check WebGL availability
+  try {
+    const canvas = document.createElement("canvas");
+    const gl =
+      canvas.getContext("webgl") || canvas.getContext("experimental-webgl");
+    if (gl) {
+      availability.webgl = true;
+      console.log(`Success WEBGL: Available`);
+    } else {
+      console.log(`Error WEBGL: Context creation failed`);
+    }
+  } catch (error) {
+    console.log(`Error WEBGL: Not available - ${error}`);
   }
 
   // Log detailed availability report
@@ -210,22 +228,40 @@ const initializeGPUAcceleration = async () => {
         ? ["webgl", "cpu"]
         : ["cpu"];
 
+  console.log(`🎯 Backend fallback order:`, fallbackOrder);
+  console.log(`🔍 Backend availability:`, availability);
+
   for (const backend of fallbackOrder) {
     if (availability[backend]) {
-      console.log(` Attempting to initialize ${backend} backend...`);
+      console.log(`🚀 Attempting to initialize ${backend} backend...`);
       backendSet = await trySetBackend(backend);
       if (backendSet) {
         selectedBackend = backend;
+        console.log(`🎉 Successfully using ${backend} backend!`);
         break;
+      } else {
+        console.warn(
+          `⚠️ ${backend} backend failed despite being marked as available`,
+        );
       }
+    } else {
+      console.log(`⏭️ Skipping ${backend} backend (not available)`);
     }
   }
 
   if (!backendSet) {
-    console.error("Error Failed to initialize any backend, forcing CPU");
-    await tf.setBackend("cpu");
-    await tf.ready();
-    selectedBackend = "cpu";
+    console.error(
+      "🚨 CRITICAL: Failed to initialize any backend, forcing CPU as last resort",
+    );
+    try {
+      await tf.setBackend("cpu");
+      await tf.ready();
+      selectedBackend = "cpu";
+      console.log("✅ CPU backend forced successfully");
+    } catch (error) {
+      console.error("💥 FATAL: Even CPU backend failed:", error);
+      throw new Error("TensorFlow.js completely failed to initialize");
+    }
   }
 
   // Configure backend-specific optimizations
