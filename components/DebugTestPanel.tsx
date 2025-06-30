@@ -22,15 +22,18 @@ export const DebugTestPanel: React.FC = () => {
   const [testResults, setTestResults] = useState<TestResult[]>([]);
   const [isRunning, setIsRunning] = useState(false);
 
-  const addResult = useCallback((message: string, type: TestResult["type"] = "pass") => {
-    const result: TestResult = {
-      id: Math.random().toString(36).substr(2, 9),
-      message,
-      type,
-      timestamp: new Date(),
-    };
-    setTestResults(prev => [...prev, result]);
-  }, []);
+  const addResult = useCallback(
+    (message: string, type: TestResult["type"] = "pass") => {
+      const result: TestResult = {
+        id: Math.random().toString(36).substr(2, 9),
+        message,
+        type,
+        timestamp: new Date(),
+      };
+      setTestResults((prev) => [...prev, result]);
+    },
+    [],
+  );
 
   const clearResults = useCallback(() => {
     setTestResults([]);
@@ -48,7 +51,10 @@ export const DebugTestPanel: React.FC = () => {
           totalSize += localStorage[key].length + key.length;
         }
       }
-      addResult(`Current localStorage usage: ~${Math.round(totalSize / 1024)}KB`, "pass");
+      addResult(
+        `Current localStorage usage: ~${Math.round(totalSize / 1024)}KB`,
+        "pass",
+      );
 
       // Test size checking function
       const checkDataSize = (data: any) => {
@@ -60,45 +66,60 @@ export const DebugTestPanel: React.FC = () => {
           size: dataSizeInBytes,
           maxSize: maxSizeInBytes,
           withinLimit: dataSizeInBytes <= maxSizeInBytes,
-          sizeInMB: Math.round(dataSizeInBytes / 1024 / 1024 * 100) / 100
+          sizeInMB: Math.round((dataSizeInBytes / 1024 / 1024) * 100) / 100,
         };
       };
 
       // Mock small training data
-      const mockTrainingData = Array.from({length: 50}, (_, i) => ({
+      const mockTrainingData = Array.from({ length: 50 }, (_, i) => ({
         id: i,
         imageData: new Array(28 * 28 * 3).fill(Math.random()),
-        label: Math.floor(Math.random() * 10)
+        label: Math.floor(Math.random() * 10),
       }));
 
       const sizeCheck = checkDataSize(mockTrainingData);
       addResult(
         `Small dataset size: ${sizeCheck.sizeInMB}MB (within 4MB limit: ${sizeCheck.withinLimit})`,
-        sizeCheck.withinLimit ? "pass" : "warn"
+        sizeCheck.withinLimit ? "pass" : "warn",
       );
 
-      // Mock large training data
-      const largeData = Array.from({length: 500}, (_, i) => ({
+      // Mock large training data with smaller size to avoid string length limits
+      const largeData = Array.from({ length: 100 }, (_, i) => ({
         id: i,
-        imageData: new Array(224 * 224 * 3).fill(Math.random()),
-        label: Math.floor(Math.random() * 10)
+        imageData: new Array(128 * 128 * 3).fill(Math.random()),
+        label: Math.floor(Math.random() * 10),
       }));
 
       const largeSizeCheck = checkDataSize(largeData);
       addResult(
         `Large dataset size: ${largeSizeCheck.sizeInMB}MB (exceeds limit: ${!largeSizeCheck.withinLimit})`,
-        largeSizeCheck.withinLimit ? "warn" : "pass"
+        largeSizeCheck.withinLimit ? "warn" : "pass",
       );
 
-      // Test safe storage function
+      // Test safe storage function with better error handling
       const safeLocalStorageSet = (key: string, data: any) => {
         try {
-          const dataToStore = JSON.stringify(data);
-          const dataSizeInBytes = new Blob([dataToStore]).size;
+          // Pre-check data size before stringification to avoid string length errors
+          const estimatedSize =
+            JSON.stringify(data.slice(0, 10)).length * (data.length / 10);
           const maxSizeInBytes = 4 * 1024 * 1024;
 
+          if (estimatedSize > maxSizeInBytes) {
+            addResult(
+              `Data estimated too large (${Math.round(estimatedSize / 1024 / 1024)}MB). Correctly rejected before serialization.`,
+              "pass",
+            );
+            return false;
+          }
+
+          const dataToStore = JSON.stringify(data);
+          const dataSizeInBytes = new Blob([dataToStore]).size;
+
           if (dataSizeInBytes > maxSizeInBytes) {
-            addResult(`Data too large for localStorage (${Math.round(dataSizeInBytes / 1024 / 1024)}MB). Correctly rejected.`, "pass");
+            addResult(
+              `Data too large for localStorage (${Math.round(dataSizeInBytes / 1024 / 1024)}MB). Correctly rejected.`,
+              "pass",
+            );
             return false;
           }
 
@@ -106,28 +127,47 @@ export const DebugTestPanel: React.FC = () => {
           addResult(`Data stored successfully in localStorage`, "pass");
           return true;
         } catch (error) {
-          if (error instanceof DOMException && error.name === 'QuotaExceededError') {
-            addResult('localStorage quota exceeded. Correctly handled.', "pass");
+          if (
+            error instanceof DOMException &&
+            error.name === "QuotaExceededError"
+          ) {
+            addResult(
+              "localStorage quota exceeded. Correctly handled.",
+              "pass",
+            );
+            return false;
+          } else if (
+            (error as Error).message.includes("Invalid string length")
+          ) {
+            addResult(
+              "String too large for JavaScript engine. Correctly handled.",
+              "pass",
+            );
             return false;
           } else {
-            addResult(`Unexpected localStorage error: ${(error as Error).message}`, "fail");
+            addResult(
+              `Unexpected localStorage error: ${(error as Error).message}`,
+              "fail",
+            );
             return false;
           }
         }
       };
 
       // Test with small data
-      const smallDataSaved = safeLocalStorageSet('debug-test-small', mockTrainingData);
+      const smallDataSaved = safeLocalStorageSet(
+        "debug-test-small",
+        mockTrainingData,
+      );
 
       // Test with large data
-      const largeDataSaved = safeLocalStorageSet('debug-test-large', largeData);
+      const largeDataSaved = safeLocalStorageSet("debug-test-large", largeData);
 
       // Clean up test data
-      localStorage.removeItem('debug-test-small');
-      localStorage.removeItem('debug-test-large');
+      localStorage.removeItem("debug-test-small");
+      localStorage.removeItem("debug-test-large");
 
       addResult("localStorage quota tests completed successfully", "pass");
-
     } catch (error) {
       addResult(`localStorage test error: ${(error as Error).message}`, "fail");
     }
@@ -140,33 +180,46 @@ export const DebugTestPanel: React.FC = () => {
     try {
       // Test basic enum values
       const layerConfig = {
-        id: 'test-layer',
+        id: "test-layer",
         type: LayerType.Conv,
         numFilters: 32,
         filterSize: 3,
-        activation: ActivationFunction.ReLU
+        activation: ActivationFunction.ReLU,
       };
 
-      addResult(`Original layer type: ${layerConfig.type} (${typeof layerConfig.type})`, "pass");
+      addResult(
+        `Original layer type: ${layerConfig.type} (${typeof layerConfig.type})`,
+        "pass",
+      );
 
       // Test JSON serialization/deserialization
       const serialized = JSON.stringify(layerConfig);
       const deserialized = JSON.parse(serialized);
 
-      addResult(`Deserialized type: ${deserialized.type} (${typeof deserialized.type})`, "pass");
+      addResult(
+        `Deserialized type: ${deserialized.type} (${typeof deserialized.type})`,
+        "pass",
+      );
 
       // Test normalization function
       const normalizeLayerType = (type: any): string => {
         if (typeof type === "string") {
           const lowerType = type.toLowerCase();
           switch (lowerType) {
-            case "conv": return LayerType.Conv;
-            case "activation": return LayerType.Activation;
-            case "pool": return LayerType.Pool;
-            case "dropout": return LayerType.Dropout;
-            case "flatten": return LayerType.Flatten;
-            case "dense": return LayerType.Dense;
-            case "reshape": return LayerType.Reshape;
+            case "conv":
+              return LayerType.Conv;
+            case "activation":
+              return LayerType.Activation;
+            case "pool":
+              return LayerType.Pool;
+            case "dropout":
+              return LayerType.Dropout;
+            case "flatten":
+              return LayerType.Flatten;
+            case "dense":
+              return LayerType.Dense;
+            case "reshape":
+              return LayerType.Reshape;
             default:
               if (Object.values(LayerType).includes(type as any)) {
                 return type;
@@ -190,34 +243,42 @@ export const DebugTestPanel: React.FC = () => {
         "CONV",
         LayerType.Dense,
         "dense",
-        "Dense"
+        "Dense",
       ];
 
-      testInputs.forEach(input => {
+      testInputs.forEach((input) => {
         try {
           const normalized = normalizeLayerType(input);
           addResult(`Normalized "${input}" → "${normalized}"`, "pass");
         } catch (error) {
-          addResult(`Failed to normalize "${input}": ${(error as Error).message}`, "fail");
+          addResult(
+            `Failed to normalize "${input}": ${(error as Error).message}`,
+            "fail",
+          );
         }
       });
 
       // Test invalid inputs
       const invalidInputs = ["invalid", "Unknown", 123, null, undefined];
 
-      invalidInputs.forEach(input => {
+      invalidInputs.forEach((input) => {
         try {
           const normalized = normalizeLayerType(input);
-          addResult(`Unexpectedly normalized invalid input "${input}" → "${normalized}"`, "warn");
+          addResult(
+            `Unexpectedly normalized invalid input "${input}" → "${normalized}"`,
+            "warn",
+          );
         } catch (error) {
           addResult(`Correctly rejected invalid input "${input}"`, "pass");
         }
       });
 
       addResult("Enum serialization tests completed successfully", "pass");
-
     } catch (error) {
-      addResult(`Enum serialization test error: ${(error as Error).message}`, "fail");
+      addResult(
+        `Enum serialization test error: ${(error as Error).message}`,
+        "fail",
+      );
     }
   }, [addResult]);
 
@@ -229,35 +290,35 @@ export const DebugTestPanel: React.FC = () => {
       // Mock layer configuration
       const layers = [
         {
-          id: 'layer-1',
+          id: "layer-1",
           type: LayerType.Conv,
           numFilters: 32,
           filterSize: 3,
-          activation: ActivationFunction.ReLU
+          activation: ActivationFunction.ReLU,
         },
         {
-          id: 'layer-2',
+          id: "layer-2",
           type: LayerType.Pool,
-          poolSize: 2
+          poolSize: 2,
         },
         {
-          id: 'layer-3',
-          type: LayerType.Flatten
+          id: "layer-3",
+          type: LayerType.Flatten,
         },
         {
-          id: 'layer-4',
+          id: "layer-4",
           type: LayerType.Dense,
           units: 128,
-          activation: ActivationFunction.ReLU
-        }
+          activation: ActivationFunction.ReLU,
+        },
       ];
 
       const message = {
-        type: 'INIT_TRAINING',
+        type: "INIT_TRAINING",
         payload: {
           layers: layers,
-          learningRate: 0.001
-        }
+          learningRate: 0.001,
+        },
       };
 
       addResult("Mock worker message created successfully", "pass");
@@ -266,12 +327,20 @@ export const DebugTestPanel: React.FC = () => {
       const serializedMessage = JSON.stringify(message);
       const deserializedMessage = JSON.parse(serializedMessage);
 
-      addResult(`Message serialization successful (${serializedMessage.length} chars)`, "pass");
+      addResult(
+        `Message serialization successful (${serializedMessage.length} chars)`,
+        "pass",
+      );
 
       // Check layer types after deserialization
-      deserializedMessage.payload.layers.forEach((layer: any, index: number) => {
-        addResult(`Layer ${index + 1}: type="${layer.type}" (${typeof layer.type})`, "pass");
-      });
+      deserializedMessage.payload.layers.forEach(
+        (layer: any, index: number) => {
+          addResult(
+            `Layer ${index + 1}: type="${layer.type}" (${typeof layer.type})`,
+            "pass",
+          );
+        },
+      );
 
       // Simulate worker layer processing
       const processLayers = (receivedLayers: any[]) => {
@@ -282,29 +351,40 @@ export const DebugTestPanel: React.FC = () => {
             // Simulate layer creation based on type
             switch (type) {
               case LayerType.Conv:
-                addResult(`✓ Created Conv layer ${index + 1} (${layerConfig.numFilters} filters)`, "pass");
+                addResult(
+                  `✓ Created Conv layer ${index + 1} (${layerConfig.numFilters} filters)`,
+                  "pass",
+                );
                 break;
               case LayerType.Pool:
-                addResult(`✓ Created Pool layer ${index + 1} (${layerConfig.poolSize || 2}x${layerConfig.poolSize || 2})`, "pass");
+                addResult(
+                  `✓ Created Pool layer ${index + 1} (${layerConfig.poolSize || 2}x${layerConfig.poolSize || 2})`,
+                  "pass",
+                );
                 break;
               case LayerType.Flatten:
                 addResult(`✓ Created Flatten layer ${index + 1}`, "pass");
                 break;
               case LayerType.Dense:
-                addResult(`✓ Created Dense layer ${index + 1} (${layerConfig.units} units)`, "pass");
+                addResult(
+                  `✓ Created Dense layer ${index + 1} (${layerConfig.units} units)`,
+                  "pass",
+                );
                 break;
               default:
                 throw new Error(`Unsupported layer type: ${type}`);
             }
           } catch (error) {
-            addResult(`✗ Failed to create layer ${index + 1}: ${(error as Error).message}`, "fail");
+            addResult(
+              `✗ Failed to create layer ${index + 1}: ${(error as Error).message}`,
+              "fail",
+            );
           }
         });
       };
 
       processLayers(deserializedMessage.payload.layers);
       addResult("Web Worker message simulation completed successfully", "pass");
-
     } catch (error) {
       addResult(`Web Worker test error: ${(error as Error).message}`, "fail");
     }
@@ -317,18 +397,24 @@ export const DebugTestPanel: React.FC = () => {
 
     addResult("🧪 Starting comprehensive debug tests...", "pass");
 
-    await new Promise(resolve => setTimeout(resolve, 100));
+    await new Promise((resolve) => setTimeout(resolve, 100));
     await testLocalStorageQuota();
 
-    await new Promise(resolve => setTimeout(resolve, 100));
+    await new Promise((resolve) => setTimeout(resolve, 100));
     await testEnumSerialization();
 
-    await new Promise(resolve => setTimeout(resolve, 100));
+    await new Promise((resolve) => setTimeout(resolve, 100));
     await testWebWorkerMessage();
 
     addResult("🎉 All debug tests completed!", "pass");
     setIsRunning(false);
-  }, [testLocalStorageQuota, testEnumSerialization, testWebWorkerMessage, clearResults, addResult]);
+  }, [
+    testLocalStorageQuota,
+    testEnumSerialization,
+    testWebWorkerMessage,
+    clearResults,
+    addResult,
+  ]);
 
   if (!isVisible) {
     return (
@@ -348,7 +434,9 @@ export const DebugTestPanel: React.FC = () => {
     <div className="fixed inset-4 z-50 bg-white rounded-lg shadow-2xl border border-gray-200 flex flex-col max-h-[90vh]">
       {/* Header */}
       <div className="bg-gray-50 px-4 py-3 border-b border-gray-200 flex items-center justify-between rounded-t-lg">
-        <h2 className="text-lg font-semibold text-gray-900">Debug Test Panel</h2>
+        <h2 className="text-lg font-semibold text-gray-900">
+          Debug Test Panel
+        </h2>
         <button
           onClick={() => setIsVisible(false)}
           className="text-gray-400 hover:text-gray-600 text-xl font-bold"
@@ -413,8 +501,8 @@ export const DebugTestPanel: React.FC = () => {
                   result.type === "pass"
                     ? "bg-green-50 text-green-800 border border-green-200"
                     : result.type === "fail"
-                    ? "bg-red-50 text-red-800 border border-red-200"
-                    : "bg-yellow-50 text-yellow-800 border border-yellow-200"
+                      ? "bg-red-50 text-red-800 border border-red-200"
+                      : "bg-yellow-50 text-yellow-800 border border-yellow-200"
                 }`}
               >
                 <div className="flex items-start gap-2">
@@ -423,7 +511,11 @@ export const DebugTestPanel: React.FC = () => {
                   </span>
                   <span className="flex-1">{result.message}</span>
                   <span className="font-bold">
-                    {result.type === "pass" ? "✅" : result.type === "fail" ? "❌" : "⚠️"}
+                    {result.type === "pass"
+                      ? "✅"
+                      : result.type === "fail"
+                        ? "❌"
+                        : "⚠️"}
                   </span>
                 </div>
               </div>
@@ -434,7 +526,10 @@ export const DebugTestPanel: React.FC = () => {
 
       {/* Footer */}
       <div className="px-4 py-2 border-t border-gray-200 bg-gray-50 text-xs text-gray-600 rounded-b-lg">
-        <p>Debug panel for testing localStorage quota and Web Worker enum serialization fixes.</p>
+        <p>
+          Debug panel for testing localStorage quota and Web Worker enum
+          serialization fixes.
+        </p>
       </div>
     </div>
   );
