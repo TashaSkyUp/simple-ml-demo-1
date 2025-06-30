@@ -549,8 +549,6 @@ export const TrainableConvNet: React.FC = () => {
     {
       id: "training",
       label: "Training",
-      icon: "🎯",
-      badge: `${layers.length} layers, ${trainingData.length} samples`,
       content: (
         <TrainingTab
           // Architecture props
@@ -599,7 +597,6 @@ export const TrainableConvNet: React.FC = () => {
     {
       id: "inference",
       label: "Live Inference",
-      icon: "🔍",
       badge: liveCameraMode
         ? "LIVE"
         : prediction.label !== "?"
@@ -632,7 +629,6 @@ export const TrainableConvNet: React.FC = () => {
     {
       id: "test",
       label: "Web Worker Test",
-      icon: "🧪",
       content: <WebWorkerTest />,
     },
   ];
