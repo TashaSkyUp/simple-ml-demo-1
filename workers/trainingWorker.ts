@@ -43,40 +43,29 @@ let shouldStop = false;
 // Initialize TensorFlow.js in worker
 const initializeTensorFlow = async () => {
   try {
-    await tf.ready();
-    console.log(" TensorFlow.js initialized in worker");
+    console.log(" Initializing TensorFlow.js in worker context...");
 
-    // Try backends in order of preference: WebGPU > WebGL > CPU
-    try {
-      await tf.setBackend("webgpu");
-      await tf.ready();
-      if (tf.getBackend() === "webgpu") {
-        console.log(" Worker using WebGPU backend (best performance)");
-        return true;
-      }
-    } catch (webgpuError) {
-      console.log(" WebGPU not available in worker, trying WebGL...");
-    }
-
-    // Fallback to WebGL
-    try {
-      const webglVersion = tf.ENV.get("WEBGL_VERSION");
-      if (typeof webglVersion === "number" && webglVersion > 0) {
-        await tf.setBackend("webgl");
-        await tf.ready();
-        if (tf.getBackend() === "webgl") {
-          console.log(" Worker using WebGL backend");
-          return true;
-        }
-      }
-    } catch (webglError) {
-      console.log(" WebGL not available in worker, using CPU...");
-    }
-
-    // Final fallback to CPU
+    // Web Workers cannot access WebGL/WebGPU contexts
+    // Force CPU backend for worker context
     await tf.setBackend("cpu");
-    console.log(" Worker using CPU backend");
-    return true;
+    await tf.ready();
+
+    const backend = tf.getBackend();
+    console.log(
+      ` Worker using ${backend} backend (WebGL/WebGPU not available in workers)`,
+    );
+
+    // Verify CPU backend is working
+    const testTensor = tf.tensor([1, 2, 3, 4]);
+    const result = await testTensor.data();
+    testTensor.dispose();
+
+    if (result.length === 4) {
+      console.log(" CPU backend verified working in worker");
+      return true;
+    } else {
+      throw new Error("CPU backend test failed");
+    }
   } catch (error) {
     console.error("Error Failed to initialize TensorFlow.js in worker:", error);
     return false;
@@ -355,23 +344,37 @@ const runPrediction = async (inputGrid: number[][][]): Promise<void> => {
 self.onmessage = async (event: MessageEvent<TrainingWorkerMessage>) => {
   const { type, payload } = event.data;
 
+  console.log(`🔧 Worker received message: ${type}`);
+
   try {
     switch (type) {
       case "INIT_TRAINING":
-        console.log(" Initializing training worker...");
+        console.log("🚀 Initializing training worker...");
 
         const initialized = await initializeTensorFlow();
         if (!initialized) {
-          throw new Error("Failed to initialize TensorFlow.js");
+          throw new Error("Failed to initialize TensorFlow.js in worker");
         }
 
+        console.log("🔧 Building model in worker...");
         const { layers, learningRate } = payload;
-        model = buildModel(layers);
-        compileModel(model, learningRate);
+
+        try {
+          model = buildModel(layers);
+          compileModel(model, learningRate);
+          console.log("✅ Model built and compiled successfully in worker");
+        } catch (modelError) {
+          console.error("❌ Model building failed:", modelError);
+          throw new Error(`Model building failed: ${modelError.message}`);
+        }
 
         self.postMessage({
           type: "MODEL_READY",
-          payload: { success: true },
+          payload: {
+            success: true,
+            backend: tf.getBackend(),
+            message: "Worker initialized successfully",
+          },
         } as TrainingWorkerResponse);
         break;
 
@@ -428,3 +431,28 @@ self.addEventListener("beforeunload", () => {
     model.dispose();
   }
 });
+
+// Global error handler for worker
+self.addEventListener("error", (error) => {
+  console.error("🚨 Worker global error:", error);
+  self.postMessage({
+    type: "TRAINING_ERROR",
+    payload: {
+      error: `Worker error: ${error.message || error}`,
+    },
+  } as TrainingWorkerResponse);
+});
+
+// Handle unhandled promise rejections
+self.addEventListener("unhandledrejection", (event) => {
+  console.error("🚨 Worker unhandled promise rejection:", event.reason);
+  self.postMessage({
+    type: "TRAINING_ERROR",
+    payload: {
+      error: `Worker promise rejection: ${event.reason}`,
+    },
+  } as TrainingWorkerResponse);
+});
+
+// Add startup logging
+console.log("🔧 Training worker script loaded");
