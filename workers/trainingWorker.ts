@@ -11,6 +11,8 @@
 // This prevents browser tab throttling from pausing training
 
 import * as tf from "@tensorflow/tfjs";
+import "@tensorflow/tfjs-backend-webgpu";
+import "@tensorflow/tfjs-backend-webgl";
 import type { LayerConfig, TrainingDataPoint } from "../types";
 import { LayerType, ActivationFunction } from "../types";
 

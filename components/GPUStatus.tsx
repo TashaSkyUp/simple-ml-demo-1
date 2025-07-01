@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from "react";
 import * as tf from "@tensorflow/tfjs";
+import "@tensorflow/tfjs-backend-webgpu";
+import "@tensorflow/tfjs-backend-webgl";
 
 interface GPUInfo {
   backend: string;

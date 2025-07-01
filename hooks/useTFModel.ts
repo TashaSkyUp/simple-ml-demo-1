@@ -1,5 +1,7 @@
 import { useState, useRef, useCallback, useEffect } from "react";
 import * as tf from "@tensorflow/tfjs";
+import "@tensorflow/tfjs-backend-webgpu";
+import "@tensorflow/tfjs-backend-webgl";
 import type {
   LayerConfig,
   TrainingDataPoint,
@@ -9,8 +11,8 @@ import type {
   PoolLayerConfig,
   ActivationLayerConfig,
   DropoutLayerConfig,
-  FlattenLayerConfig,
   DenseLayerConfig,
+  FlattenLayerConfig,
   ReshapeLayerConfig,
 } from "../types";
 import {
