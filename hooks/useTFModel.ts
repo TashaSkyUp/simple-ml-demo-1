@@ -1616,10 +1616,8 @@ export const useTFModel = ({
     }
   }, [status]);
 
-  // Calculate training mode separately to avoid scoping issues in minified build
-  const currentTrainingMode = isUsingWorker ? "CPU Worker" : "GPU Main Thread";
-
-  return {
+  // Create return object with explicit variable references to avoid minification issues
+  const returnObject = {
     model: modelRef.current,
     status,
     prediction,
@@ -1634,11 +1632,13 @@ export const useTFModel = ({
     resetModelTrainingState,
     runGPUBenchmark,
     saveModelWeights,
-    isUsingWorker,
+    isUsingWorker: isUsingWorker,
     isHybridTraining,
-    trainingMode: currentTrainingMode,
+    trainingMode: isUsingWorker ? "CPU Worker" : "GPU Main Thread",
     loadModelWeights,
     setEpochsRun,
     setLossHistory,
   };
+
+  return returnObject;
 };
