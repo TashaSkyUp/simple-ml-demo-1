@@ -357,6 +357,15 @@ export const useTFModel = ({
   );
   const [fcWeightsViz, setFcWeightsViz] = useState<number[][] | null>(null);
   const [isUsingWorker, setIsUsingWorker] = useState<boolean>(false);
+  const [isPageVisible, setIsPageVisible] = useState<boolean>(true);
+  const [isHybridTraining, setIsHybridTraining] = useState<boolean>(false);
+  const [hybridTrainingState, setHybridTrainingState] = useState<{
+    totalEpochs: number;
+    currentEpoch: number;
+    trainingData: TrainingDataPoint[];
+    batchSize: number;
+    isActive: boolean;
+  } | null>(null);
   const [gpuBenchmark, setGpuBenchmark] = useState<{
     opsPerSecond: number;
     isRunning: boolean;
@@ -1078,6 +1087,8 @@ export const useTFModel = ({
             console.log("Complete Training completed in worker");
             setStatus("success");
             setIsUsingWorker(false);
+            setIsHybridTraining(false);
+            setHybridTrainingState(null);
             break;
 
           case "PREDICTION_RESULT":
@@ -1132,45 +1143,75 @@ export const useTFModel = ({
       numEpochsToRun: number,
       batchSize: number,
     ) => {
-      // Debug worker status
-      console.log("🔍 Training start - Worker debug:", {
-        useWebWorker,
-        workerExists: !!workerRef.current,
-        workerStatus,
-        conditions: {
-          useWebWorker,
-          workerRef: !!workerRef.current,
-          statusReady: workerStatus === "ready",
-        },
+      // Start hybrid training mode
+      setIsHybridTraining(true);
+      setHybridTrainingState({
+        totalEpochs: numEpochsToRun,
+        currentEpoch: 0,
+        trainingData,
+        batchSize,
+        isActive: true,
       });
 
-      // Try Web Worker first if enabled
-      if (useWebWorker && workerRef.current && workerStatus === "ready") {
-        console.log("🚀 Starting background training with Web Worker");
-        setStatus("training");
-        setEpochsRun(0);
-        setLossHistory([]);
+      console.log("🔀 Starting hybrid GPU/CPU training", {
+        pageVisible: isPageVisible,
+        useWebWorker,
+        workerReady: workerStatus === "ready",
+      });
 
-        const message: TrainingWorkerMessage = {
-          type: "START_TRAINING",
-          payload: {
-            trainingData,
-            numEpochs: numEpochsToRun,
-            batchSize,
-            learningRate: currentLearningRateRef.current,
-          },
-        };
-
-        workerRef.current.postMessage(message);
-        return;
+      // Start with appropriate method based on tab visibility
+      if (isPageVisible) {
+        return startMainThreadTraining(trainingData, numEpochsToRun, batchSize);
+      } else if (
+        useWebWorker &&
+        workerRef.current &&
+        workerStatus === "ready"
+      ) {
+        return startWorkerTraining(trainingData, numEpochsToRun, batchSize);
+      } else {
+        // Fallback to main thread if worker not available
+        return startMainThreadTraining(trainingData, numEpochsToRun, batchSize);
       }
+    },
+    [isPageVisible, useWebWorker, workerStatus],
+  );
 
-      // Fallback to main thread training
-      console.log("🔧 Using main thread training (worker not available)", {
-        useWebWorker,
-        workerExists: !!workerRef.current,
-        workerStatus,
-      });
+  const startWorkerTraining = useCallback(
+    async (
+      trainingData: TrainingDataPoint[],
+      numEpochsToRun: number,
+      batchSize: number,
+    ) => {
+      if (!workerRef.current || workerStatus !== "ready") return;
+
+      console.log("🔧 Starting CPU worker training");
+      setStatus("training");
+      setIsUsingWorker(true);
+
+      const message: TrainingWorkerMessage = {
+        type: "START_TRAINING",
+        payload: {
+          trainingData,
+          numEpochs: numEpochsToRun,
+          batchSize,
+          learningRate: currentLearningRateRef.current,
+        },
+      };
+
+      workerRef.current.postMessage(message);
+    },
+    [workerStatus],
+  );
+
+  const startMainThreadTraining = useCallback(
+    async (
+      trainingData: TrainingDataPoint[],
+      numEpochsToRun: number,
+      batchSize: number,
+    ) => {
+      console.log("🚀 Starting GPU main thread training");
+      setStatus("training");
+      setIsUsingWorker(false);
       let activeModel = modelRef.current;
       if (
         !activeModel ||
@@ -1338,6 +1379,58 @@ export const useTFModel = ({
     [initializeModel, status, runPrediction],
   );
 
+  const switchToWorkerTraining = useCallback(async () => {
+    if (!hybridTrainingState || !hybridTrainingState.isActive) return;
+    if (!useWebWorker || !workerRef.current || workerStatus !== "ready") return;
+    if (isUsingWorker) return; // Already using worker
+
+    console.log("🔀 Switching to CPU worker training (tab hidden)");
+
+    // Stop main thread training if active
+    // Calculate remaining epochs
+    const remainingEpochs = hybridTrainingState.totalEpochs - epochsRun;
+    if (remainingEpochs <= 0) return;
+
+    await startWorkerTraining(
+      hybridTrainingState.trainingData,
+      remainingEpochs,
+      hybridTrainingState.batchSize,
+    );
+  }, [
+    hybridTrainingState,
+    useWebWorker,
+    workerStatus,
+    isUsingWorker,
+    epochsRun,
+    startWorkerTraining,
+  ]);
+
+  const switchToMainThreadTraining = useCallback(async () => {
+    if (!hybridTrainingState || !hybridTrainingState.isActive) return;
+    if (!isUsingWorker) return; // Already using main thread
+
+    console.log("🔀 Switching to GPU main thread training (tab visible)");
+
+    // Stop worker training
+    if (workerRef.current) {
+      const message: TrainingWorkerMessage = { type: "STOP_TRAINING" };
+      workerRef.current.postMessage(message);
+    }
+
+    // Calculate remaining epochs
+    const remainingEpochs = hybridTrainingState.totalEpochs - epochsRun;
+    if (remainingEpochs <= 0) return;
+
+    // Small delay to ensure worker stops
+    setTimeout(async () => {
+      await startMainThreadTraining(
+        hybridTrainingState.trainingData,
+        remainingEpochs,
+        hybridTrainingState.batchSize,
+      );
+    }, 100);
+  }, [hybridTrainingState, isUsingWorker, epochsRun, startMainThreadTraining]);
+
   const resetModelTrainingState = useCallback(async () => {
     // Clean up worker (only if it exists and isn't already being disposed)
     if (workerRef.current && workerStatus !== "uninitialized") {
@@ -1364,6 +1457,8 @@ export const useTFModel = ({
     setFcWeightsViz(null);
     setLossHistory([]);
     setEpochsRun(0);
+    setIsHybridTraining(false);
+    setHybridTrainingState(null);
   }, [workerStatus]);
 
   // Save model weights to a serializable format
@@ -1450,6 +1545,43 @@ export const useTFModel = ({
       }
     };
   }, []);
+
+  // Page Visibility API for hybrid training
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      const visible = !document.hidden;
+      setIsPageVisible(visible);
+
+      if (!isHybridTraining || !hybridTrainingState?.isActive) return;
+
+      if (visible) {
+        // Tab became visible - switch to GPU if currently using worker
+        switchToMainThreadTraining();
+      } else {
+        // Tab became hidden - switch to worker if currently using main thread
+        switchToWorkerTraining();
+      }
+    };
+
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+    return () => {
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
+    };
+  }, [
+    isHybridTraining,
+    hybridTrainingState,
+    switchToMainThreadTraining,
+    switchToWorkerTraining,
+  ]);
+
+  // Update hybrid training state when training completes
+  useEffect(() => {
+    if (status === "success" || status === "error") {
+      setIsHybridTraining(false);
+      setHybridTrainingState(null);
+      setIsUsingWorker(false);
+    }
+  }, [status]);
 
   return {
     model: modelRef.current,
