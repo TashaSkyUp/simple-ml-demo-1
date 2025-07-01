@@ -45,7 +45,7 @@ interface TrainingTabProps {
   onLoadSession: () => void;
 
   // Training mode props
-  isUsingWorker?: boolean;
+  isUsingBackgroundWorker?: boolean;
   isHybridTraining?: boolean;
   trainingMode?: string;
 
@@ -103,6 +103,11 @@ export const TrainingTab: React.FC<TrainingTabProps> = ({
   lossHistory,
   onSaveSession,
   onLoadSession,
+
+  // Training mode props
+  isUsingBackgroundWorker,
+  isHybridTraining,
+  trainingMode,
 
   // GPU
   gpuBenchmark,
@@ -267,7 +272,7 @@ export const TrainingTab: React.FC<TrainingTabProps> = ({
               lossHistory={lossHistory}
               onSaveSession={onSaveSession}
               onLoadSession={onLoadSession}
-              isUsingWorker={isUsingWorker}
+              isUsingWorker={isUsingBackgroundWorker}
               isHybridTraining={isHybridTraining}
               trainingMode={trainingMode}
             />

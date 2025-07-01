@@ -27,7 +27,7 @@ interface TrainingControlsProps {
   onSaveSession: () => void; // New prop
   onLoadSession: () => void; // New prop
   // Training mode props
-  isUsingWorker?: boolean;
+  isUsingBackgroundWorker?: boolean;
   isHybridTraining?: boolean;
   trainingMode?: string;
 }
@@ -50,7 +50,7 @@ export const TrainingControls: React.FC<TrainingControlsProps> = ({
   lossHistory,
   onSaveSession, // Destructure new prop
   onLoadSession, // Destructure new prop
-  isUsingWorker,
+  isUsingWorker: isUsingBackgroundWorker,
   isHybridTraining,
   trainingMode,
 }) => {
@@ -221,7 +221,7 @@ export const TrainingControls: React.FC<TrainingControlsProps> = ({
             {status === "training" && isHybridTraining && (
               <div className="mb-2">
                 <div className="text-sm opacity-90">
-                  {isUsingWorker === true ? (
+                  {isUsingBackgroundWorker === true ? (
                     <span className="flex items-center justify-center gap-2">
                       🔧 <strong>CPU Worker</strong> (continuous, slower)
                     </span>

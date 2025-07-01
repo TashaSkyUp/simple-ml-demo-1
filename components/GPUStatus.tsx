@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from "react";
-// TensorFlow.js is loaded via CDN as global object
-declare const tf: any;
+import * as tf from "@tensorflow/tfjs";
 
 interface GPUInfo {
   backend: string;

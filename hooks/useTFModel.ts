@@ -356,8 +356,9 @@ export const useTFModel = ({
     [],
   );
   const [fcWeightsViz, setFcWeightsViz] = useState<number[][] | null>(null);
-  const [isUsingWorker, setIsUsingWorker] = useState<boolean>(false);
-  const isUsingWorkerRef = useRef<boolean>(false);
+  const [isUsingBackgroundWorker, setIsUsingBackgroundWorker] =
+    useState<boolean>(false);
+  const isUsingBackgroundWorkerRef = useRef<boolean>(false);
   const [isPageVisible, setIsPageVisible] = useState<boolean>(true);
   const [isHybridTraining, setIsHybridTraining] = useState<boolean>(false);
   const [hybridTrainingState, setHybridTrainingState] = useState<{
@@ -1070,8 +1071,8 @@ export const useTFModel = ({
           case "MODEL_READY":
             console.log("Success Training worker model ready");
             setWorkerStatus("ready");
-            setIsUsingWorker(true);
-            isUsingWorkerRef.current = true;
+            setIsUsingBackgroundWorker(true);
+            isUsingBackgroundWorkerRef.current = true;
             break;
 
           case "TRAINING_PROGRESS":
@@ -1088,8 +1089,8 @@ export const useTFModel = ({
           case "TRAINING_COMPLETE":
             console.log("Complete Training completed in worker");
             setStatus("success");
-            setIsUsingWorker(false);
-            isUsingWorkerRef.current = false;
+            setIsUsingBackgroundWorker(false);
+            isUsingBackgroundWorkerRef.current = false;
             setIsHybridTraining(false);
             setHybridTrainingState(null);
             break;
@@ -1101,8 +1102,8 @@ export const useTFModel = ({
           case "TRAINING_ERROR":
             console.error("Error Training worker error:", payload.error);
             setStatus("error");
-            setIsUsingWorker(false);
-            isUsingWorkerRef.current = false;
+            setIsUsingBackgroundWorker(false);
+            isUsingBackgroundWorkerRef.current = false;
             break;
         }
       };
@@ -1111,8 +1112,8 @@ export const useTFModel = ({
       workerRef.current.onerror = (error) => {
         console.error("Error Worker error:", error);
         setWorkerStatus("error");
-        setIsUsingWorker(false);
-        isUsingWorkerRef.current = false;
+        setIsUsingBackgroundWorker(false);
+        isUsingBackgroundWorkerRef.current = false;
       };
 
       // Initialize the model in the worker
@@ -1188,12 +1189,12 @@ export const useTFModel = ({
       batchSize: number,
     ) => {
       if (!workerRef.current || workerStatus !== "ready") return;
-      if (status === "training" && isUsingWorkerRef.current) return; // Already training in worker
+      if (status === "training" && isUsingBackgroundWorkerRef.current) return; // Already training in worker
 
       console.log("🔧 Starting CPU worker training (slower but continuous)");
       setStatus("training");
-      setIsUsingWorker(true);
-      isUsingWorkerRef.current = true;
+      setIsUsingBackgroundWorker(true);
+      isUsingBackgroundWorkerRef.current = true;
 
       const message: TrainingWorkerMessage = {
         type: "START_TRAINING",
@@ -1216,12 +1217,12 @@ export const useTFModel = ({
       numEpochsToRun: number,
       batchSize: number,
     ) => {
-      if (status === "training" && !isUsingWorkerRef.current) return; // Already training on main thread
+      if (status === "training" && !isUsingBackgroundWorkerRef.current) return; // Already training on main thread
 
       console.log("🚀 Starting GPU main thread training (fast but pausable)");
       setStatus("training");
-      setIsUsingWorker(false);
-      isUsingWorkerRef.current = false;
+      setIsUsingBackgroundWorker(false);
+      isUsingBackgroundWorkerRef.current = false;
       let activeModel = modelRef.current;
       if (
         !activeModel ||
@@ -1392,7 +1393,7 @@ export const useTFModel = ({
   const switchToWorkerTraining = useCallback(async () => {
     if (!hybridTrainingState || !hybridTrainingState.isActive) return;
     if (!useWebWorker || !workerRef.current || workerStatus !== "ready") return;
-    if (isUsingWorkerRef.current || status !== "training") return; // Already using worker or not training
+    if (isUsingBackgroundWorkerRef.current || status !== "training") return; // Already using worker or not training
 
     console.log(
       "🔀 Switching to CPU worker training (tab hidden) - Training will continue in background",
@@ -1404,7 +1405,8 @@ export const useTFModel = ({
 
     // Add delay to ensure any previous transitions complete
     setTimeout(async () => {
-      if (!hybridTrainingState?.isActive || isUsingWorkerRef.current) return;
+      if (!hybridTrainingState?.isActive || isUsingBackgroundWorkerRef.current)
+        return;
       await startWorkerTraining(
         hybridTrainingState.trainingData,
         remainingEpochs,
@@ -1421,7 +1423,7 @@ export const useTFModel = ({
 
   const switchToMainThreadTraining = useCallback(async () => {
     if (!hybridTrainingState || !hybridTrainingState.isActive) return;
-    if (!isUsingWorkerRef.current || status !== "training") return; // Already using main thread or not training
+    if (!isUsingBackgroundWorkerRef.current || status !== "training") return; // Already using main thread or not training
 
     console.log(
       "🔀 Switching to GPU main thread training (tab visible) - Training will be faster now",
@@ -1431,8 +1433,8 @@ export const useTFModel = ({
     if (workerRef.current) {
       const message: TrainingWorkerMessage = { type: "STOP_TRAINING" };
       workerRef.current.postMessage(message);
-      setIsUsingWorker(false);
-      isUsingWorkerRef.current = false;
+      setIsUsingBackgroundWorker(false);
+      isUsingBackgroundWorkerRef.current = false;
     }
 
     // Calculate remaining epochs
@@ -1441,7 +1443,8 @@ export const useTFModel = ({
 
     // Longer delay to ensure worker fully stops
     setTimeout(async () => {
-      if (!hybridTrainingState?.isActive || isUsingWorkerRef.current) return;
+      if (!hybridTrainingState?.isActive || isUsingBackgroundWorkerRef.current)
+        return;
       await startMainThreadTraining(
         hybridTrainingState.trainingData,
         remainingEpochs,
@@ -1463,8 +1466,8 @@ export const useTFModel = ({
       workerRef.current = null;
       setWorkerStatus("uninitialized");
     }
-    setIsUsingWorker(false);
-    isUsingWorkerRef.current = false;
+    setIsUsingBackgroundWorker(false);
+    isUsingBackgroundWorkerRef.current = false;
 
     if (modelRef.current) {
       modelRef.current.dispose();
@@ -1614,34 +1617,40 @@ export const useTFModel = ({
     if (status === "success" || status === "error") {
       setIsHybridTraining(false);
       setHybridTrainingState(null);
-      setIsUsingWorker(false);
-      isUsingWorkerRef.current = false;
+      setIsUsingBackgroundWorker(false);
+      isUsingBackgroundWorkerRef.current = false;
     }
   }, [status]);
 
-  // Create return object with explicit variable references to avoid minification issues
-  const returnObject = {
-    model: modelRef.current,
-    status,
-    prediction,
-    epochsRun,
-    lossHistory,
-    liveLayerOutputs,
-    fcWeightsViz,
-    gpuBenchmark,
-    initializeModel,
-    runPrediction,
-    startTraining: startTrainingLogic,
-    resetModelTrainingState,
-    runGPUBenchmark,
-    saveModelWeights,
-    isUsingWorker: isUsingWorker,
-    isHybridTraining,
-    trainingMode: isUsingWorker ? "CPU Worker" : "GPU Main Thread",
-    loadModelWeights,
-    setEpochsRun,
-    setLossHistory,
+  // Create return object using function construction
+  const createReturnObject = () => {
+    const workerFlag = isUsingBackgroundWorker;
+    const hybridFlag = isHybridTraining;
+    const mode = workerFlag ? "CPU Worker" : "GPU Main Thread";
+
+    return {
+      model: modelRef.current,
+      status,
+      prediction,
+      epochsRun,
+      lossHistory,
+      liveLayerOutputs,
+      fcWeightsViz,
+      gpuBenchmark,
+      initializeModel,
+      runPrediction,
+      startTraining: startTrainingLogic,
+      resetModelTrainingState,
+      runGPUBenchmark,
+      saveModelWeights,
+      isUsingWorker: workerFlag,
+      isHybridTraining: hybridFlag,
+      trainingMode: mode,
+      loadModelWeights,
+      setEpochsRun,
+      setLossHistory,
+    };
   };
 
-  return returnObject;
+  return createReturnObject();
 };
