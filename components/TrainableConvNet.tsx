@@ -184,6 +184,9 @@ export const TrainableConvNet: React.FC = () => {
     loadModelWeights,
     setEpochsRun,
     setLossHistory,
+    isUsingWorker,
+    isHybridTraining,
+    trainingMode,
   } = useTFModel({
     initialLayers: layers,
     learningRate,
@@ -646,6 +649,10 @@ export const TrainableConvNet: React.FC = () => {
           lossHistory={lossHistory}
           onSaveSession={handleSaveSession}
           onLoadSession={handleLoadSession}
+          // Training mode props
+          isUsingWorker={isUsingWorker}
+          isHybridTraining={isHybridTraining}
+          trainingMode={trainingMode}
           // GPU props
           gpuBenchmark={gpuBenchmark}
           onRunGPUBenchmark={runGPUBenchmark}

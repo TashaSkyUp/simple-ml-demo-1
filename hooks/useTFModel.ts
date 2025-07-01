@@ -1079,7 +1079,7 @@ export const useTFModel = ({
               payload.loss,
             ]);
             console.log(
-              `Epoch ${payload.epoch}/${payload.totalEpochs} - Loss: ${payload.loss.toFixed(4)}`,
+              `🔧 CPU Worker Training - Epoch ${payload.epoch}/${payload.totalEpochs} - Loss: ${payload.loss.toFixed(4)} - Accuracy: ${(payload.accuracy || 0).toFixed(4)}`,
             );
             break;
 
@@ -1185,7 +1185,7 @@ export const useTFModel = ({
       if (!workerRef.current || workerStatus !== "ready") return;
       if (status === "training" && isUsingWorker) return; // Already training in worker
 
-      console.log("🔧 Starting CPU worker training");
+      console.log("🔧 Starting CPU worker training (slower but continuous)");
       setStatus("training");
       setIsUsingWorker(true);
 
@@ -1212,7 +1212,7 @@ export const useTFModel = ({
     ) => {
       if (status === "training" && !isUsingWorker) return; // Already training on main thread
 
-      console.log("🚀 Starting GPU main thread training");
+      console.log("🚀 Starting GPU main thread training (fast but pausable)");
       setStatus("training");
       setIsUsingWorker(false);
       let activeModel = modelRef.current;
@@ -1387,7 +1387,9 @@ export const useTFModel = ({
     if (!useWebWorker || !workerRef.current || workerStatus !== "ready") return;
     if (isUsingWorker || status !== "training") return; // Already using worker or not training
 
-    console.log("🔀 Switching to CPU worker training (tab hidden)");
+    console.log(
+      "🔀 Switching to CPU worker training (tab hidden) - Training will continue in background",
+    );
 
     // Calculate remaining epochs
     const remainingEpochs = hybridTrainingState.totalEpochs - epochsRun;
@@ -1415,7 +1417,9 @@ export const useTFModel = ({
     if (!hybridTrainingState || !hybridTrainingState.isActive) return;
     if (!isUsingWorker || status !== "training") return; // Already using main thread or not training
 
-    console.log("🔀 Switching to GPU main thread training (tab visible)");
+    console.log(
+      "🔀 Switching to GPU main thread training (tab visible) - Training will be faster now",
+    );
 
     // Stop worker training with proper wait
     if (workerRef.current) {
@@ -1577,9 +1581,15 @@ export const useTFModel = ({
       switchTimeout = setTimeout(() => {
         if (visible) {
           // Tab became visible - switch to GPU if currently using worker
+          console.log(
+            "👁️ Tab became visible - preparing to switch to GPU training...",
+          );
           switchToMainThreadTraining();
         } else {
           // Tab became hidden - switch to worker if currently using main thread
+          console.log(
+            "🫥 Tab became hidden - preparing to switch to CPU worker training...",
+          );
           switchToWorkerTraining();
         }
       }, 200);
@@ -1621,6 +1631,9 @@ export const useTFModel = ({
     resetModelTrainingState,
     runGPUBenchmark,
     saveModelWeights,
+    isUsingWorker,
+    isHybridTraining,
+    trainingMode: isUsingWorker ? "CPU Worker" : "GPU Main Thread",
     loadModelWeights,
     setEpochsRun,
     setLossHistory,

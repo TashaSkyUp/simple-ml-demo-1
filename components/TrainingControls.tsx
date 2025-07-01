@@ -26,6 +26,10 @@ interface TrainingControlsProps {
   lossHistory: number[];
   onSaveSession: () => void; // New prop
   onLoadSession: () => void; // New prop
+  // Training mode props
+  isUsingWorker?: boolean;
+  isHybridTraining?: boolean;
+  trainingMode?: string;
 }
 
 export const TrainingControls: React.FC<TrainingControlsProps> = ({
@@ -46,6 +50,9 @@ export const TrainingControls: React.FC<TrainingControlsProps> = ({
   lossHistory,
   onSaveSession, // Destructure new prop
   onLoadSession, // Destructure new prop
+  isUsingWorker,
+  isHybridTraining,
+  trainingMode,
 }) => {
   const canTrain = !(
     status === "training" ||
@@ -211,6 +218,24 @@ export const TrainingControls: React.FC<TrainingControlsProps> = ({
           <div
             className={`p-3 rounded-md text-center font-semibold ${status === "collecting" ? "bg-gray-700 text-gray-300" : status === "training" ? "bg-blue-800 text-blue-200 animate-pulse" : status === "architecture-changed" ? "bg-yellow-800 text-yellow-200" : status === "error" ? "bg-red-800 text-red-200" : "bg-green-800 text-green-200"}`}
           >
+            {status === "training" && isHybridTraining && (
+              <div className="mb-2">
+                <div className="text-sm opacity-90">
+                  {isUsingWorker ? (
+                    <span className="flex items-center justify-center gap-2">
+                      🔧 <strong>CPU Worker</strong> (continuous, slower)
+                    </span>
+                  ) : (
+                    <span className="flex items-center justify-center gap-2">
+                      🚀 <strong>GPU Main Thread</strong> (fast, pausable)
+                    </span>
+                  )}
+                </div>
+                <div className="text-xs opacity-75 mt-1">
+                  Switch tabs to see automatic backend switching
+                </div>
+              </div>
+            )}
             {status === "collecting"
               ? "Ready..."
               : status === "training"

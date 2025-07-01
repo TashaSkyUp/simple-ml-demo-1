@@ -44,6 +44,11 @@ interface TrainingTabProps {
   onSaveSession: () => void;
   onLoadSession: () => void;
 
+  // Training mode props
+  isUsingWorker?: boolean;
+  isHybridTraining?: boolean;
+  trainingMode?: string;
+
   // GPU props
   gpuBenchmark: {
     opsPerSecond: number;
@@ -262,6 +267,9 @@ export const TrainingTab: React.FC<TrainingTabProps> = ({
               lossHistory={lossHistory}
               onSaveSession={onSaveSession}
               onLoadSession={onLoadSession}
+              isUsingWorker={isUsingWorker}
+              isHybridTraining={isHybridTraining}
+              trainingMode={trainingMode}
             />
           </CollapsibleSection>
         </div>
@@ -279,7 +287,7 @@ export const TrainingTab: React.FC<TrainingTabProps> = ({
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           <div className="bg-gray-800 rounded-lg p-4 border border-gray-700">
             <h3 className="text-lg font-semibold text-cyan-400 mb-2">
-               Data Collection
+              Data Collection
             </h3>
             <ul className="text-sm text-gray-300 space-y-1">
               <li>• Collect varied samples for each class</li>
@@ -291,7 +299,7 @@ export const TrainingTab: React.FC<TrainingTabProps> = ({
 
           <div className="bg-gray-800 rounded-lg p-4 border border-gray-700">
             <h3 className="text-lg font-semibold text-green-400 mb-2">
-               Architecture Design
+              Architecture Design
             </h3>
             <ul className="text-sm text-gray-300 space-y-1">
               <li>• Start simple, add complexity gradually</li>
@@ -303,7 +311,7 @@ export const TrainingTab: React.FC<TrainingTabProps> = ({
 
           <div className="bg-gray-800 rounded-lg p-4 border border-gray-700">
             <h3 className="text-lg font-semibold text-purple-400 mb-2">
-               Training Strategy
+              Training Strategy
             </h3>
             <ul className="text-sm text-gray-300 space-y-1">
               <li>• Start with default learning rate (0.001)</li>
