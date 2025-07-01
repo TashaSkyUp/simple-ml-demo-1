@@ -221,7 +221,7 @@ export const TrainingControls: React.FC<TrainingControlsProps> = ({
             {status === "training" && isHybridTraining && (
               <div className="mb-2">
                 <div className="text-sm opacity-90">
-                  {isUsingWorker ? (
+                  {isUsingWorker === true ? (
                     <span className="flex items-center justify-center gap-2">
                       🔧 <strong>CPU Worker</strong> (continuous, slower)
                     </span>

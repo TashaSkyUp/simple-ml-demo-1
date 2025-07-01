@@ -357,6 +357,7 @@ export const useTFModel = ({
   );
   const [fcWeightsViz, setFcWeightsViz] = useState<number[][] | null>(null);
   const [isUsingWorker, setIsUsingWorker] = useState<boolean>(false);
+  const isUsingWorkerRef = useRef<boolean>(false);
   const [isPageVisible, setIsPageVisible] = useState<boolean>(true);
   const [isHybridTraining, setIsHybridTraining] = useState<boolean>(false);
   const [hybridTrainingState, setHybridTrainingState] = useState<{
@@ -1070,6 +1071,7 @@ export const useTFModel = ({
             console.log("Success Training worker model ready");
             setWorkerStatus("ready");
             setIsUsingWorker(true);
+            isUsingWorkerRef.current = true;
             break;
 
           case "TRAINING_PROGRESS":
@@ -1087,6 +1089,7 @@ export const useTFModel = ({
             console.log("Complete Training completed in worker");
             setStatus("success");
             setIsUsingWorker(false);
+            isUsingWorkerRef.current = false;
             setIsHybridTraining(false);
             setHybridTrainingState(null);
             break;
@@ -1099,6 +1102,7 @@ export const useTFModel = ({
             console.error("Error Training worker error:", payload.error);
             setStatus("error");
             setIsUsingWorker(false);
+            isUsingWorkerRef.current = false;
             break;
         }
       };
@@ -1108,6 +1112,7 @@ export const useTFModel = ({
         console.error("Error Worker error:", error);
         setWorkerStatus("error");
         setIsUsingWorker(false);
+        isUsingWorkerRef.current = false;
       };
 
       // Initialize the model in the worker
@@ -1183,11 +1188,12 @@ export const useTFModel = ({
       batchSize: number,
     ) => {
       if (!workerRef.current || workerStatus !== "ready") return;
-      if (status === "training" && isUsingWorker) return; // Already training in worker
+      if (status === "training" && isUsingWorkerRef.current) return; // Already training in worker
 
       console.log("🔧 Starting CPU worker training (slower but continuous)");
       setStatus("training");
       setIsUsingWorker(true);
+      isUsingWorkerRef.current = true;
 
       const message: TrainingWorkerMessage = {
         type: "START_TRAINING",
@@ -1201,7 +1207,7 @@ export const useTFModel = ({
 
       workerRef.current.postMessage(message);
     },
-    [workerStatus, status, isUsingWorker],
+    [workerStatus, status],
   );
 
   const startMainThreadTraining = useCallback(
@@ -1210,11 +1216,12 @@ export const useTFModel = ({
       numEpochsToRun: number,
       batchSize: number,
     ) => {
-      if (status === "training" && !isUsingWorker) return; // Already training on main thread
+      if (status === "training" && !isUsingWorkerRef.current) return; // Already training on main thread
 
       console.log("🚀 Starting GPU main thread training (fast but pausable)");
       setStatus("training");
       setIsUsingWorker(false);
+      isUsingWorkerRef.current = false;
       let activeModel = modelRef.current;
       if (
         !activeModel ||
@@ -1379,13 +1386,13 @@ export const useTFModel = ({
         tf.dispose([xs, ys]);
       }
     },
-    [initializeModel, status, runPrediction, isUsingWorker],
+    [initializeModel, status, runPrediction],
   );
 
   const switchToWorkerTraining = useCallback(async () => {
     if (!hybridTrainingState || !hybridTrainingState.isActive) return;
     if (!useWebWorker || !workerRef.current || workerStatus !== "ready") return;
-    if (isUsingWorker || status !== "training") return; // Already using worker or not training
+    if (isUsingWorkerRef.current || status !== "training") return; // Already using worker or not training
 
     console.log(
       "🔀 Switching to CPU worker training (tab hidden) - Training will continue in background",
@@ -1397,7 +1404,7 @@ export const useTFModel = ({
 
     // Add delay to ensure any previous transitions complete
     setTimeout(async () => {
-      if (!hybridTrainingState?.isActive || isUsingWorker) return;
+      if (!hybridTrainingState?.isActive || isUsingWorkerRef.current) return;
       await startWorkerTraining(
         hybridTrainingState.trainingData,
         remainingEpochs,
@@ -1408,14 +1415,13 @@ export const useTFModel = ({
     hybridTrainingState,
     useWebWorker,
     workerStatus,
-    isUsingWorker,
     epochsRun,
     startWorkerTraining,
   ]);
 
   const switchToMainThreadTraining = useCallback(async () => {
     if (!hybridTrainingState || !hybridTrainingState.isActive) return;
-    if (!isUsingWorker || status !== "training") return; // Already using main thread or not training
+    if (!isUsingWorkerRef.current || status !== "training") return; // Already using main thread or not training
 
     console.log(
       "🔀 Switching to GPU main thread training (tab visible) - Training will be faster now",
@@ -1426,6 +1432,7 @@ export const useTFModel = ({
       const message: TrainingWorkerMessage = { type: "STOP_TRAINING" };
       workerRef.current.postMessage(message);
       setIsUsingWorker(false);
+      isUsingWorkerRef.current = false;
     }
 
     // Calculate remaining epochs
@@ -1434,20 +1441,14 @@ export const useTFModel = ({
 
     // Longer delay to ensure worker fully stops
     setTimeout(async () => {
-      if (!hybridTrainingState?.isActive || isUsingWorker) return;
+      if (!hybridTrainingState?.isActive || isUsingWorkerRef.current) return;
       await startMainThreadTraining(
         hybridTrainingState.trainingData,
         remainingEpochs,
         hybridTrainingState.batchSize,
       );
     }, 500);
-  }, [
-    hybridTrainingState,
-    isUsingWorker,
-    epochsRun,
-    startMainThreadTraining,
-    status,
-  ]);
+  }, [hybridTrainingState, epochsRun, startMainThreadTraining, status]);
 
   const resetModelTrainingState = useCallback(async () => {
     // Clean up worker (only if it exists and isn't already being disposed)
@@ -1463,6 +1464,7 @@ export const useTFModel = ({
       setWorkerStatus("uninitialized");
     }
     setIsUsingWorker(false);
+    isUsingWorkerRef.current = false;
 
     if (modelRef.current) {
       modelRef.current.dispose();
@@ -1613,6 +1615,7 @@ export const useTFModel = ({
       setIsHybridTraining(false);
       setHybridTrainingState(null);
       setIsUsingWorker(false);
+      isUsingWorkerRef.current = false;
     }
   }, [status]);
 
