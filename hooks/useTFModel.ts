@@ -1132,9 +1132,21 @@ export const useTFModel = ({
       numEpochsToRun: number,
       batchSize: number,
     ) => {
+      // Debug worker status
+      console.log("🔍 Training start - Worker debug:", {
+        useWebWorker,
+        workerExists: !!workerRef.current,
+        workerStatus,
+        conditions: {
+          useWebWorker,
+          workerRef: !!workerRef.current,
+          statusReady: workerStatus === "ready",
+        },
+      });
+
       // Try Web Worker first if enabled
       if (useWebWorker && workerRef.current && workerStatus === "ready") {
-        console.log(" Starting background training with Web Worker");
+        console.log("🚀 Starting background training with Web Worker");
         setStatus("training");
         setEpochsRun(0);
         setLossHistory([]);
@@ -1154,7 +1166,11 @@ export const useTFModel = ({
       }
 
       // Fallback to main thread training
-      console.log(" Using main thread training (worker not available)");
+      console.log("🔧 Using main thread training (worker not available)", {
+        useWebWorker,
+        workerExists: !!workerRef.current,
+        workerStatus,
+      });
       let activeModel = modelRef.current;
       if (
         !activeModel ||
