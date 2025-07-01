@@ -1341,6 +1341,10 @@ export const useTFModel = ({
   const resetModelTrainingState = useCallback(async () => {
     // Clean up worker
     if (workerRef.current) {
+      console.log(
+        "🗑️ resetModelTrainingState: Disposing worker",
+        new Error().stack,
+      );
       const message: TrainingWorkerMessage = { type: "DISPOSE" };
       workerRef.current.postMessage(message);
       workerRef.current.terminate();
@@ -1352,7 +1356,9 @@ export const useTFModel = ({
       modelRef.current.dispose();
       modelRef.current = null;
     }
+    setWorkerStatus("uninitialized");
     setStatus("uninitialized");
+    console.log("🗑️ Worker status reset to uninitialized");
     setPrediction({ label: "?", confidence: 0 });
     setLiveLayerOutputs([]);
     setFcWeightsViz(null);
@@ -1437,6 +1443,7 @@ export const useTFModel = ({
   useEffect(() => {
     return () => {
       if (workerRef.current) {
+        console.log("🗑️ Component unmount: Disposing worker");
         const message: TrainingWorkerMessage = { type: "DISPOSE" };
         workerRef.current.postMessage(message);
         workerRef.current.terminate();
