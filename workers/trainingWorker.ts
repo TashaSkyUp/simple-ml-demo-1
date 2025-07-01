@@ -177,29 +177,17 @@ const mapActivationFunction = (activation?: ActivationFunction): string => {
 const buildModel = (layers: LayerConfig[]): tf.Sequential => {
   const model = tf.sequential();
 
-  // Add input layer for 28x28x3 images
-  let isFirstLayer = true;
-
   console.log("Building model with layers:", layers);
 
+  // Always add input layer first
+  model.add(
+    tf.layers.inputLayer({ inputShape: [28, 28, 3], name: "input_layer" }),
+  );
+
+  // Add all layers from config
   for (const layerConfig of layers) {
     const layer = createTFLayer(layerConfig);
-    const normalizedType = normalizeLayerType(layerConfig.type);
-
-    if (isFirstLayer && normalizedType === LayerType.Conv) {
-      model.add(
-        tf.layers.conv2d({
-          filters: layerConfig.numFilters || 8,
-          kernelSize: layerConfig.filterSize || 3,
-          activation: mapActivationFunction(layerConfig.activation) as any,
-          padding: "same",
-          inputShape: [28, 28, 3],
-        }),
-      );
-      isFirstLayer = false;
-    } else {
-      model.add(layer);
-    }
+    model.add(layer);
   }
 
   // Ensure we have flatten and output layers
