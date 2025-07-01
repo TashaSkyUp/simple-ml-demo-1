@@ -1183,6 +1183,7 @@ export const useTFModel = ({
       batchSize: number,
     ) => {
       if (!workerRef.current || workerStatus !== "ready") return;
+      if (status === "training" && isUsingWorker) return; // Already training in worker
 
       console.log("🔧 Starting CPU worker training");
       setStatus("training");
@@ -1200,7 +1201,7 @@ export const useTFModel = ({
 
       workerRef.current.postMessage(message);
     },
-    [workerStatus],
+    [workerStatus, status, isUsingWorker],
   );
 
   const startMainThreadTraining = useCallback(
@@ -1209,6 +1210,8 @@ export const useTFModel = ({
       numEpochsToRun: number,
       batchSize: number,
     ) => {
+      if (status === "training" && !isUsingWorker) return; // Already training on main thread
+
       console.log("🚀 Starting GPU main thread training");
       setStatus("training");
       setIsUsingWorker(false);
@@ -1376,26 +1379,29 @@ export const useTFModel = ({
         tf.dispose([xs, ys]);
       }
     },
-    [initializeModel, status, runPrediction],
+    [initializeModel, status, runPrediction, isUsingWorker],
   );
 
   const switchToWorkerTraining = useCallback(async () => {
     if (!hybridTrainingState || !hybridTrainingState.isActive) return;
     if (!useWebWorker || !workerRef.current || workerStatus !== "ready") return;
-    if (isUsingWorker) return; // Already using worker
+    if (isUsingWorker || status !== "training") return; // Already using worker or not training
 
     console.log("🔀 Switching to CPU worker training (tab hidden)");
 
-    // Stop main thread training if active
     // Calculate remaining epochs
     const remainingEpochs = hybridTrainingState.totalEpochs - epochsRun;
     if (remainingEpochs <= 0) return;
 
-    await startWorkerTraining(
-      hybridTrainingState.trainingData,
-      remainingEpochs,
-      hybridTrainingState.batchSize,
-    );
+    // Add delay to ensure any previous transitions complete
+    setTimeout(async () => {
+      if (!hybridTrainingState?.isActive || isUsingWorker) return;
+      await startWorkerTraining(
+        hybridTrainingState.trainingData,
+        remainingEpochs,
+        hybridTrainingState.batchSize,
+      );
+    }, 300);
   }, [
     hybridTrainingState,
     useWebWorker,
@@ -1407,29 +1413,37 @@ export const useTFModel = ({
 
   const switchToMainThreadTraining = useCallback(async () => {
     if (!hybridTrainingState || !hybridTrainingState.isActive) return;
-    if (!isUsingWorker) return; // Already using main thread
+    if (!isUsingWorker || status !== "training") return; // Already using main thread or not training
 
     console.log("🔀 Switching to GPU main thread training (tab visible)");
 
-    // Stop worker training
+    // Stop worker training with proper wait
     if (workerRef.current) {
       const message: TrainingWorkerMessage = { type: "STOP_TRAINING" };
       workerRef.current.postMessage(message);
+      setIsUsingWorker(false);
     }
 
     // Calculate remaining epochs
     const remainingEpochs = hybridTrainingState.totalEpochs - epochsRun;
     if (remainingEpochs <= 0) return;
 
-    // Small delay to ensure worker stops
+    // Longer delay to ensure worker fully stops
     setTimeout(async () => {
+      if (!hybridTrainingState?.isActive || isUsingWorker) return;
       await startMainThreadTraining(
         hybridTrainingState.trainingData,
         remainingEpochs,
         hybridTrainingState.batchSize,
       );
-    }, 100);
-  }, [hybridTrainingState, isUsingWorker, epochsRun, startMainThreadTraining]);
+    }, 500);
+  }, [
+    hybridTrainingState,
+    isUsingWorker,
+    epochsRun,
+    startMainThreadTraining,
+    status,
+  ]);
 
   const resetModelTrainingState = useCallback(async () => {
     // Clean up worker (only if it exists and isn't already being disposed)
@@ -1546,26 +1560,35 @@ export const useTFModel = ({
     };
   }, []);
 
-  // Page Visibility API for hybrid training
+  // Page Visibility API for hybrid training with debouncing
   useEffect(() => {
+    let switchTimeout: NodeJS.Timeout;
+
     const handleVisibilityChange = () => {
       const visible = !document.hidden;
       setIsPageVisible(visible);
 
       if (!isHybridTraining || !hybridTrainingState?.isActive) return;
 
-      if (visible) {
-        // Tab became visible - switch to GPU if currently using worker
-        switchToMainThreadTraining();
-      } else {
-        // Tab became hidden - switch to worker if currently using main thread
-        switchToWorkerTraining();
-      }
+      // Clear any pending switches to avoid race conditions
+      if (switchTimeout) clearTimeout(switchTimeout);
+
+      // Debounce the switch to prevent rapid toggling
+      switchTimeout = setTimeout(() => {
+        if (visible) {
+          // Tab became visible - switch to GPU if currently using worker
+          switchToMainThreadTraining();
+        } else {
+          // Tab became hidden - switch to worker if currently using main thread
+          switchToWorkerTraining();
+        }
+      }, 200);
     };
 
     document.addEventListener("visibilitychange", handleVisibilityChange);
     return () => {
       document.removeEventListener("visibilitychange", handleVisibilityChange);
+      if (switchTimeout) clearTimeout(switchTimeout);
     };
   }, [
     isHybridTraining,
