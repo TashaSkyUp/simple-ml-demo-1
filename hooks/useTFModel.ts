@@ -1637,6 +1637,5 @@ export const useTFModel = ({
     loadModelWeights,
     setEpochsRun,
     setLossHistory,
-    isUsingWorker, // New: indicates if background training is active
   };
 };
