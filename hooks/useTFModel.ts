@@ -1339,8 +1339,8 @@ export const useTFModel = ({
   );
 
   const resetModelTrainingState = useCallback(async () => {
-    // Clean up worker
-    if (workerRef.current) {
+    // Clean up worker (only if it exists and isn't already being disposed)
+    if (workerRef.current && workerStatus !== "uninitialized") {
       console.log(
         "🗑️ resetModelTrainingState: Disposing worker",
         new Error().stack,
@@ -1349,6 +1349,7 @@ export const useTFModel = ({
       workerRef.current.postMessage(message);
       workerRef.current.terminate();
       workerRef.current = null;
+      setWorkerStatus("uninitialized");
     }
     setIsUsingWorker(false);
 
@@ -1356,7 +1357,6 @@ export const useTFModel = ({
       modelRef.current.dispose();
       modelRef.current = null;
     }
-    setWorkerStatus("uninitialized");
     setStatus("uninitialized");
     console.log("🗑️ Worker status reset to uninitialized");
     setPrediction({ label: "?", confidence: 0 });
@@ -1364,7 +1364,7 @@ export const useTFModel = ({
     setFcWeightsViz(null);
     setLossHistory([]);
     setEpochsRun(0);
-  }, []);
+  }, [workerStatus]);
 
   // Save model weights to a serializable format
   const saveModelWeights = useCallback(async (): Promise<any[] | null> => {
