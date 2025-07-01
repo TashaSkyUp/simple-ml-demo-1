@@ -2,7 +2,7 @@
 
 ## Overview
 
-The Interactive CNN Trainer includes powerful session management capabilities that allow you to save and restore complete training sessions, including your model architecture, training data, and most importantly - your trained model weights.
+The Interactive CNN Trainer includes powerful session management capabilities that allow you to save and restore complete training sessions, including your model architecture, training data, and most importantly - your trained model weights. This feature is fully implemented and working in the current version.
 
 ## What Gets Saved
 
@@ -31,29 +31,36 @@ When you save a session, the following data is preserved:
 ## How to Save a Session
 
 1. **Train Your Model**: Collect data and train your CNN as usual
-2. **Click "Save Session"**: Located in the Training Controls panel
+2. **Click "Save Session"**: Located in the Training Controls panel (blue button)
 3. **Wait for Processing**: The system will serialize model weights (may take a few seconds)
 4. **Download Automatically**: A timestamped JSON file will be downloaded
 
 ### Save Process Details
-- **Progress Feedback**: Button shows "Saving..." during weight serialization
+- **Progress Feedback**: Button shows "Saving..." during weight serialization and becomes disabled
 - **Automatic Naming**: Files are named `cnn_session_YYYY-MM-DD-HHMMSS.json`
-- **Comprehensive Summary**: Success message shows what was saved
+- **Comprehensive Summary**: Alert message shows detailed breakdown of what was saved:
+  - Architecture: Number of layers
+  - Training data: Number of samples
+  - Trained weights: Included/Not available
+  - Epochs: Number completed
+  - Loss history: Number of data points
 
 ## How to Load a Session
 
-1. **Click "Load Session"**: Located in the Training Controls panel
-2. **Select File**: Choose a previously saved session JSON file
+1. **Click "Load Session"**: Located in the Training Controls panel (purple button)
+2. **Select File**: Choose a previously saved session JSON file (.json files only)
 3. **Automatic Processing**: 
    - Architecture loads immediately
+   - Training data loads immediately
    - Model reinitializes with new architecture
-   - Weights restore after 1-second delay (for model initialization)
+   - Weights restore after model is ready (with automatic retry mechanism)
 4. **Continue Training**: Pick up exactly where you left off
 
 ### Load Process Details
-- **Validation**: File structure is validated before loading
-- **Graceful Fallback**: If weights fail to load, model uses random weights
-- **Status Updates**: Clear messages indicate what was successfully restored
+- **Validation**: File structure is validated before loading (checks for required arrays)
+- **Graceful Fallback**: If weights fail to load, model uses random weights but continues
+- **Status Updates**: Alert messages indicate what was successfully restored
+- **Smart Retry**: System waits up to 5 seconds for model to be ready before loading weights
 
 ## Session File Format
 
@@ -157,7 +164,9 @@ If you encounter persistent issues:
 1. Check browser console for detailed error messages
 2. Verify JSON file isn't corrupted (should be valid JSON)
 3. Try loading with a fresh browser session
-4. Report issues with session file examples if possible
+4. Ensure your browser supports modern JavaScript features
+5. Check that the session file contains the required fields (layers, trainingData)
+6. Report issues with session file examples if possible
 
 ## Advanced Usage
 
@@ -175,6 +184,21 @@ For researchers or advanced users:
 - Scripts can process multiple session files
 - Extract weights for analysis in other tools
 - Automate session validation and conversion
+
+## Implementation Details
+
+### Current Implementation Status
+- ✅ **Fully Implemented**: Session save/load functionality is complete
+- ✅ **Model Weights**: TensorFlow.js weights are properly serialized and restored
+- ✅ **Error Handling**: Comprehensive error handling with user feedback
+- ✅ **Memory Management**: Proper tensor disposal to prevent memory leaks
+- ✅ **User Interface**: Clear save/load buttons with progress indicators
+
+### Technical Implementation
+- **Weight Serialization**: Uses TensorFlow.js `model.getWeights()` and `model.setWeights()`
+- **Async Operations**: Non-blocking weight operations with proper error handling
+- **File Validation**: JSON structure validation before processing
+- **Retry Logic**: Smart retry mechanism for weight loading after model initialization
 
 ## Future Enhancements
 

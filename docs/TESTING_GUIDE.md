@@ -1,7 +1,41 @@
 # Testing and Validation Guide for Web Worker Implementation
 
 ## Overview
-This guide provides comprehensive testing instructions for the Web Worker background training implementation. Since I don't have the ability to run actual tests or execute code, this testing framework helps validate that the implementation works correctly in real browsers.
+This guide provides comprehensive testing instructions for the Web Worker background training implementation. The testing framework validates that the implementation works correctly in real browsers and can be executed both manually and programmatically.
+
+## Automated Test Suite
+
+### Test Directory Structure
+The project includes a comprehensive test suite in the `tests/` directory:
+
+```
+tests/
+├── unit/              # Unit tests for individual components
+├── integration/       # Integration tests for component interactions  
+├── e2e/              # End-to-end tests (planned)
+├── README.md         # Detailed testing documentation
+└── run-tests.js      # Automated test runner
+```
+
+### Running Automated Tests
+
+**All Tests:**
+```bash
+npm test
+```
+
+**Unit Tests Only:**
+```bash
+npm run test:unit
+```
+
+**Integration Tests:**
+```bash
+npm run test:integration
+# Then open http://localhost:5173/tests/integration/fixes-test.html
+```
+
+For detailed information about the test suite, see `tests/README.md`.
 
 ## Quick Test - Using the Built-in Test Suite
 

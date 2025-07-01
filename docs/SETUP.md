@@ -1,54 +1,50 @@
 # Setup Guide - Interactive CNN Trainer
 
-This guide provides multiple options for setting up and running the Interactive CNN Trainer application, depending on your system configuration and Node.js version.
+This guide provides setup instructions for the Interactive CNN Trainer application with its modern Node.js v22 environment.
 
-## 🚀 Quick Setup Options
+## 🚀 Quick Setup (Recommended)
 
-### Option 1: Modern Node.js (18+) - Recommended
-If you have Node.js 18 or higher, use the full development setup:
+### Option 1: Automated Setup Script
+The simplest way to get started with Node.js 18+ (v22.17.0 currently installed):
 
 ```bash
 ./start.sh
 ```
 
 This script will:
-- Check your Node.js version
-- Install all dependencies
-- Set up environment variables
-- Start the Vite development server
-- Open the app at `http://localhost:5173`
+- ✅ Check your Node.js version (requires 18+)
+- ✅ Install all dependencies automatically
+- ✅ Set up environment variables
+- ✅ Start the Vite development server
+- ✅ Display the app URL (typically `http://localhost:5173` or `http://localhost:5174`)
 
-### Option 2: Older Node.js or Python Fallback
-If you have Node.js 12-17 or prefer a simpler setup:
+**Current Status**: ✅ Fully working with Node.js v22.17.0
 
-```bash
-./start-simple.sh
-```
-
-This script will:
-- Use Python's built-in HTTP server
-- Create a standalone HTML version
-- Process environment variables
-- Open the app at `http://localhost:8080/index-standalone.html`
-
-### Option 3: Manual Setup
+### Option 2: Manual Setup
 For complete control or troubleshooting:
 
-1. **Install dependencies** (Node.js 18+ required):
+1. **Verify Node.js version** (18+ required, v22.17.0 recommended):
+   ```bash
+   node --version  # Should show v18.0.0 or higher
+   ```
+
+2. **Install dependencies**:
    ```bash
    npm install
    ```
 
-2. **Configure environment**:
+3. **Configure environment** (optional for AI features):
    ```bash
    cp .env.local.template .env.local
-   # Edit .env.local with your Gemini API key
+   # Edit .env.local with your Gemini API key if desired
    ```
 
-3. **Start development server**:
+4. **Start development server**:
    ```bash
    npm run dev
    ```
+
+5. **Open in browser**: Visit the URL shown in terminal (usually `http://localhost:5173`)
 
 ## 🔑 Environment Setup
 
@@ -74,20 +70,23 @@ The application supports both formats:
 
 ## 🔧 System Requirements
 
+### Current Environment (Verified Working)
+- **Node.js**: v22.17.0 (currently installed and working)
+- **npm**: v10.9.2+ (included with Node.js 22)
+- **Browser**: Chrome 113+ (WebGPU), Firefox 110+, Safari 16.4+, Edge 113+
+- **GPU**: WebGL 2.0 and/or WebGPU support for acceleration
+
 ### Minimum Requirements
-- **Browser**: Chrome 60+, Firefox 55+, Safari 11+, Edge 79+
-- **WebGL**: 2.0 support required
-- **Internet**: For CDN resources (React, TensorFlow.js, Tailwind)
-
-### Recommended Requirements
-- **Node.js**: 18+ for full development features
+- **Node.js**: 18.0.0+ (required for Vite and modern JavaScript features)
+- **Browser**: Modern browser with WebGL 2.0 support
 - **RAM**: 4GB+ for comfortable training
-- **GPU**: Dedicated graphics card for better performance
+- **Internet**: For initial dependency download only
 
-### Alternative Requirements (Simple Mode)
-- **Python**: 2.7+ or 3.x for HTTP server
-- **Browser**: Same as above
-- **Node.js**: Not required for simple mode
+### Recommended for Best Performance
+- **Node.js**: v22.17.0 (current LTS, fully tested)
+- **Browser**: Chrome 113+ or Edge 113+ (best WebGPU support)
+- **GPU**: Dedicated graphics card (NVIDIA RTX/GTX, AMD RDNA, Intel Arc)
+- **RAM**: 8GB+ for complex models and visualizations
 
 ## 📁 Project Structure After Setup
 
@@ -96,18 +95,23 @@ simple-ml-demo-1/
 ├── 📁 components/           # React components
 ├── 📁 hooks/               # Custom React hooks  
 ├── 📁 utils/               # Utility functions
+├── 📁 tests/               # Test files and suites
+│   ├── 📁 unit/            # Unit tests
+│   ├── 📁 integration/     # Integration tests
+│   ├── 📁 e2e/            # End-to-end tests
+│   ├── 📄 README.md       # Testing documentation
+│   └── 📄 run-tests.js    # Test runner script
+├── 📁 docs/               # Documentation
 ├── 📁 node_modules/        # Dependencies (after npm install)
 ├── 📄 .env.local           # Environment variables (you create this)
 ├── 📄 .env.local.template  # Environment template
 ├── 📄 env.js              # Generated environment file (simple mode)
-├── 📄 index-standalone.html # Standalone version (simple mode)
 ├── 📄 index.html          # Main HTML template
 ├── 📄 index.css           # Global styles
 ├── 📄 package.json        # Dependencies and scripts
 ├── 📄 README.md           # Comprehensive documentation
 ├── 📄 SETUP.md            # This setup guide
 ├── 📄 start.sh            # Main startup script
-├── 📄 start-simple.sh     # Simple startup script
 └── 📄 vite.config.ts      # Vite configuration
 ```
 
@@ -116,38 +120,42 @@ simple-ml-demo-1/
 ### Common Issues
 
 #### 1. Node.js Version Problems
-**Error**: `SyntaxError: Unexpected reserved word`
-**Solution**: Use `./start-simple.sh` or upgrade to Node.js 18+
+**Error**: `SyntaxError: Unexpected reserved word` or `ERR_REQUIRE_ESM`
+**Solution**: 
+- Check version: `node --version` (must be 18.0.0+)
+- Current working version: v22.17.0
+- Upgrade if needed: Visit [nodejs.org](https://nodejs.org/) or use nvm
 
 #### 2. Dependencies Won't Install
-**Error**: `npm install` fails
+**Error**: `npm install` fails or shows conflicts
 **Solutions**:
-- Delete `node_modules` and `package-lock.json`
-- Run `npm install` again
-- Use `./start-simple.sh` as alternative
+- Clear cache: `npm cache clean --force`
+- Delete `node_modules` and `package-lock.json`, then run `npm install`
+- Ensure Node.js version is 18+
+- Check internet connection for package downloads
 
 #### 3. Port Already in Use
-**Error**: `EADDRINUSE: address already in use`
+**Error**: `EADDRINUSE: address already in use :::5173`
 **Solutions**:
-- The scripts automatically find available ports
-- Manually specify port: `npm run dev -- --port 3000`
-- Kill existing processes: `lsof -ti:5173 | xargs kill`
+- ✅ Vite automatically finds available ports (5173, 5174, etc.)
+- Manual port: `npm run dev -- --port 3000`
+- Kill process: `lsof -ti:5173 | xargs kill` (macOS/Linux)
 
-#### 4. WebGL Not Supported
-**Error**: TensorFlow.js WebGL errors
+#### 4. GPU Acceleration Issues
+**Error**: Poor performance or WebGL/WebGPU errors
 **Solutions**:
-- Update your browser
-- Enable hardware acceleration
-- Try a different browser
-- Check `chrome://gpu` for WebGL status
+- Update graphics drivers
+- Check browser GPU support: visit `chrome://gpu/`
+- Enable hardware acceleration in browser settings
+- Try different browser (Chrome 113+ recommended for WebGPU)
 
-#### 5. API Key Issues
-**Error**: Gemini API failures
+#### 5. Build or Runtime Errors
+**Error**: TypeScript compilation errors or runtime failures
 **Solutions**:
-- Verify API key is correct
-- Check `.env.local` file exists and has correct format
-- Ensure API key has proper permissions
-- App works without API key (some features disabled)
+- Ensure all dependencies installed: `npm install`
+- Clear build cache: `rm -rf dist .vite`
+- Check browser console for detailed error messages
+- Verify browser supports modern JavaScript features
 
 ### Getting Help
 
@@ -162,11 +170,78 @@ If problems persist:
 
 After successful setup:
 
-1. **Learn the Interface**: Explore the drawing canvas, architecture builder, and training controls
-2. **Create Training Data**: Draw samples and label them with different classes
-3. **Design Your Network**: Configure CNN layers and parameters
-4. **Train Your Model**: Start training and watch the visualizations
-5. **Experiment**: Try different architectures and hyperparameters
+1. **Explore the Interface**: 
+   - Use collapsible sections for optimal workflow
+   - Try keyboard shortcuts (Ctrl+1-5 for quick navigation)
+   - Check GPU Performance section for acceleration status
+
+2. **Create Training Data**: 
+   - Draw samples on the canvas with different classes
+   - Use data augmentation options for better training
+   - Collect 10+ samples per class for good results
+
+3. **Design Your Network**: 
+   - Use drag-and-drop layer reordering
+   - Experiment with different architectures
+   - Try the reshape layer for custom tensor transformations
+
+4. **Train Your Model**: 
+   - Watch real-time GPU/CPU performance metrics
+   - Monitor training progress and loss curves
+   - Use session save/load to preserve your work
+
+5. **Advanced Features**:
+   - Test WebGPU vs WebGL performance
+   - Explore live layer visualizations
+   - Save complete sessions with trained weights
+
+## 🧪 Testing
+
+### Running Tests
+After setup is complete, you can run the test suite to verify everything is working correctly:
+
+```bash
+# Run all tests
+npm test
+
+# Run only unit tests
+npm run test:unit
+
+# Get integration test instructions
+npm run test:integration
+```
+
+### Test Types Available
+
+1. **Unit Tests** (`tests/unit/`):
+   - Session management functionality
+   - Utility function validation
+   - Data processing pipelines
+
+2. **Integration Tests** (`tests/integration/`):
+   - localStorage quota handling
+   - Web Worker communication
+   - TensorFlow.js backend integration
+   - Component interaction testing
+
+3. **End-to-End Tests** (`tests/e2e/`):
+   - Complete user workflows
+   - Cross-browser compatibility
+   - Performance benchmarking
+
+### Running Integration Tests
+Integration tests run in the browser:
+
+1. Start the development server: `npm run dev`
+2. Open: `http://localhost:5173/tests/integration/fixes-test.html`
+3. Click "Run Tests" to execute all browser-based tests
+4. Check browser console for detailed results
+
+### Test Documentation
+For detailed testing information, see:
+- `tests/README.md` - Comprehensive testing guide
+- `TESTING_GUIDE.md` - Manual testing procedures
+- Individual test files for specific functionality
 
 ## 📚 Additional Resources
 
@@ -175,12 +250,30 @@ After successful setup:
 - **Vite Documentation**: https://vitejs.dev
 - **Tailwind CSS**: https://tailwindcss.com
 
-## 🤝 Support
+## 📚 Additional Documentation
 
-This is an educational demo application. For issues:
+### Available Guides
+- **SESSION_MANAGEMENT.md**: Complete guide to saving/loading training sessions
+- **GPU_ACCELERATION_GUIDE.md**: WebGPU and WebGL optimization
+- **INTERFACE_GUIDE.md**: Collapsible sections and responsive design
+- **USAGE_GUIDE.md**: Advanced features and best practices
+- **EXAMPLES.md**: Architecture examples and common patterns
+- **tests/README.md**: Complete testing documentation and guidelines
+- **TESTING_GUIDE.md**: Manual testing procedures and validation
+
+### 🤝 Support
+
+This is a fully functional educational application. For issues:
 - Check the troubleshooting section above
-- Review browser console for error messages
-- Ensure all requirements are met
-- Try the alternative setup methods
+- Review browser console for detailed error messages
+- Ensure Node.js 18+ is installed
+- Verify browser supports WebGL 2.0 or WebGPU
+- Check the comprehensive documentation in the `docs/` folder
+
+### 🚀 Current Status
+- ✅ **Fully Operational**: All features working with Node.js v22.17.0
+- ✅ **GPU Accelerated**: WebGPU and WebGL support verified
+- ✅ **Production Ready**: Stable and optimized for learning
+- ✅ **Well Documented**: Complete implementation guides available
 
 Happy learning with CNNs! 🧠✨

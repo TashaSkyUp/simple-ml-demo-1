@@ -1,0 +1,47 @@
+{
+  "compilerOptions": {
+    "target": "ES2022",
+    "lib": ["ES2022", "DOM"],
+    "module": "ESNext",
+    "moduleResolution": "Node",
+    "allowSyntheticDefaultImports": true,
+    "esModuleInterop": true,
+    "allowJs": true,
+    "strict": true,
+    "skipLibCheck": true,
+    "forceConsistentCasingInFileNames": true,
+    "resolveJsonModule": true,
+    "isolatedModules": true,
+    "noEmit": true,
+    "types": ["node", "@jest/globals"],
+    "baseUrl": ".",
+    "paths": {
+      "@/*": ["../src/*"],
+      "@/components/*": ["../components/*"],
+      "@/hooks/*": ["../hooks/*"],
+      "@/utils/*": ["../utils/*"],
+      "@/types/*": ["../types/*"]
+    }
+  },
+  "ts-node": {
+    "esm": true,
+    "experimentalSpecifierResolution": "node",
+    "compilerOptions": {
+      "module": "ESNext",
+      "target": "ES2022"
+    }
+  },
+  "include": [
+    "**/*.ts",
+    "**/*.js",
+    "../types.ts",
+    "../components/**/*.ts",
+    "../hooks/**/*.ts",
+    "../utils/**/*.ts"
+  ],
+  "exclude": [
+    "node_modules",
+    "dist",
+    "build"
+  ]
+}
