@@ -72,92 +72,7 @@ const initializeTensorFlow = async () => {
   }
 };
 
-// Convert layer config to TensorFlow.js layer
-const createTFLayer = (layerConfig: LayerConfig): tf.layers.Layer => {
-  // Debug logging to understand the serialization issue
-  console.log("Creating layer with config:", layerConfig);
-  console.log("Layer type received:", layerConfig.type);
-  console.log("LayerType enum values:", LayerType);
-
-  // Normalize the layer type to handle serialization issues
-  const normalizedType = normalizeLayerType(layerConfig.type);
-  console.log("Normalized layer type:", normalizedType);
-
-  switch (normalizedType) {
-    case LayerType.Conv:
-      return tf.layers.conv2d({
-        filters: layerConfig.numFilters || 8,
-        kernelSize: layerConfig.filterSize || 3,
-        activation: mapActivationFunction(layerConfig.activation) as any,
-        padding: "same",
-      });
-
-    case LayerType.Pool:
-      return tf.layers.maxPooling2d({
-        poolSize: layerConfig.poolSize || 2,
-        strides: layerConfig.poolSize || 2,
-      });
-
-    case LayerType.Flatten:
-      return tf.layers.flatten();
-
-    case LayerType.Dense:
-      return tf.layers.dense({
-        units: layerConfig.units || 128,
-        activation: mapActivationFunction(layerConfig.activation) as any,
-      });
-
-    case LayerType.Dropout:
-      return tf.layers.dropout({
-        rate: layerConfig.rate || 0.2,
-      });
-
-    default:
-      throw new Error(
-        `Unsupported layer type: ${layerConfig.type} (normalized: ${normalizedType})`,
-      );
-  }
-};
-
-// Helper function to normalize layer types from serialization
-const normalizeLayerType = (type: any): LayerType => {
-  // Handle both string and enum values
-  if (typeof type === "string") {
-    // Convert string to lowercase and map to enum
-    const lowerType = type.toLowerCase();
-    switch (lowerType) {
-      case "conv":
-        return LayerType.Conv;
-      case "activation":
-        return LayerType.Activation;
-      case "pool":
-        return LayerType.Pool;
-      case "dropout":
-        return LayerType.Dropout;
-      case "flatten":
-        return LayerType.Flatten;
-      case "dense":
-        return LayerType.Dense;
-      case "reshape":
-        return LayerType.Reshape;
-      default:
-        // If it's already the correct enum value, return it
-        if (Object.values(LayerType).includes(type as LayerType)) {
-          return type as LayerType;
-        }
-        throw new Error(`Unknown layer type string: ${type}`);
-    }
-  }
-
-  // If it's already a LayerType enum value, return it
-  if (Object.values(LayerType).includes(type)) {
-    return type;
-  }
-
-  throw new Error(`Invalid layer type: ${type}`);
-};
-
-// Map activation functions
+// Map activation functions to match main thread
 const mapActivationFunction = (activation?: ActivationFunction): string => {
   switch (activation) {
     case ActivationFunction.ReLU:
@@ -173,7 +88,7 @@ const mapActivationFunction = (activation?: ActivationFunction): string => {
   }
 };
 
-// Build model from layer configs
+// Build model from layer configs - using same logic as main thread
 const buildModel = (layers: LayerConfig[]): tf.Sequential => {
   const model = tf.sequential();
 
@@ -184,20 +99,96 @@ const buildModel = (layers: LayerConfig[]): tf.Sequential => {
     tf.layers.inputLayer({ inputShape: [28, 28, 3], name: "input_layer" }),
   );
 
-  // Add all layers from config
+  // Add all layers from config using main thread logic
   for (const layerConfig of layers) {
-    const layer = createTFLayer(layerConfig);
-    model.add(layer);
+    switch (layerConfig.type) {
+      case LayerType.Conv:
+        model.add(
+          tf.layers.conv2d({
+            filters: layerConfig.numFilters || 8,
+            kernelSize: layerConfig.filterSize || 3,
+            activation: mapActivationFunction(layerConfig.activation) || "relu",
+            padding: "valid", // Match main thread padding
+          }),
+        );
+        break;
+
+      case LayerType.Pool:
+        if ((layerConfig as any).poolingType === "max") {
+          model.add(
+            tf.layers.maxPooling2d({
+              poolSize: layerConfig.poolSize || 2,
+              strides: layerConfig.poolSize || 2,
+            }),
+          );
+        } else {
+          model.add(
+            tf.layers.averagePooling2d({
+              poolSize: layerConfig.poolSize || 2,
+              strides: layerConfig.poolSize || 2,
+            }),
+          );
+        }
+        break;
+
+      case LayerType.Activation:
+        model.add(
+          tf.layers.activation({
+            activation:
+              mapActivationFunction((layerConfig as any).func) || "relu",
+          }),
+        );
+        break;
+
+      case LayerType.Dropout:
+        model.add(
+          tf.layers.dropout({
+            rate: layerConfig.rate || 0.2,
+          }),
+        );
+        break;
+
+      case LayerType.Flatten:
+        model.add(tf.layers.flatten());
+        break;
+
+      case LayerType.Dense:
+        model.add(
+          tf.layers.dense({
+            units: layerConfig.units || 128,
+            activation: mapActivationFunction(layerConfig.activation) || "relu",
+          }),
+        );
+        break;
+
+      case LayerType.Reshape:
+        model.add(
+          tf.layers.reshape({
+            targetShape: (layerConfig as any).targetShape || [1],
+          }),
+        );
+        break;
+
+      default:
+        console.warn(`Unknown layer type: ${layerConfig.type}`);
+        break;
+    }
   }
 
-  // Ensure we have flatten and output layers
-  const lastLayer = layers[layers.length - 1];
-  if (lastLayer?.type !== LayerType.Flatten) {
+  // Add flatten layer before final dense if needed
+  const flattenAdded = layers.some((layer) => layer.type === LayerType.Flatten);
+  if (!flattenAdded) {
     model.add(tf.layers.flatten());
   }
 
-  // Add final dense layer if not present
-  if (lastLayer?.type !== LayerType.Dense) {
+  // Add final output layer if not present
+  const hasDenseOutput = layers.some(
+    (layer) =>
+      layer.type === LayerType.Dense &&
+      (layer.units === 1 || layer.units === undefined),
+  );
+
+  if (!hasDenseOutput) {
     model.add(
       tf.layers.dense({
         units: 1,
