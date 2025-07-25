@@ -27,6 +27,11 @@ export interface TrainingWorkerMessage {
   payload?: any;
 }
 
+interface SerializedWeight {
+  shape: number[];
+  data: number[];
+}
+
 export interface TrainingWorkerResponse {
   type:
     | "TRAINING_PROGRESS"
@@ -34,7 +39,10 @@ export interface TrainingWorkerResponse {
     | "TRAINING_ERROR"
     | "PREDICTION_RESULT"
     | "MODEL_READY";
-  payload?: any;
+  payload?: {
+    modelWeights?: SerializedWeight[];
+    [key: string]: any;
+  };
 }
 
 // Global worker state
@@ -271,11 +279,16 @@ const trainModel = async (
           isTraining = false;
 
           // Send completion message
+          const serialized = await Promise.all(
+            model!.getWeights().map(async (w) => ({
+              shape: w.shape,
+              data: Array.from(await w.data()),
+            })),
+          );
+
           self.postMessage({
             type: "TRAINING_COMPLETE",
-            payload: {
-              modelWeights: await model!.getWeights().map((w) => w.dataSync()),
-            },
+            payload: { modelWeights: serialized },
           } as TrainingWorkerResponse);
         },
       },

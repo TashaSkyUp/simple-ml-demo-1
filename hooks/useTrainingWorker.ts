@@ -7,9 +7,17 @@ interface TrainingWorkerMessage {
   payload?: any;
 }
 
+interface SerializedWeight {
+  shape: number[];
+  data: number[];
+}
+
 interface TrainingWorkerResponse {
   type: 'TRAINING_PROGRESS' | 'TRAINING_COMPLETE' | 'TRAINING_ERROR' | 'PREDICTION_RESULT' | 'MODEL_READY';
-  payload?: any;
+  payload?: {
+    modelWeights?: SerializedWeight[];
+    [key: string]: any;
+  };
 }
 
 export interface TrainingProgress {
@@ -30,7 +38,7 @@ interface UseTrainingWorkerProps {
   layers: LayerConfig[];
   learningRate: number;
   onTrainingProgress?: (progress: TrainingProgress) => void;
-  onTrainingComplete?: (modelWeights: any[]) => void;
+  onTrainingComplete?: (modelWeights: SerializedWeight[]) => void;
   onPredictionResult?: (prediction: PredictionState) => void;
   onError?: (error: string) => void;
 }
@@ -82,7 +90,7 @@ export const useTrainingWorker = ({
             console.log('Complete Training completed in worker');
             setStatus("ready");
             setCurrentProgress(null);
-            onTrainingComplete?.(payload.modelWeights);
+            onTrainingComplete?.(payload.modelWeights || []);
             break;
 
           case 'PREDICTION_RESULT':

@@ -32,6 +32,11 @@ interface TrainingWorkerMessage {
   payload?: any;
 }
 
+interface SerializedWeight {
+  shape: number[];
+  data: number[];
+}
+
 interface TrainingWorkerResponse {
   type:
     | "TRAINING_PROGRESS"
@@ -39,7 +44,10 @@ interface TrainingWorkerResponse {
     | "TRAINING_ERROR"
     | "PREDICTION_RESULT"
     | "MODEL_READY";
-  payload?: any;
+  payload?: {
+    modelWeights?: SerializedWeight[];
+    [key: string]: any;
+  };
 }
 
 // Backend performance comparison
@@ -1090,6 +1098,9 @@ export const useTFModel = ({
 
           case "TRAINING_COMPLETE":
             console.log("Complete Training completed in worker");
+            if (payload && Array.isArray(payload.modelWeights)) {
+              loadModelWeights(payload.modelWeights);
+            }
             setStatus("success");
             setIsUsingBackgroundWorker(false);
             isUsingBackgroundWorkerRef.current = false;
