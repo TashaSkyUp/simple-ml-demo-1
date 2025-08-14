@@ -20,27 +20,8 @@ const App: React.FC = () => (
           Interactive CNN with TensorFlow.js
         </h1>
         <p className="text-center text-gray-300 mt-2 text-sm hover:text-gray-200 transition-colors">
-          Train neural networks in your browser • Collapsible sections •
-          Responsive design • Session persistence
+          Train neural networks in your browser
         </p>
-        <div className="hidden lg:flex justify-center mt-3 gap-4 text-xs text-gray-400">
-          <span className="flex items-center gap-1">
-            <span className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></span>
-            GPU Accelerated
-          </span>
-          <span className="flex items-center gap-1">
-            <span className="w-2 h-2 bg-blue-500 rounded-full"></span>
-            Real-time Training
-          </span>
-          <span className="flex items-center gap-1">
-            <span className="w-2 h-2 bg-purple-500 rounded-full"></span>
-            Session Management
-          </span>
-          <span className="flex items-center gap-1">
-            <span className="w-2 h-2 bg-yellow-500 rounded-full"></span>
-            Live Camera Pipeline
-          </span>
-        </div>
       </div>
     </header>
     <main className="ultra-wide-container max-w-7xl mx-auto p-4 md:p-6 lg:p-8 xl:p-10">

@@ -128,9 +128,6 @@ export const TrainingTab: React.FC<TrainingTabProps> = ({
               <h2 className="text-xl font-semibold text-gray-100">
                 Training Mode
               </h2>
-              <p className="text-sm text-gray-400">
-                Design architecture, collect data, and train your CNN
-              </p>
             </div>
           </div>
           <div className="flex items-center gap-4 text-sm">
@@ -280,53 +277,6 @@ export const TrainingTab: React.FC<TrainingTabProps> = ({
         </div>
       </div>
 
-      {/* Training Tips Section */}
-      <CollapsibleSection
-        title="Training Tips & Best Practices"
-        icon=""
-        sectionId="training-tips"
-        isOpen={isSectionOpen("training-tips")}
-        onToggle={toggleSection}
-        className="w-full hover-lift"
-      >
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          <div className="bg-gray-800 rounded-lg p-4 border border-gray-700">
-            <h3 className="text-lg font-semibold text-cyan-400 mb-2">
-              Data Collection
-            </h3>
-            <ul className="text-sm text-gray-300 space-y-1">
-              <li>• Collect varied samples for each class</li>
-              <li>• Use data augmentation for better generalization</li>
-              <li>• Aim for balanced dataset sizes</li>
-              <li>• Draw clearly and consistently</li>
-            </ul>
-          </div>
-
-          <div className="bg-gray-800 rounded-lg p-4 border border-gray-700">
-            <h3 className="text-lg font-semibold text-green-400 mb-2">
-              Architecture Design
-            </h3>
-            <ul className="text-sm text-gray-300 space-y-1">
-              <li>• Start simple, add complexity gradually</li>
-              <li>• Use Conv2D → MaxPooling patterns</li>
-              <li>• Add Flatten before Dense layers</li>
-              <li>• Match output units to number of classes</li>
-            </ul>
-          </div>
-
-          <div className="bg-gray-800 rounded-lg p-4 border border-gray-700">
-            <h3 className="text-lg font-semibold text-purple-400 mb-2">
-              Training Strategy
-            </h3>
-            <ul className="text-sm text-gray-300 space-y-1">
-              <li>• Start with default learning rate (0.001)</li>
-              <li>• Monitor loss curve for overfitting</li>
-              <li>• Save sessions before major changes</li>
-              <li>• Use GPU acceleration when available</li>
-            </ul>
-          </div>
-        </div>
-      </CollapsibleSection>
     </div>
   );
 };
