@@ -372,10 +372,6 @@ export const InferenceTab: React.FC<InferenceTabProps> = ({
               <h2 className="text-xl font-semibold text-gray-100">
                 Live Inference
               </h2>
-              <p className="text-sm text-gray-400">
-                Test your trained model with real-time predictions and
-                visualization
-              </p>
             </div>
           </div>
           <div className="flex items-center gap-4 text-sm">
@@ -476,11 +472,6 @@ export const InferenceTab: React.FC<InferenceTabProps> = ({
                       Live Camera Mode
                     </h3>
                   </div>
-                  <p className="text-red-200 text-sm mb-3">
-                    Camera is streaming live predictions. The model processes
-                    each frame in real-time and updates the visualization
-                    pipeline.
-                  </p>
                   <div className="flex items-center gap-4 text-sm">
                     <div className="flex items-center gap-2">
                       <span className="text-red-300">Status:</span>
@@ -513,42 +504,6 @@ export const InferenceTab: React.FC<InferenceTabProps> = ({
               modelReady={modelReady}
             />
 
-            {/* Prediction History */}
-            <div className="mt-6 bg-gray-800 rounded-lg p-4 border border-gray-700">
-              <h3 className="text-lg font-semibold text-gray-300 mb-3">
-                Quick Stats
-              </h3>
-              <div className="grid grid-cols-2 gap-4 text-sm">
-                <div>
-                  <span className="text-gray-400">Current Prediction:</span>
-                  <div className="text-cyan-400 font-medium">
-                    {prediction.label}
-                  </div>
-                </div>
-                <div>
-                  <span className="text-gray-400">Confidence:</span>
-                  <div className="text-green-400 font-medium">
-                    {(prediction.confidence * 100).toFixed(1)}%
-                  </div>
-                </div>
-                <div>
-                  <span className="text-gray-400">Model Status:</span>
-                  <div
-                    className={`font-medium ${modelReady ? "text-green-400" : "text-red-400"}`}
-                  >
-                    {modelReady ? "Ready" : "Not Ready"}
-                  </div>
-                </div>
-                <div>
-                  <span className="text-gray-400">Live Mode:</span>
-                  <div
-                    className={`font-medium ${liveCameraMode ? "text-red-400" : "text-gray-400"}`}
-                  >
-                    {liveCameraMode ? "Active" : "Inactive"}
-                  </div>
-                </div>
-              </div>
-            </div>
           </CollapsibleSection>
         </div>
 
@@ -587,15 +542,6 @@ export const InferenceTab: React.FC<InferenceTabProps> = ({
                     {audioEnabled ? "ON" : "OFF"}
                   </button>
                 </div>
-                <p className="text-sm text-gray-400">
-                  Play custom sounds when classes are detected with high
-                  confidence (≥70%)
-                  {audioEnabled && !audioContextInitialized && (
-                    <span className="block text-yellow-400 mt-1">
-                      Warning Click anywhere to enable audio
-                    </span>
-                  )}
-                </p>
               </div>
 
               {/* Trigger Configuration */}
@@ -813,11 +759,6 @@ export const InferenceTab: React.FC<InferenceTabProps> = ({
                         Clear
                       </button>
                     </div>
-                    <p className="text-xs text-green-200">
-                      Try built-in sounds above, or use:
-                      https://www.soundboard.com/handler/DownLoadTrack.ashx?trackid=1341
-                      (Note: Some URLs may not work due to CORS restrictions)
-                    </p>
                   </div>
                 </div>
               )}
@@ -901,11 +842,6 @@ export const InferenceTab: React.FC<InferenceTabProps> = ({
                         Clear
                       </button>
                     </div>
-                    <p className="text-xs text-purple-200">
-                      Try built-in sounds above, or use:
-                      https://www.soundboard.com/handler/DownLoadTrack.ashx?trackid=1342
-                      (Note: Some URLs may not work due to CORS restrictions)
-                    </p>
                   </div>
                 </div>
               )}
@@ -1025,51 +961,6 @@ export const InferenceTab: React.FC<InferenceTabProps> = ({
         </div>
       </CollapsibleSection>
 
-      {/* Performance Monitor */}
-      <CollapsibleSection
-        title="Performance Monitor"
-        icon=""
-        sectionId="inference-performance"
-        isOpen={isSectionOpen("inference-performance")}
-        onToggle={toggleSection}
-        className="w-full hover-lift"
-      >
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          <div className="bg-gray-800 rounded-lg p-4 border border-gray-700">
-            <h3 className="text-lg font-semibold text-cyan-400 mb-2">
-               Inference Speed
-            </h3>
-            <div className="text-2xl font-bold text-white mb-1">
-              {liveCameraMode ? "~30ms" : "< 100ms"}
-            </div>
-            <p className="text-sm text-gray-400">Average prediction time</p>
-          </div>
-
-          <div className="bg-gray-800 rounded-lg p-4 border border-gray-700">
-            <h3 className="text-lg font-semibold text-green-400 mb-2">
-               Model Complexity
-            </h3>
-            <div className="text-2xl font-bold text-white mb-1">
-              {liveLayerOutputs.length}
-            </div>
-            <p className="text-sm text-gray-400">Active layers</p>
-          </div>
-
-          <div className="bg-gray-800 rounded-lg p-4 border border-gray-700">
-            <h3 className="text-lg font-semibold text-purple-400 mb-2">
-               Accuracy
-            </h3>
-            <div className="text-2xl font-bold text-white mb-1">
-              {prediction.confidence > 0
-                ? `${(prediction.confidence * 100).toFixed(0)}%`
-                : "N/A"}
-            </div>
-            <p className="text-sm text-gray-400">
-              Current prediction confidence
-            </p>
-          </div>
-        </div>
-      </CollapsibleSection>
 
       {/* Hidden audio element for playing chimes */}
       <audio
