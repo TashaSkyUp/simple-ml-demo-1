@@ -3,6 +3,27 @@ import { FeatureMapCanvas } from "./FeatureMapCanvas";
 import type { LiveLayerOutput, PredictionState } from "../types";
 // LayerType from types is not directly used here for TF.js layer class names
 
+const getAbbreviatedLayerName = (layerClassName: string): string => {
+  const abbreviations: { [key: string]: string } = {
+    Conv2D: "Conv",
+    MaxPooling2D: "Pool",
+    AveragePooling2D: "AvgPool",
+    Dense: "Dense",
+    Flatten: "Flatten",
+    Activation: "Act",
+    Dropout: "Drop",
+    BatchNormalization: "BatchNorm",
+  };
+
+  for (const key in abbreviations) {
+    if (layerClassName.includes(key)) {
+      return abbreviations[key];
+    }
+  }
+  // Fallback for unknown layer types, get the first part of the name
+  return layerClassName.replace(/([A-Z])/g, " $1").trim().split(" ")[0];
+};
+
 interface PipelineVisualizationProps {
   liveLayerOutputs: LiveLayerOutput[];
   fcWeightsViz: number[][] | null;
@@ -130,13 +151,13 @@ export const PipelineVisualization: React.FC<PipelineVisualizationProps> = ({
             }
           }
 
+          const abbreviatedName = getAbbreviatedLayerName(
+            output.layerClassName,
+          );
           const labelBase = output.id.startsWith("input-")
-            ? `Input`
-            : `L${index}: ${layerDetailLabel
-                .replace(/([A-Z])/g, " $1")
-                .trim()
-                .split(" ")
-                .pop()}`; // Attempt to get a short name
+            ? "Input"
+            : `L${index}: ${abbreviatedName}`;
+
           const titleFull = output.id.startsWith("input-")
             ? `Input (${mapDimensions})`
             : `L${index}: ${layerDetailLabel} (Output: ${mapDimensions})`;
@@ -150,80 +171,92 @@ export const PipelineVisualization: React.FC<PipelineVisualizationProps> = ({
           return (
             <div
               key={output.id}
-              className={`flex flex-col items-center flex-shrink-0 w-36 ${isClickable ? "cursor-pointer" : ""} p-1`}
+              className={`flex flex-row items-center flex-shrink-0 gap-3 ${
+                isClickable ? "cursor-pointer" : ""
+              } p-1`}
               onClick={
                 isClickable
                   ? () => onChannelCycle(output.id, numMaps)
                   : undefined
               }
-              title={titleFull}
               role="group"
-              aria-label={`Layer ${index}: ${layerDetailLabel}, Output Shape: ${mapDimensions}${numMaps > 1 ? `, ${numMaps} feature maps` : ""}`}
+              aria-label={`Layer ${index}: ${layerDetailLabel}, Output Shape: ${mapDimensions}${
+                numMaps > 1 ? `, ${numMaps} feature maps` : ""
+              }`}
             >
-              <h4 className="text-xs font-semibold text-gray-300 mb-1 truncate w-full text-center h-8 leading-tight flex items-center justify-center">
+              <h4
+                className="text-sm font-semibold text-gray-400 w-24 text-right"
+                title={titleFull}
+              >
                 {shortLabel}
               </h4>
-              <FeatureMapCanvas
-                mapData={output.maps}
-                channelIndexToDisplay={displayedChannel}
-                size={100}
-                label={mapToDisplay.length > 0 ? "" : "No Output"}
-              />
-              <p className="text-xs text-gray-500 mt-1">
-                {mapDimensions}
-                {numMaps > 1
-                  ? ` (${numMaps} maps)`
-                  : numMaps === 1 && mapToDisplay.length > 0
+              <div className="flex flex-col items-center">
+                <FeatureMapCanvas
+                  mapData={output.maps}
+                  channelIndexToDisplay={displayedChannel}
+                  size={100}
+                  label={mapToDisplay.length > 0 ? "" : "No Output"}
+                />
+                <p className="text-xs text-gray-500 mt-1">
+                  {mapDimensions}
+                  {numMaps > 1
+                    ? ` (${numMaps} maps)`
+                    : numMaps === 1 && mapToDisplay.length > 0
                     ? " (1 map)"
                     : ""}
-              </p>
+                </p>
+              </div>
             </div>
           );
         })}
         {fcWeightsViz && (status === "success" || status === "ready") && (
           <div
-            className="flex flex-col items-center flex-shrink-0 w-36 p-1"
+            className="flex flex-row items-center flex-shrink-0 gap-3 p-1"
             role="group"
             aria-label="Fully Connected Layer Weights Visualization"
           >
             <h4
-              className="text-xs font-semibold text-gray-300 mb-1 truncate w-full text-center h-8 leading-tight flex items-center justify-center"
+              className="text-sm font-semibold text-gray-400 w-24 text-right"
               title="Learned Template (FC Weights)"
             >
               FC Weights
             </h4>
-            <FeatureMapCanvas
-              mapData={fcWeightsViz}
-              size={100}
-              label="FC Weights"
-            />
-            <p className="text-xs text-gray-500 mt-1">
-              {fcWeightsViz.length > 0 && fcWeightsViz[0]
-                ? `${fcWeightsViz.length}x${fcWeightsViz[0].length}`
-                : "N/A"}
-            </p>
+            <div className="flex flex-col items-center">
+              <FeatureMapCanvas
+                mapData={fcWeightsViz}
+                size={100}
+                label="FC Weights"
+              />
+              <p className="text-xs text-gray-500 mt-1">
+                {fcWeightsViz.length > 0 && fcWeightsViz[0]
+                  ? `${fcWeightsViz.length}x${fcWeightsViz[0].length}`
+                  : "N/A"}
+              </p>
+            </div>
           </div>
         )}
         {liveLayerOutputs.length > 0 && ( // Show prediction at the end of pipeline if there are outputs
           <div
-            className="flex flex-col items-center flex-shrink-0 w-36 p-1"
+            className="flex flex-row items-center flex-shrink-0 gap-3 p-1"
             role="group"
             aria-label="Final Prediction"
           >
-            <h4 className="text-xs font-semibold text-gray-300 mb-1 truncate w-full text-center h-8 leading-tight flex items-center justify-center">
+            <h4 className="text-sm font-semibold text-gray-400 w-24 text-right">
               Prediction
             </h4>
-            <div className="w-[100px] h-[100px] flex items-center justify-center bg-gray-900 rounded-md border-2 border-cyan-500">
-              <p
-                className="text-6xl font-bold text-cyan-400"
-                aria-live="polite"
-              >
-                {prediction.label}
+            <div className="flex flex-col items-center">
+              <div className="w-[100px] h-[100px] flex items-center justify-center bg-gray-900 rounded-md border-2 border-cyan-500">
+                <p
+                  className="text-6xl font-bold text-cyan-400"
+                  aria-live="polite"
+                >
+                  {prediction.label}
+                </p>
+              </div>
+              <p className="text-xs text-gray-500 mt-1">
+                {(prediction.confidence * 100).toFixed(1)}% Conf.
               </p>
             </div>
-            <p className="text-xs text-gray-500 mt-1">
-              {(prediction.confidence * 100).toFixed(1)}% Conf.
-            </p>
           </div>
         )}
       </div>
