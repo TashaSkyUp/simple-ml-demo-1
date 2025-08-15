@@ -26,7 +26,7 @@ interface TrainingTabProps {
   liveCameraMode: boolean;
   onLiveCameraModeChange: (enabled: boolean) => void;
   onCameraStreamingChange?: (streaming: boolean) => void;
-  predictFromCanvas: (grid: number[][][]) => Promise<void>;
+  predict: (grid: number[][][]) => Promise<void>;
 
   // Training props
   numEpochs: number;
@@ -86,7 +86,7 @@ export const TrainingTab: React.FC<TrainingTabProps> = ({
   liveCameraMode,
   onLiveCameraModeChange,
   onCameraStreamingChange,
-  predictFromCanvas,
+  predict,
 
   // Training
   numEpochs,
@@ -214,7 +214,7 @@ export const TrainingTab: React.FC<TrainingTabProps> = ({
           >
             <DataCollection
               onAddData={onAddData}
-              predictFromCanvas={predictFromCanvas}
+              predict={predict}
               augmentFlip={augmentFlip}
               onAugmentFlipChange={onAugmentFlipChange}
               augmentTranslate={augmentTranslate}

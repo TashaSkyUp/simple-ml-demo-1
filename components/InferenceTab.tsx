@@ -11,7 +11,7 @@ interface InferenceTabProps {
   prediction: PredictionState;
 
   // Live inference props
-  onPredictFromCanvas: (grid: number[][][]) => Promise<void>;
+  onPredict: (grid: number[][][]) => Promise<void>;
   liveCameraMode: boolean;
   onLiveCameraModeChange: (enabled: boolean) => void;
   onCameraStreamingChange?: (streaming: boolean) => void;
@@ -32,7 +32,7 @@ interface InferenceTabProps {
 export const InferenceTab: React.FC<InferenceTabProps> = ({
   modelReady,
   prediction,
-  onPredictFromCanvas,
+  onPredict,
   liveCameraMode,
   onLiveCameraModeChange,
   onCameraStreamingChange,
@@ -452,7 +452,7 @@ export const InferenceTab: React.FC<InferenceTabProps> = ({
               {/* Input Methods */}
               <DataCollection
                 onAddData={() => {}} // No data collection in inference mode
-                predictFromCanvas={onPredictFromCanvas}
+                predict={onPredict}
                 augmentFlip={false}
                 onAugmentFlipChange={() => {}}
                 augmentTranslate={false}
