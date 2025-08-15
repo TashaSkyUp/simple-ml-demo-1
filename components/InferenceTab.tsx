@@ -727,7 +727,7 @@ export const InferenceTab: React.FC<InferenceTabProps> = ({
                       className="flex-1 accent-blue-500"
                     />
                     <span className="text-sm text-blue-200 min-w-[40px]">
-                      
+
                     </span>
                     <span className="text-sm text-blue-200 min-w-[40px]">
                       {Math.round(volume * 100)}%
