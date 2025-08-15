@@ -185,10 +185,10 @@ export const ArchitectureDefinition: React.FC<ArchitectureDefinitionProps> = ({
 
   return (
     <div>
-      <h2 className="text-2xl font-bold mb-4 text-cyan-400">
+      <h2 className="text-lg font-bold mb-2 text-cyan-400">
         1. Define Architecture
       </h2>
-      <div className="space-y-3 bg-gray-900/50 p-3 rounded-lg max-h-96 overflow-y-auto">
+      <div className="space-y-2 bg-gray-900/50 p-2 rounded-lg max-h-96 overflow-y-auto">
         {layers.map((layer, index) => (
           <div
             key={layer.id}
@@ -203,7 +203,7 @@ export const ArchitectureDefinition: React.FC<ArchitectureDefinitionProps> = ({
             onTouchMove={handleTouchMove}
             onTouchEnd={handleTouchEnd}
             className={`
-                            bg-gray-700 p-3 rounded-md cursor-move transition-all duration-200
+                            bg-gray-700 p-2 rounded-md cursor-move transition-all duration-200
                             ${draggedIndex === index ? "opacity-50 scale-95" : ""}
                             ${hoverIndex === index ? "border-2 border-cyan-400 bg-gray-600" : "border-2 border-transparent"}
                         `}
@@ -215,7 +215,7 @@ export const ArchitectureDefinition: React.FC<ArchitectureDefinitionProps> = ({
                   <div className="w-1 h-1 bg-current rounded-full mb-1"></div>
                   <div className="w-1 h-1 bg-current rounded-full"></div>
                 </div>
-                <p className="font-bold text-cyan-400">
+                <p className="font-semibold text-cyan-400">
                   Layer {index + 1}:{" "}
                   {layer.type.charAt(0).toUpperCase() + layer.type.slice(1)}
                 </p>
@@ -237,7 +237,7 @@ export const ArchitectureDefinition: React.FC<ArchitectureDefinitionProps> = ({
                 <div>
                   <label
                     htmlFor={`conv-filtersize-${layer.id}`}
-                    className="text-sm text-gray-400 block"
+                    className="text-xs text-gray-400 block"
                   >
                     Filter Size
                   </label>
@@ -249,7 +249,7 @@ export const ArchitectureDefinition: React.FC<ArchitectureDefinitionProps> = ({
                         filterSize: parseInt(e.target.value) as 3 | 5,
                       })
                     }
-                    className="w-full bg-gray-800 text-white p-2 rounded-md border border-gray-600 mt-1 focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500"
+                    className="w-full bg-gray-800 text-white p-1 rounded-md border border-gray-600 mt-1 focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500"
                   >
                     <option value="3">3x3</option>
                     <option value="5">5x5</option>
@@ -258,7 +258,7 @@ export const ArchitectureDefinition: React.FC<ArchitectureDefinitionProps> = ({
                 <div>
                   <label
                     htmlFor={`conv-numfilters-${layer.id}`}
-                    className="text-sm text-gray-400 block"
+                    className="text-xs text-gray-400 block"
                   >
                     Num Filters
                   </label>
@@ -279,13 +279,13 @@ export const ArchitectureDefinition: React.FC<ArchitectureDefinitionProps> = ({
                         ),
                       })
                     }
-                    className="w-full bg-gray-800 text-white p-2 rounded-md border border-gray-600 mt-1 focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500"
+                    className="w-full bg-gray-800 text-white p-1 rounded-md border border-gray-600 mt-1 focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500"
                   />
                 </div>
                 <div className="col-span-2">
                   <label
                     htmlFor={`conv-activation-${layer.id}`}
-                    className="text-sm text-gray-400 block"
+                    className="text-xs text-gray-400 block"
                   >
                     Activation
                   </label>
@@ -300,7 +300,7 @@ export const ArchitectureDefinition: React.FC<ArchitectureDefinitionProps> = ({
                         activation: e.target.value as ActivationFunction,
                       })
                     }
-                    className="w-full bg-gray-800 text-white p-2 rounded-md border border-gray-600 mt-1 focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500"
+                    className="w-full bg-gray-800 text-white p-1 rounded-md border border-gray-600 mt-1 focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500"
                   >
                     {Object.values(ActivationFunction).map((funcName) => (
                       <option key={funcName} value={funcName}>
@@ -317,7 +317,7 @@ export const ArchitectureDefinition: React.FC<ArchitectureDefinitionProps> = ({
                 <div>
                   <label
                     htmlFor={`pool-size-${layer.id}`}
-                    className="text-sm text-gray-400 block"
+                    className="text-xs text-gray-400 block"
                   >
                     Pool Size: {(layer as PoolLayerConfig).poolSize}x
                     {(layer as PoolLayerConfig).poolSize}
@@ -340,7 +340,7 @@ export const ArchitectureDefinition: React.FC<ArchitectureDefinitionProps> = ({
                 <div>
                   <label
                     htmlFor={`pool-type-${layer.id}`}
-                    className="text-sm text-gray-400 block"
+                    className="text-xs text-gray-400 block"
                   >
                     Pooling Type
                   </label>
@@ -352,7 +352,7 @@ export const ArchitectureDefinition: React.FC<ArchitectureDefinitionProps> = ({
                         poolingType: e.target.value as PoolingType,
                       })
                     }
-                    className="w-full bg-gray-800 text-white p-2 rounded-md border border-gray-600 mt-1 focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500"
+                    className="w-full bg-gray-800 text-white p-1 rounded-md border border-gray-600 mt-1 focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500"
                   >
                     {Object.values(PoolingType).map((poolTypeName) => (
                       <option key={poolTypeName} value={poolTypeName}>
@@ -369,7 +369,7 @@ export const ArchitectureDefinition: React.FC<ArchitectureDefinitionProps> = ({
               <div>
                 <label
                   htmlFor={`dropout-rate-${layer.id}`}
-                  className="text-sm text-gray-400 block"
+                  className="text-xs text-gray-400 block"
                 >
                   Dropout Rate:{" "}
                   {Math.round((layer as DropoutLayerConfig).rate * 100)}%
@@ -393,7 +393,7 @@ export const ArchitectureDefinition: React.FC<ArchitectureDefinitionProps> = ({
               <div>
                 <label
                   htmlFor={`activation-func-${layer.id}`}
-                  className="text-sm text-gray-400 block"
+                  className="text-xs text-gray-400 block"
                 >
                   Function
                 </label>
@@ -405,7 +405,7 @@ export const ArchitectureDefinition: React.FC<ArchitectureDefinitionProps> = ({
                       func: e.target.value as ActivationFunction,
                     })
                   }
-                  className="w-full bg-gray-800 text-white p-2 rounded-md border border-gray-600 mt-1 focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500"
+                  className="w-full bg-gray-800 text-white p-1 rounded-md border border-gray-600 mt-1 focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500"
                 >
                   {Object.values(ActivationFunction).map((funcName) => (
                     <option key={funcName} value={funcName}>
@@ -421,7 +421,7 @@ export const ArchitectureDefinition: React.FC<ArchitectureDefinitionProps> = ({
                 <div>
                   <label
                     htmlFor={`dense-units-${layer.id}`}
-                    className="text-sm text-gray-400 block"
+                    className="text-xs text-gray-400 block"
                   >
                     Units
                   </label>
@@ -437,13 +437,13 @@ export const ArchitectureDefinition: React.FC<ArchitectureDefinitionProps> = ({
                         units: handleNumericInput(e.target.value, 1, 1, 128),
                       })
                     }
-                    className="w-full bg-gray-800 text-white p-2 rounded-md border border-gray-600 mt-1 focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500"
+                    className="w-full bg-gray-800 text-white p-1 rounded-md border border-gray-600 mt-1 focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500"
                   />
                 </div>
                 <div>
                   <label
                     htmlFor={`dense-activation-${layer.id}`}
-                    className="text-sm text-gray-400 block"
+                    className="text-xs text-gray-400 block"
                   >
                     Activation
                   </label>
@@ -455,7 +455,7 @@ export const ArchitectureDefinition: React.FC<ArchitectureDefinitionProps> = ({
                         activation: e.target.value as ActivationFunction,
                       })
                     }
-                    className="w-full bg-gray-800 text-white p-2 rounded-md border border-gray-600 mt-1 focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500"
+                    className="w-full bg-gray-800 text-white p-1 rounded-md border border-gray-600 mt-1 focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500"
                   >
                     {Object.values(ActivationFunction).map((funcName) => (
                       <option key={funcName} value={funcName}>
@@ -468,7 +468,7 @@ export const ArchitectureDefinition: React.FC<ArchitectureDefinitionProps> = ({
             )}
 
             {layer.type === LayerType.Flatten && (
-              <p className="text-sm text-gray-400 italic">
+              <p className="text-xs text-gray-400 italic">
                 Flattens input. No configurable parameters.
               </p>
             )}
@@ -477,7 +477,7 @@ export const ArchitectureDefinition: React.FC<ArchitectureDefinitionProps> = ({
               <div>
                 <label
                   htmlFor={`reshape-target-${layer.id}`}
-                  className="text-sm text-gray-400 block mb-2"
+                  className="text-xs text-gray-400 block mb-2"
                 >
                   Target Shape: [
                   {(layer as ReshapeLayerConfig).targetShape.join(", ")}]
@@ -615,51 +615,51 @@ export const ArchitectureDefinition: React.FC<ArchitectureDefinitionProps> = ({
         <div className="grid grid-cols-2 md:grid-cols-3 gap-2 pt-2">
           <button
             onClick={() => addLayer(LayerType.Conv)}
-            className="p-2 rounded-md transition-all duration-200 bg-cyan-700 hover:bg-cyan-600 focus:outline-none focus:ring-2 focus:ring-cyan-500 text-sm hover:scale-105 active:scale-95"
+            className="p-1 rounded-md transition-all duration-200 bg-cyan-700 hover:bg-cyan-600 focus:outline-none focus:ring-2 focus:ring-cyan-500 text-xs hover:scale-105 active:scale-95"
           >
             <span className="font-bold text-cyan-200">+</span> Conv
           </button>
           <button
             onClick={() => addLayer(LayerType.Pool)}
-            className="p-2 rounded-md transition-all duration-200 bg-sky-700 hover:bg-sky-600 focus:outline-none focus:ring-2 focus:ring-sky-500 text-sm hover:scale-105 active:scale-95"
+            className="p-1 rounded-md transition-all duration-200 bg-sky-700 hover:bg-sky-600 focus:outline-none focus:ring-2 focus:ring-sky-500 text-xs hover:scale-105 active:scale-95"
           >
             <span className="font-bold text-sky-200">+</span> Pool
           </button>
           <button
             onClick={() => addLayer(LayerType.Activation)}
-            className="p-2 rounded-md transition-all duration-200 bg-green-700 hover:bg-green-600 focus:outline-none focus:ring-2 focus:ring-green-500 text-sm hover:scale-105 active:scale-95"
+            className="p-1 rounded-md transition-all duration-200 bg-green-700 hover:bg-green-600 focus:outline-none focus:ring-2 focus:ring-green-500 text-xs hover:scale-105 active:scale-95"
           >
             <span className="font-bold text-green-200">+</span> Activation
           </button>
           <button
             onClick={() => addLayer(LayerType.Dropout)}
-            className="p-2 rounded-md transition-all duration-200 bg-purple-700 hover:bg-purple-600 focus:outline-none focus:ring-2 focus:ring-purple-500 text-sm hover:scale-105 active:scale-95"
+            className="p-1 rounded-md transition-all duration-200 bg-purple-700 hover:bg-purple-600 focus:outline-none focus:ring-2 focus:ring-purple-500 text-xs hover:scale-105 active:scale-95"
           >
             <span className="font-bold text-purple-200">+</span> Dropout
           </button>
           <button
             onClick={() => addLayer(LayerType.Flatten)}
-            className="p-2 rounded-md transition-all duration-200 bg-indigo-700 hover:bg-indigo-600 focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm hover:scale-105 active:scale-95"
+            className="p-1 rounded-md transition-all duration-200 bg-indigo-700 hover:bg-indigo-600 focus:outline-none focus:ring-2 focus:ring-indigo-500 text-xs hover:scale-105 active:scale-95"
           >
             <span className="font-bold text-indigo-200">+</span> Flatten
           </button>
           <button
             onClick={() => addLayer(LayerType.Dense)}
-            className="p-2 rounded-md transition-all duration-200 bg-pink-700 hover:bg-pink-600 focus:outline-none focus:ring-2 focus:ring-pink-500 text-sm hover:scale-105 active:scale-95"
+            className="p-1 rounded-md transition-all duration-200 bg-pink-700 hover:bg-pink-600 focus:outline-none focus:ring-2 focus:ring-pink-500 text-xs hover:scale-105 active:scale-95"
           >
             <span className="font-bold text-pink-200">+</span> Dense
           </button>
           <button
             onClick={() => addLayer(LayerType.Reshape)}
-            className="p-2 rounded-md transition-all duration-200 bg-orange-700 hover:bg-orange-600 focus:outline-none focus:ring-2 focus:ring-orange-500 text-sm hover:scale-105 active:scale-95"
+            className="p-1 rounded-md transition-all duration-200 bg-orange-700 hover:bg-orange-600 focus:outline-none focus:ring-2 focus:ring-orange-500 text-xs hover:scale-105 active:scale-95"
           >
             <span className="font-bold text-orange-200">+</span> Reshape
           </button>
         </div>
 
         {layers.length > 0 && (
-          <div className="mt-4 p-3 bg-gray-800/50 rounded-lg border border-gray-700">
-            <div className="flex items-center space-x-2 text-sm text-gray-400">
+          <div className="mt-2 p-2 bg-gray-800/50 rounded-lg border border-gray-700">
+            <div className="flex items-center space-x-2 text-xs text-gray-400">
               <div className="flex flex-col justify-center w-4 h-4">
                 <div className="w-0.5 h-0.5 bg-current rounded-full mb-0.5"></div>
                 <div className="w-0.5 h-0.5 bg-current rounded-full mb-0.5"></div>

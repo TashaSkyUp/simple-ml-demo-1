@@ -118,19 +118,19 @@ export const TrainingTab: React.FC<TrainingTabProps> = ({
   toggleSection,
 }) => {
   return (
-    <div className="space-y-6">
+    <div className="space-y-3">
       {/* Training Tab Header */}
-      <div className="bg-gray-800 rounded-lg p-4 border border-gray-700">
+      <div className="bg-gray-800 rounded-lg p-2 border border-gray-700">
         <div className="flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <span className="text-2xl"></span>
+          <div className="flex items-center gap-2">
+            <span className="text-xl"></span>
             <div>
-              <h2 className="text-xl font-semibold text-gray-100">
+              <h2 className="text-lg font-semibold text-gray-100">
                 Training Mode
               </h2>
             </div>
           </div>
-          <div className="flex items-center gap-4 text-sm">
+          <div className="flex items-center gap-2 text-sm">
             <div className="flex items-center gap-2">
               <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
               <span className="text-gray-300">
@@ -156,7 +156,7 @@ export const TrainingTab: React.FC<TrainingTabProps> = ({
       </div>
 
       {/* Responsive Grid Layout */}
-      <div className="grid grid-cols-1 xl:grid-cols-3 lg:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 xl:grid-cols-3 lg:grid-cols-2 gap-3">
         {/* Architecture Section */}
         <div className="xl:col-span-1">
           <CollapsibleSection
@@ -178,7 +178,7 @@ export const TrainingTab: React.FC<TrainingTabProps> = ({
           </CollapsibleSection>
 
           {/* GPU Performance Section */}
-          <div className="mt-6">
+          <div className="mt-3">
             <CollapsibleSection
               title="GPU Performance"
               icon=""
@@ -276,7 +276,6 @@ export const TrainingTab: React.FC<TrainingTabProps> = ({
           </CollapsibleSection>
         </div>
       </div>
-
     </div>
   );
 };
