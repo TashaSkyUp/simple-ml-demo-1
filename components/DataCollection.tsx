@@ -330,19 +330,19 @@ export const DataCollection: React.FC<DataCollectionProps> = ({
 
   return (
     <div>
-      <h2 className="text-2xl font-bold mb-4 text-cyan-400">
+      <h2 className="text-lg font-bold mb-2 text-cyan-400">
         {inferenceMode ? "Live Inference Input" : "2. Collect Data"}
       </h2>
 
       {/* Input Mode Selection */}
-      <div className="mb-6">
-        <h3 className="text-lg font-semibold mb-3 text-gray-300">
+      <div className="mb-3">
+        <h3 className="text-base font-semibold mb-2 text-gray-300">
           Input Method
         </h3>
-        <div className="flex space-x-4">
+        <div className="flex space-x-2">
           <button
             onClick={() => setInputMode("draw")}
-            className={`px-4 py-2 rounded-lg font-medium transition-colors ${
+            className={`px-2 py-1 rounded-lg font-medium transition-colors text-sm ${
               inputMode === "draw"
                 ? "bg-blue-600 text-white"
                 : "bg-gray-700 text-gray-300 hover:bg-gray-600"
@@ -352,7 +352,7 @@ export const DataCollection: React.FC<DataCollectionProps> = ({
           </button>
           <button
             onClick={() => setInputMode("camera")}
-            className={`px-4 py-2 rounded-lg font-medium transition-colors ${
+            className={`px-2 py-1 rounded-lg font-medium transition-colors text-sm ${
               inputMode === "camera"
                 ? "bg-blue-600 text-white"
                 : "bg-gray-700 text-gray-300 hover:bg-gray-600"
@@ -365,8 +365,8 @@ export const DataCollection: React.FC<DataCollectionProps> = ({
 
       {/* Camera Section */}
       {inputMode === "camera" && (
-        <div className="mb-6">
-          <h3 className="text-lg font-semibold mb-3 text-gray-300">
+        <div className="mb-3">
+          <h3 className="text-base font-semibold mb-2 text-gray-300">
             Camera Capture
           </h3>
           <CameraCapture
@@ -380,10 +380,10 @@ export const DataCollection: React.FC<DataCollectionProps> = ({
             height={224}
           />
           {(isCameraStreaming || lastCapturedData) && (
-            <div className="w-full max-w-[280px] mx-auto mt-4">
+            <div className="w-full max-w-[280px] mx-auto mt-2">
               {isCameraStreaming ? (
-                <div className="bg-blue-900/30 border border-blue-600 rounded-lg p-3 mb-3">
-                  <p className="text-blue-300 text-sm text-center">
+                <div className="bg-blue-900/30 border border-blue-600 rounded-lg p-2 mb-2">
+                  <p className="text-blue-300 text-xs text-center">
                      Camera active -{" "}
                     {inferenceMode
                       ? "live inference running"
@@ -392,22 +392,22 @@ export const DataCollection: React.FC<DataCollectionProps> = ({
                 </div>
               ) : (
                 !inferenceMode && (
-                  <div className="bg-green-900/30 border border-green-600 rounded-lg p-3 mb-3">
-                    <p className="text-green-300 text-sm text-center">
+                  <div className="bg-green-900/30 border border-green-600 rounded-lg p-2 mb-2">
+                    <p className="text-green-300 text-xs text-center">
                        Photo captured! Add it as a training sample:
                     </p>
                   </div>
                 )
               )}
               {!inferenceMode && (
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-2 gap-2">
                   <button
                     onClick={() =>
                       isCameraStreaming
                         ? handleCaptureAndAdd(0)
                         : handleAddData(0)
                     }
-                    className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded transition-colors"
+                    className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-1 px-2 rounded transition-colors text-sm"
                   >
                     Add as Class 0
                   </button>
@@ -417,7 +417,7 @@ export const DataCollection: React.FC<DataCollectionProps> = ({
                         ? handleCaptureAndAdd(1)
                         : handleAddData(1)
                     }
-                    className="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded transition-colors"
+                    className="bg-green-600 hover:bg-green-700 text-white font-bold py-1 px-2 rounded transition-colors text-sm"
                   >
                     Add as Class 1
                   </button>
@@ -431,10 +431,10 @@ export const DataCollection: React.FC<DataCollectionProps> = ({
       {/* Drawing Section - Now common for manual and AI generated images */}
       {inputMode === "draw" && (
         <div>
-          <h3 className="text-lg font-semibold mb-2 text-gray-300">
+          <h3 className="text-base font-semibold mb-2 text-gray-300">
             Drawing & Generation Canvas
           </h3>
-          <div className="flex flex-col items-center mb-4">
+          <div className="flex flex-col items-center mb-2">
             {" "}
             {/* Reduced mb for AI section */}
             <canvas
@@ -442,10 +442,10 @@ export const DataCollection: React.FC<DataCollectionProps> = ({
               className="bg-gray-900 rounded-lg shadow-inner cursor-crosshair touch-none border-2 border-gray-700 w-[280px] h-[280px]"
               aria-label="Drawing canvas for image samples"
             />
-            <div className="w-full max-w-[280px] mt-3 space-y-2">
+            <div className="w-full max-w-[280px] mt-2 space-y-2">
               {!inferenceMode && (
                 <div className="flex items-center justify-start gap-x-4">
-                  <label className="flex items-center text-sm text-gray-300 cursor-pointer">
+                  <label className="flex items-center text-xs text-gray-300 cursor-pointer">
                     <input
                       type="checkbox"
                       checked={augmentFlip}
@@ -454,7 +454,7 @@ export const DataCollection: React.FC<DataCollectionProps> = ({
                     />
                     <span className="ml-2">Augment: Flip</span>
                   </label>
-                  <label className="flex items-center text-sm text-gray-300 cursor-pointer">
+                  <label className="flex items-center text-xs text-gray-300 cursor-pointer">
                     <input
                       type="checkbox"
                       checked={augmentTranslate}
@@ -469,32 +469,32 @@ export const DataCollection: React.FC<DataCollectionProps> = ({
               )}
               <button
                 onClick={clearCanvas}
-                className="w-full bg-red-600 hover:bg-red-500 text-white font-bold py-2 px-4 rounded transition-colors"
+                className="w-full bg-red-600 hover:bg-red-500 text-white font-bold py-1 px-2 rounded transition-colors text-sm"
               >
                 Clear Canvas
               </button>
             </div>
             {!inferenceMode && (
-              <div className="w-full max-w-[280px] grid grid-cols-2 gap-4 mt-3">
+              <div className="w-full max-w-[280px] grid grid-cols-2 gap-2 mt-2">
                 <button
                   onClick={() => handleAddData(0)}
-                  className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded transition-colors"
+                  className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-1 px-2 rounded transition-colors text-sm"
                 >
                   Add as Class 0
                 </button>
                 <button
                   onClick={() => handleAddData(1)}
-                  className="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded transition-colors"
+                  className="bg-green-600 hover:bg-green-700 text-white font-bold py-1 px-2 rounded transition-colors text-sm"
                 >
                   Add as Class 1
                 </button>
               </div>
             )}
             {inferenceMode && (
-              <div className="w-full max-w-[280px] mt-3">
+              <div className="w-full max-w-[280px] mt-2">
                 <button
                   onClick={handleDrawingPredict}
-                  className="w-full bg-purple-600 hover:bg-purple-700 text-white font-bold py-2 px-4 rounded transition-colors"
+                  className="w-full bg-purple-600 hover:bg-purple-700 text-white font-bold py-1 px-2 rounded transition-colors text-sm"
                 >
                    Predict Drawing
                 </button>
@@ -505,14 +505,14 @@ export const DataCollection: React.FC<DataCollectionProps> = ({
           {/* AI Generation Section - Controls */}
           {!inferenceMode && (
             <>
-              <h3 className="text-lg font-semibold mt-6 mb-3 text-gray-300">
+              <h3 className="text-base font-semibold mt-3 mb-2 text-gray-300">
                 Generate Sample via AI (onto Canvas)
               </h3>
-              <div className="flex flex-col items-center space-y-3">
+              <div className="flex flex-col items-center space-y-2">
                 <div className="w-full max-w-md">
                   <label
                     htmlFor="ai-prompt"
-                    className="block text-sm font-medium text-gray-400 mb-1"
+                    className="block text-xs font-medium text-gray-400 mb-1"
                   >
                     Image Prompt
                   </label>
@@ -522,18 +522,18 @@ export const DataCollection: React.FC<DataCollectionProps> = ({
                     value={aiPrompt}
                     onChange={(e) => setAiPrompt(e.target.value)}
                     placeholder="e.g., a simple line drawing of the number 1"
-                    className="w-full bg-gray-800 text-white p-2 rounded-md border border-gray-600 focus:ring-cyan-500 focus:border-cyan-500"
+                    className="w-full bg-gray-800 text-white p-1 rounded-md border border-gray-600 focus:ring-cyan-500 focus:border-cyan-500 text-sm"
                   />
                 </div>
                 <button
                   onClick={handleGenerateImage}
                   disabled={isGenerating}
-                  className="w-full max-w-md bg-teal-600 hover:bg-teal-500 text-white font-semibold py-2 px-4 rounded-md transition-colors text-base focus:outline-none focus:ring-2 focus:ring-teal-400 disabled:bg-gray-500 disabled:cursor-wait"
+                  className="w-full max-w-md bg-teal-600 hover:bg-teal-500 text-white font-semibold py-1 px-2 rounded-md transition-colors text-sm focus:outline-none focus:ring-2 focus:ring-teal-400 disabled:bg-gray-500 disabled:cursor-wait"
                 >
                   {isGenerating ? "Generating..." : "Generate & Draw on Canvas"}
                 </button>
                 {generationError && (
-                  <p className="text-red-400 text-sm mt-2 w-full max-w-md text-center">
+                  <p className="text-red-400 text-xs mt-2 w-full max-w-md text-center">
                     {generationError}
                   </p>
                 )}

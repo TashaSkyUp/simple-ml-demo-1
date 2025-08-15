@@ -362,19 +362,19 @@ export const InferenceTab: React.FC<InferenceTabProps> = ({
     lastPlayTime,
   ]);
   return (
-    <div className="space-y-6">
+    <div className="space-y-3">
       {/* Inference Tab Header */}
-      <div className="bg-gray-800 rounded-lg p-4 border border-gray-700">
+      <div className="bg-gray-800 rounded-lg p-2 border border-gray-700">
         <div className="flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <span className="text-2xl">Predict</span>
+          <div className="flex items-center gap-2">
+            <span className="text-xl">Predict</span>
             <div>
-              <h2 className="text-xl font-semibold text-gray-100">
+              <h2 className="text-lg font-semibold text-gray-100">
                 Live Inference
               </h2>
             </div>
           </div>
-          <div className="flex items-center gap-4 text-sm">
+          <div className="flex items-center gap-2 text-sm">
             <div className="flex items-center gap-2">
               <div
                 className={`w-2 h-2 rounded-full ${
@@ -405,14 +405,14 @@ export const InferenceTab: React.FC<InferenceTabProps> = ({
 
       {/* Model Status Warning */}
       {!modelReady && (
-        <div className="bg-yellow-900 border border-yellow-600 rounded-lg p-4">
-          <div className="flex items-center gap-3">
-            <span className="text-2xl">Warning</span>
+        <div className="bg-yellow-900 border border-yellow-600 rounded-lg p-2">
+          <div className="flex items-center gap-2">
+            <span className="text-xl">Warning</span>
             <div>
-              <h3 className="text-lg font-semibold text-yellow-300">
+              <h3 className="text-base font-semibold text-yellow-300">
                 Model Not Ready
               </h3>
-              <p className="text-yellow-200">
+              <p className="text-yellow-200 text-sm">
                 Please train your model in the Training tab before using
                 inference features. A trained model is required for predictions
                 and visualization.
@@ -422,7 +422,7 @@ export const InferenceTab: React.FC<InferenceTabProps> = ({
                   // This would need to be passed as a prop to switch tabs
                   console.log("Switch to training tab");
                 }}
-                className="mt-2 px-4 py-2 bg-yellow-600 hover:bg-yellow-500 text-white rounded-lg transition-colors text-sm"
+                className="mt-2 px-2 py-1 bg-yellow-600 hover:bg-yellow-500 text-white rounded-lg transition-colors text-xs"
               >
                 Go to Training Tab
               </button>
@@ -432,7 +432,7 @@ export const InferenceTab: React.FC<InferenceTabProps> = ({
       )}
 
       {/* Responsive Grid Layout */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
         {/* Input & Prediction Section */}
         <div className="space-y-6">
           <CollapsibleSection
@@ -465,14 +465,14 @@ export const InferenceTab: React.FC<InferenceTabProps> = ({
 
               {/* Live Camera Controls */}
               {liveCameraMode && (
-                <div className="bg-red-900 border border-red-600 rounded-lg p-4">
-                  <div className="flex items-center gap-3 mb-3">
+                <div className="bg-red-900 border border-red-600 rounded-lg p-2">
+                  <div className="flex items-center gap-2 mb-2">
                     <div className="w-3 h-3 bg-red-500 rounded-full animate-pulse"></div>
-                    <h3 className="text-lg font-semibold text-red-300">
+                    <h3 className="text-base font-semibold text-red-300">
                       Live Camera Mode
                     </h3>
                   </div>
-                  <div className="flex items-center gap-4 text-sm">
+                  <div className="flex items-center gap-2 text-sm">
                     <div className="flex items-center gap-2">
                       <span className="text-red-300">Status:</span>
                       <span className="text-red-100">
@@ -520,9 +520,9 @@ export const InferenceTab: React.FC<InferenceTabProps> = ({
           >
             <div className="space-y-4">
               {/* Master Enable */}
-              <div className="bg-gray-800 border border-gray-600 rounded-lg p-4">
-                <div className="flex items-center justify-between mb-3">
-                  <h3 className="text-lg font-semibold text-gray-300">
+              <div className="bg-gray-800 border border-gray-600 rounded-lg p-2">
+                <div className="flex items-center justify-between mb-2">
+                  <h3 className="text-base font-semibold text-gray-300">
                      Enable Audio Alerts
                   </h3>
                   <button
@@ -533,7 +533,7 @@ export const InferenceTab: React.FC<InferenceTabProps> = ({
                         initializeAudioContext();
                       }
                     }}
-                    className={`px-4 py-2 rounded-lg font-medium transition-colors ${
+                    className={`px-2 py-1 rounded-lg font-medium transition-colors text-sm ${
                       audioEnabled
                         ? "bg-green-600 hover:bg-green-500 text-white"
                         : "bg-gray-600 hover:bg-gray-500 text-gray-300"
@@ -546,13 +546,13 @@ export const InferenceTab: React.FC<InferenceTabProps> = ({
 
               {/* Trigger Configuration */}
               {audioEnabled && (
-                <div className="bg-indigo-900 border border-indigo-600 rounded-lg p-4">
-                  <h3 className="text-lg font-semibold text-indigo-300 mb-3">
+                <div className="bg-indigo-900 border border-indigo-600 rounded-lg p-2">
+                  <h3 className="text-base font-semibold text-indigo-300 mb-2">
                      Trigger Configuration
                   </h3>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
                     <div>
-                      <label className="block text-sm text-indigo-200 mb-2">
+                      <label className="block text-xs text-indigo-200 mb-1">
                         Trigger Mode
                       </label>
                       <select
@@ -562,7 +562,7 @@ export const InferenceTab: React.FC<InferenceTabProps> = ({
                             e.target.value as "change" | "every" | "threshold",
                           )
                         }
-                        className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded text-white focus:border-indigo-500 focus:outline-none"
+                        className="w-full px-2 py-1 bg-gray-700 border border-gray-600 rounded text-white focus:border-indigo-500 focus:outline-none text-sm"
                       >
                         <option value="change">On prediction change</option>
                         <option value="every">Every prediction</option>
@@ -570,7 +570,7 @@ export const InferenceTab: React.FC<InferenceTabProps> = ({
                       </select>
                     </div>
                     <div>
-                      <label className="block text-sm text-indigo-200 mb-2">
+                      <label className="block text-xs text-indigo-200 mb-1">
                         Confidence Threshold:{" "}
                         {Math.round(confidenceThreshold * 100)}%
                       </label>
@@ -583,11 +583,11 @@ export const InferenceTab: React.FC<InferenceTabProps> = ({
                         onChange={(e) =>
                           setConfidenceThreshold(parseFloat(e.target.value))
                         }
-                        className="w-full accent-indigo-500"
+                        className="w-full accent-indigo-500 h-2"
                       />
                     </div>
                     <div>
-                      <label className="block text-sm text-indigo-200 mb-2">
+                      <label className="block text-xs text-indigo-200 mb-1">
                         Trigger Delay: {triggerDelay}s
                       </label>
                       <input
@@ -599,16 +599,16 @@ export const InferenceTab: React.FC<InferenceTabProps> = ({
                         onChange={(e) =>
                           setTriggerDelay(parseFloat(e.target.value))
                         }
-                        className="w-full accent-indigo-500"
+                        className="w-full accent-indigo-500 h-2"
                       />
                     </div>
                     <div>
-                      <label className="block text-sm text-indigo-200 mb-2">
+                      <label className="block text-xs text-indigo-200 mb-1">
                         Live Camera Only
                       </label>
                       <button
                         onClick={() => setOnlyInLiveMode(!onlyInLiveMode)}
-                        className={`px-3 py-2 rounded text-sm font-medium transition-colors ${
+                        className={`px-2 py-1 rounded text-xs font-medium transition-colors ${
                           onlyInLiveMode
                             ? "bg-indigo-600 hover:bg-indigo-500 text-white"
                             : "bg-gray-600 hover:bg-gray-500 text-gray-300"
@@ -618,7 +618,7 @@ export const InferenceTab: React.FC<InferenceTabProps> = ({
                       </button>
                     </div>
                   </div>
-                  <div className="mt-4 grid grid-cols-2 gap-4">
+                  <div className="mt-2 grid grid-cols-2 gap-2">
                     <div>
                       <label className="flex items-center gap-2">
                         <input
@@ -629,7 +629,7 @@ export const InferenceTab: React.FC<InferenceTabProps> = ({
                           }
                           className="accent-green-500"
                         />
-                        <span className="text-sm text-indigo-200">
+                        <span className="text-xs text-indigo-200">
                           Enable Class 0 chimes
                         </span>
                       </label>
@@ -644,7 +644,7 @@ export const InferenceTab: React.FC<InferenceTabProps> = ({
                           }
                           className="accent-purple-500"
                         />
-                        <span className="text-sm text-indigo-200">
+                        <span className="text-xs text-indigo-200">
                           Enable Class 1 chimes
                         </span>
                       </label>
@@ -655,12 +655,12 @@ export const InferenceTab: React.FC<InferenceTabProps> = ({
 
               {/* Volume Control */}
               {audioEnabled && (
-                <div className="bg-blue-900 border border-blue-600 rounded-lg p-4">
-                  <h3 className="text-lg font-semibold text-blue-300 mb-3">
+                <div className="bg-blue-900 border border-blue-600 rounded-lg p-2">
+                  <h3 className="text-base font-semibold text-blue-300 mb-2">
                      Volume Control
                   </h3>
-                  <div className="flex items-center gap-3">
-                    <span className="text-sm text-blue-200 min-w-[40px]">
+                  <div className="flex items-center gap-2">
+                    <span className="text-sm text-blue-200 min-w-[30px]">
                       🔈
                     </span>
                     <input
@@ -670,12 +670,12 @@ export const InferenceTab: React.FC<InferenceTabProps> = ({
                       step="0.1"
                       value={volume}
                       onChange={(e) => setVolume(parseFloat(e.target.value))}
-                      className="flex-1 accent-blue-500"
+                      className="flex-1 accent-blue-500 h-2"
                     />
-                    <span className="text-sm text-blue-200 min-w-[40px]">
+                    <span className="text-sm text-blue-200 min-w-[30px]">
                       
                     </span>
-                    <span className="text-sm text-blue-200 min-w-[40px]">
+                    <span className="text-xs text-blue-200 min-w-[30px]">
                       {Math.round(volume * 100)}%
                     </span>
                   </div>
@@ -684,11 +684,11 @@ export const InferenceTab: React.FC<InferenceTabProps> = ({
 
               {/* Class 0 Chime */}
               {audioEnabled && (
-                <div className="bg-green-900 border border-green-600 rounded-lg p-4">
-                  <h3 className="text-lg font-semibold text-green-300 mb-3">
+                <div className="bg-green-900 border border-green-600 rounded-lg p-2">
+                  <h3 className="text-base font-semibold text-green-300 mb-2">
                      Class 0 Chime
                   </h3>
-                  <div className="space-y-3">
+                  <div className="space-y-2">
                     <input
                       type="url"
                       placeholder="Enter URL for Class 0 sound (mp3, wav, ogg)"
@@ -698,7 +698,7 @@ export const InferenceTab: React.FC<InferenceTabProps> = ({
                           : class0ChimeUrl
                       }
                       onChange={(e) => setClass0ChimeUrl(e.target.value)}
-                      className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:border-green-500 focus:outline-none"
+                      className="w-full px-2 py-1 bg-gray-700 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:border-green-500 focus:outline-none text-sm"
                     />
                     <div className="flex gap-2 flex-wrap">
                       <button
@@ -736,25 +736,25 @@ export const InferenceTab: React.FC<InferenceTabProps> = ({
                           }
                         }}
                         disabled={!class0ChimeUrl}
-                        className="px-3 py-1 bg-green-600 hover:bg-green-500 disabled:bg-gray-600 disabled:text-gray-400 text-white rounded text-sm transition-colors"
+                        className="px-2 py-1 bg-green-600 hover:bg-green-500 disabled:bg-gray-600 disabled:text-gray-400 text-white rounded text-xs transition-colors"
                       >
                         Test
                       </button>
                       <button
                         onClick={() => setClass0ChimeUrl("builtin-bell")}
-                        className="px-3 py-1 bg-blue-600 hover:bg-blue-500 text-white rounded text-sm transition-colors"
+                        className="px-2 py-1 bg-blue-600 hover:bg-blue-500 text-white rounded text-xs transition-colors"
                       >
                         Bell
                       </button>
                       <button
                         onClick={() => setClass0ChimeUrl("builtin-success")}
-                        className="px-3 py-1 bg-blue-600 hover:bg-blue-500 text-white rounded text-sm transition-colors"
+                        className="px-2 py-1 bg-blue-600 hover:bg-blue-500 text-white rounded text-xs transition-colors"
                       >
                         Success
                       </button>
                       <button
                         onClick={() => setClass0ChimeUrl("")}
-                        className="px-3 py-1 bg-red-600 hover:bg-red-500 text-white rounded text-sm transition-colors"
+                        className="px-2 py-1 bg-red-600 hover:bg-red-500 text-white rounded text-xs transition-colors"
                       >
                         Clear
                       </button>
@@ -765,11 +765,11 @@ export const InferenceTab: React.FC<InferenceTabProps> = ({
 
               {/* Class 1 Chime */}
               {audioEnabled && (
-                <div className="bg-purple-900 border border-purple-600 rounded-lg p-4">
-                  <h3 className="text-lg font-semibold text-purple-300 mb-3">
+                <div className="bg-purple-900 border border-purple-600 rounded-lg p-2">
+                  <h3 className="text-base font-semibold text-purple-300 mb-2">
                      Class 1 Chime
                   </h3>
-                  <div className="space-y-3">
+                  <div className="space-y-2">
                     <input
                       type="url"
                       placeholder="Enter URL for Class 1 sound (mp3, wav, ogg)"
@@ -779,7 +779,7 @@ export const InferenceTab: React.FC<InferenceTabProps> = ({
                           : class1ChimeUrl
                       }
                       onChange={(e) => setClass1ChimeUrl(e.target.value)}
-                      className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:border-purple-500 focus:outline-none"
+                      className="w-full px-2 py-1 bg-gray-700 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:border-purple-500 focus:outline-none text-sm"
                     />
                     <div className="flex gap-2 flex-wrap">
                       <button
@@ -817,13 +817,13 @@ export const InferenceTab: React.FC<InferenceTabProps> = ({
                           }
                         }}
                         disabled={!class1ChimeUrl}
-                        className="px-3 py-1 bg-purple-600 hover:bg-purple-500 disabled:bg-gray-600 disabled:text-gray-400 text-white rounded text-sm transition-colors"
+                        className="px-2 py-1 bg-purple-600 hover:bg-purple-500 disabled:bg-gray-600 disabled:text-gray-400 text-white rounded text-xs transition-colors"
                       >
                         Test
                       </button>
                       <button
                         onClick={() => setClass1ChimeUrl("builtin-chime")}
-                        className="px-3 py-1 bg-blue-600 hover:bg-blue-500 text-white rounded text-sm transition-colors"
+                        className="px-2 py-1 bg-blue-600 hover:bg-blue-500 text-white rounded text-xs transition-colors"
                       >
                         Chime
                       </button>
@@ -831,13 +831,13 @@ export const InferenceTab: React.FC<InferenceTabProps> = ({
                         onClick={() =>
                           setClass1ChimeUrl("builtin-notification")
                         }
-                        className="px-3 py-1 bg-blue-600 hover:bg-blue-500 text-white rounded text-sm transition-colors"
+                        className="px-2 py-1 bg-blue-600 hover:bg-blue-500 text-white rounded text-xs transition-colors"
                       >
                         Notify
                       </button>
                       <button
                         onClick={() => setClass1ChimeUrl("")}
-                        className="px-3 py-1 bg-red-600 hover:bg-red-500 text-white rounded text-sm transition-colors"
+                        className="px-2 py-1 bg-red-600 hover:bg-red-500 text-white rounded text-xs transition-colors"
                       >
                         Clear
                       </button>
@@ -848,11 +848,11 @@ export const InferenceTab: React.FC<InferenceTabProps> = ({
 
               {/* Status Info */}
               {audioEnabled && (
-                <div className="bg-yellow-900 border border-yellow-600 rounded-lg p-4">
-                  <h3 className="text-lg font-semibold text-yellow-300 mb-2">
+                <div className="bg-yellow-900 border border-yellow-600 rounded-lg p-2">
+                  <h3 className="text-base font-semibold text-yellow-300 mb-2">
                      Alert Status
                   </h3>
-                  <div className="grid grid-cols-2 gap-4 text-sm">
+                  <div className="grid grid-cols-2 gap-2 text-xs">
                     <div>
                       <span className="text-yellow-200">Class 0 Sound:</span>
                       <div
@@ -923,24 +923,24 @@ export const InferenceTab: React.FC<InferenceTabProps> = ({
         onToggle={toggleSection}
         className="w-full hover-lift"
       >
-        <div className="space-y-4">
+        <div className="space-y-2">
           {!modelReady ? (
-            <div className="text-center py-8">
-              <span className="text-6xl mb-4 block">🤖</span>
-              <h3 className="text-xl font-semibold text-gray-300 mb-2">
+            <div className="text-center py-4">
+              <span className="text-4xl mb-2 block">🤖</span>
+              <h3 className="text-lg font-semibold text-gray-300 mb-1">
                 Model Visualization Not Available
               </h3>
-              <p className="text-gray-400">
+              <p className="text-gray-400 text-sm">
                 Train your model first to see the neural network visualization
               </p>
             </div>
           ) : liveLayerOutputs.length === 0 ? (
-            <div className="text-center py-8">
-              <span className="text-6xl mb-4 block"></span>
-              <h3 className="text-xl font-semibold text-gray-300 mb-2">
+            <div className="text-center py-4">
+              <span className="text-4xl mb-2 block"></span>
+              <h3 className="text-lg font-semibold text-gray-300 mb-1">
                 Make a Prediction to See Visualization
               </h3>
-              <p className="text-gray-400">
+              <p className="text-gray-400 text-sm">
                 Draw something or use the camera to activate the neural network
                 visualization
               </p>
