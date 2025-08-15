@@ -109,7 +109,13 @@ export const TrainableConvNet: React.FC = () => {
 
   // Collapsible sections management with responsive defaults
   const responsiveDefaults = useResponsiveDefaults();
-  const { isSectionOpen, toggleSection } = useCollapsibleSections({
+  const {
+    isSectionOpen,
+    toggleSection,
+    maximizedSectionId,
+    setMaximizedSectionId,
+    closeSection,
+  } = useCollapsibleSections({
     defaultStates: responsiveDefaults,
     persistToLocalStorage: true,
     storageKey: "cnn-trainer-sections",
@@ -652,6 +658,9 @@ export const TrainableConvNet: React.FC = () => {
           // Sections state
           isSectionOpen={isSectionOpen}
           toggleSection={toggleSection}
+          maximizedSectionId={maximizedSectionId}
+          setMaximizedSectionId={setMaximizedSectionId}
+          closeSection={closeSection}
         />
       ),
     },
@@ -684,6 +693,9 @@ export const TrainableConvNet: React.FC = () => {
           pipelineStatus={tfStatus}
           isSectionOpen={isSectionOpen}
           toggleSection={toggleSection}
+          maximizedSectionId={maximizedSectionId}
+          setMaximizedSectionId={setMaximizedSectionId}
+          closeSection={closeSection}
         />
       ),
     },
