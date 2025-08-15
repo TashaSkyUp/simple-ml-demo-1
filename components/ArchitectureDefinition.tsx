@@ -188,7 +188,7 @@ export const ArchitectureDefinition: React.FC<ArchitectureDefinitionProps> = ({
       <h2 className="text-lg font-bold mb-2 text-cyan-400">
         1. Define Architecture
       </h2>
-      <div className="space-y-2 bg-gray-900/50 p-2 rounded-lg max-h-96 overflow-y-auto">
+      <div className="space-y-2 bg-gray-900/50 p-2 rounded-lg overflow-y-auto">
         {layers.map((layer, index) => (
           <div
             key={layer.id}
