@@ -64,9 +64,6 @@ interface TrainingTabProps {
   // Collapsible sections state
   isSectionOpen: (sectionId: string) => boolean;
   toggleSection: (sectionId: string) => void;
-  maximizedSectionId: string | null;
-  setMaximizedSectionId: (sectionId: string | null) => void;
-  closeSection: (sectionId: string) => void;
 }
 
 export const TrainingTab: React.FC<TrainingTabProps> = ({
@@ -119,146 +116,21 @@ export const TrainingTab: React.FC<TrainingTabProps> = ({
   // Sections
   isSectionOpen,
   toggleSection,
-  maximizedSectionId,
-  setMaximizedSectionId,
 }) => {
-  const handleMaximize = (sectionId: string) => {
-    if (maximizedSectionId === sectionId) {
-      setMaximizedSectionId(null);
-    } else {
-      setMaximizedSectionId(sectionId);
-    }
-  };
-
-  const sections = {
-    "training-architecture": {
-      title: "Network Architecture",
-      badge: layers.length,
-      content: (
-        <ArchitectureDefinition
-          layers={layers}
-          updateLayer={onUpdateLayer}
-          removeLayer={onRemoveLayer}
-          addLayer={onAddLayer}
-          reorderLayers={onReorderLayers}
-        />
-      ),
-    },
-    "training-gpu-performance": {
-      title: "GPU Performance",
-      badge:
-        gpuBenchmark.currentBackend?.toUpperCase() ||
-        (gpuBenchmark.opsPerSecond > 0
-          ? `${Math.round(gpuBenchmark.opsPerSecond)} ops/s`
-          : undefined),
-      content: (
-        <GPUStatus
-          benchmarkData={gpuBenchmark}
-          onRunBenchmark={onRunGPUBenchmark}
-        />
-      ),
-    },
-    "training-data-collection": {
-      title: "Data Collection & Augmentation",
-      badge: trainingData.length,
-      content: (
-        <DataCollection
-          onAddData={onAddData}
-          predict={predict}
-          augmentFlip={augmentFlip}
-          onAugmentFlipChange={onAugmentFlipChange}
-          augmentTranslate={augmentTranslate}
-          onAugmentTranslateChange={onAugmentTranslateChange}
-          liveCameraMode={liveCameraMode}
-          onLiveCameraModeChange={onLiveCameraModeChange}
-          onCameraStreamingChange={onCameraStreamingChange}
-          inferenceMode={false}
-        />
-      ),
-    },
-    "training-controls": {
-      title: "Training Controls",
-      badge:
-        trainingStatus === "training"
-          ? `Training ${epochsRun}/${numEpochs}`
-          : epochsRun > 0
-          ? `${epochsRun} epochs`
-          : undefined,
-      content: (
-        <TrainingControls
-          trainingData={trainingData}
-          onClearTrainingData={onClearTrainingData}
-          onRemoveTrainingDataPoint={onRemoveTrainingDataPoint}
-          numEpochs={numEpochs}
-          onNumEpochsChange={onNumEpochsChange}
-          learningRate={learningRate}
-          onLearningRateChange={onLearningRateChange}
-          batchSize={batchSize}
-          onBatchSizeChange={onBatchSizeChange}
-          maxBatchSize={maxBatchSize}
-          onStartTraining={onStartTraining}
-          onResetAll={onResetAll}
-          status={
-            trainingStatus as
-              | "collecting"
-              | "training"
-              | "success"
-              | "architecture-changed"
-              | "error"
-          }
-          epochsRun={epochsRun}
-          lossHistory={lossHistory}
-          onSaveSession={onSaveSession}
-          onLoadSession={onLoadSession}
-          isUsingWorker={isUsingBackgroundWorker}
-          isHybridTraining={isHybridTraining}
-          trainingMode={trainingMode}
-        />
-      ),
-    },
-  };
-
-  const renderSection = (sectionId: keyof typeof sections, className: string) => {
-    const section = sections[sectionId];
-    const isMaximized = maximizedSectionId === sectionId;
-
-    if (maximizedSectionId && !isMaximized) {
-      return null; // Don't render other sections when one is maximized
-    }
-
-    return (
-      <div className={`${className} ${isMaximized ? 'col-span-full' : ''}`}>
-        <CollapsibleSection
-          title={section.title}
-          icon=""
-          badge={section.badge}
-          sectionId={sectionId}
-          isOpen={isSectionOpen(sectionId)}
-          onToggle={toggleSection}
-          isMaximized={isMaximized}
-          onMaximize={handleMaximize}
-          className="h-fit hover-lift"
-        >
-          {section.content}
-        </CollapsibleSection>
-      </div>
-    );
-  };
-
   return (
-    <div className="space-y-3">
+    <div className="space-y-6">
       {/* Training Tab Header */}
-      <div className="bg-gray-800 rounded-lg p-2 border border-gray-700">
+      <div className="bg-gray-800 rounded-lg p-4 border border-gray-700">
         <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <span className="text-xl"></span>
+          <div className="flex items-center gap-3">
+            <span className="text-2xl"></span>
             <div>
-              <h2 className="text-lg font-semibold text-gray-100">
+              <h2 className="text-xl font-semibold text-gray-100">
                 Training Mode
               </h2>
             </div>
           </div>
-          <div className="flex items-center gap-2 text-sm">
+          <div className="flex items-center gap-4 text-sm">
             <div className="flex items-center gap-2">
               <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
               <span className="text-gray-300">
@@ -284,12 +156,127 @@ export const TrainingTab: React.FC<TrainingTabProps> = ({
       </div>
 
       {/* Responsive Grid Layout */}
-      <div className="grid grid-cols-1 xl:grid-cols-3 lg:grid-cols-2 gap-3">
-        {renderSection("training-architecture", "xl:col-span-1")}
-        {renderSection("training-gpu-performance", "xl:col-span-1")}
-        {renderSection("training-data-collection", "xl:col-span-1 lg:col-span-1")}
-        {renderSection("training-controls", "xl:col-span-1 lg:col-span-2")}
+      <div className="grid grid-cols-1 xl:grid-cols-3 lg:grid-cols-2 gap-6">
+        {/* Architecture Section */}
+        <div className="xl:col-span-1">
+          <CollapsibleSection
+            title="Network Architecture"
+            icon=""
+            badge={layers.length}
+            sectionId="training-architecture"
+            isOpen={isSectionOpen("training-architecture")}
+            onToggle={toggleSection}
+            className="h-fit hover-lift"
+          >
+            <ArchitectureDefinition
+              layers={layers}
+              updateLayer={onUpdateLayer}
+              removeLayer={onRemoveLayer}
+              addLayer={onAddLayer}
+              reorderLayers={onReorderLayers}
+            />
+          </CollapsibleSection>
+
+          {/* GPU Performance Section */}
+          <div className="mt-6">
+            <CollapsibleSection
+              title="GPU Performance"
+              icon=""
+              badge={
+                gpuBenchmark.currentBackend?.toUpperCase() ||
+                (gpuBenchmark.opsPerSecond > 0
+                  ? `${Math.round(gpuBenchmark.opsPerSecond)} ops/s`
+                  : undefined)
+              }
+              sectionId="training-gpu-performance"
+              isOpen={isSectionOpen("training-gpu-performance")}
+              onToggle={toggleSection}
+              className="h-fit hover-lift"
+            >
+              <GPUStatus
+                benchmarkData={gpuBenchmark}
+                onRunBenchmark={onRunGPUBenchmark}
+              />
+            </CollapsibleSection>
+          </div>
+        </div>
+
+        {/* Data Collection Section */}
+        <div className="xl:col-span-1">
+          <CollapsibleSection
+            title="Data Collection"
+            icon=""
+            badge={trainingData.length}
+            sectionId="training-data-collection"
+            isOpen={isSectionOpen("training-data-collection")}
+            onToggle={toggleSection}
+            className="h-fit hover-lift"
+          >
+            <DataCollection
+              onAddData={onAddData}
+              predict={predict}
+              augmentFlip={augmentFlip}
+              onAugmentFlipChange={onAugmentFlipChange}
+              augmentTranslate={augmentTranslate}
+              onAugmentTranslateChange={onAugmentTranslateChange}
+              liveCameraMode={liveCameraMode}
+              onLiveCameraModeChange={onLiveCameraModeChange}
+              onCameraStreamingChange={onCameraStreamingChange}
+              inferenceMode={false}
+            />
+          </CollapsibleSection>
+        </div>
+
+        {/* Training Controls Section */}
+        <div className="xl:col-span-1 lg:col-span-2 xl:col-span-1">
+          <CollapsibleSection
+            title="Training & Session Management"
+            icon=""
+            badge={
+              trainingStatus === "training"
+                ? `Training ${epochsRun}/${numEpochs}`
+                : epochsRun > 0
+                  ? `${epochsRun} epochs`
+                  : undefined
+            }
+            sectionId="training-controls"
+            isOpen={isSectionOpen("training-controls")}
+            onToggle={toggleSection}
+            className="h-fit hover-lift"
+          >
+            <TrainingControls
+              trainingData={trainingData}
+              onClearTrainingData={onClearTrainingData}
+              onRemoveTrainingDataPoint={onRemoveTrainingDataPoint}
+              numEpochs={numEpochs}
+              onNumEpochsChange={onNumEpochsChange}
+              learningRate={learningRate}
+              onLearningRateChange={onLearningRateChange}
+              batchSize={batchSize}
+              onBatchSizeChange={onBatchSizeChange}
+              maxBatchSize={maxBatchSize}
+              onStartTraining={onStartTraining}
+              onResetAll={onResetAll}
+              status={
+                trainingStatus as
+                  | "collecting"
+                  | "training"
+                  | "success"
+                  | "architecture-changed"
+                  | "error"
+              }
+              epochsRun={epochsRun}
+              lossHistory={lossHistory}
+              onSaveSession={onSaveSession}
+              onLoadSession={onLoadSession}
+              isUsingWorker={isUsingBackgroundWorker}
+              isHybridTraining={isHybridTraining}
+              trainingMode={trainingMode}
+            />
+          </CollapsibleSection>
+        </div>
       </div>
+
     </div>
   );
 };

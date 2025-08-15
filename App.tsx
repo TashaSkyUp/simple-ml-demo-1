@@ -14,17 +14,17 @@ import { DebugTestPanel } from "./components/DebugTestPanel";
 
 const App: React.FC = () => (
   <div className="bg-gray-900 text-white min-h-screen font-sans">
-    <header className="bg-gray-800 shadow-md p-2 dark-glass">
-      <div className="ultra-wide-container mx-auto">
-        <h1 className="text-2xl font-bold text-center text-cyan-400 hover:text-cyan-300 transition-colors">
+    <header className="bg-gray-800 shadow-md p-4 sticky top-0 z-50 dark-glass">
+      <div className="ultra-wide-container max-w-7xl mx-auto">
+        <h1 className="text-3xl font-bold text-center text-cyan-400 hover:text-cyan-300 transition-colors">
           Interactive CNN with TensorFlow.js
         </h1>
-        <p className="text-center text-gray-300 mt-1 text-sm hover:text-gray-200 transition-colors">
+        <p className="text-center text-gray-300 mt-2 text-sm hover:text-gray-200 transition-colors">
           Train neural networks in your browser
         </p>
       </div>
     </header>
-    <main className="ultra-wide-container mx-auto py-2 md:py-3 lg:py-4 xl:py-5">
+    <main className="ultra-wide-container max-w-7xl mx-auto p-4 md:p-6 lg:p-8 xl:p-10">
       <TrainableConvNet />
     </main>
     <Footer />

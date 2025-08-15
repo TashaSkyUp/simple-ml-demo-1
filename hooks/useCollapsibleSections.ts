@@ -18,8 +18,6 @@ interface UseCollapsibleSectionsReturn {
   openAllSections: () => void;
   closeAllSections: () => void;
   isSectionOpen: (sectionId: string) => boolean;
-  maximizedSectionId: string | null;
-  setMaximizedSectionId: (sectionId: string | null) => void;
 }
 
 export const useCollapsibleSections = (
@@ -50,9 +48,6 @@ export const useCollapsibleSections = (
 
   const [sectionStates, setSectionStates] =
     useState<SectionState>(getInitialStates);
-  const [maximizedSectionId, setMaximizedSectionId] = useState<string | null>(
-    null,
-  );
 
   // Save to localStorage whenever states change
   const updateStates = useCallback(
@@ -142,8 +137,6 @@ export const useCollapsibleSections = (
     openAllSections,
     closeAllSections,
     isSectionOpen,
-    maximizedSectionId,
-    setMaximizedSectionId,
   };
 };
 

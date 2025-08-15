@@ -65,23 +65,23 @@ export const TrainingControls: React.FC<TrainingControlsProps> = ({
 
   return (
     <div>
-      <h2 className="text-lg font-bold mb-2 text-cyan-400">
+      <h2 className="text-2xl font-bold mb-4 text-cyan-400">
         3. Train & Predict
       </h2>
       <div className="flex justify-between items-center mb-2">
-        <h3 className="font-semibold text-gray-300 text-sm">
+        <h3 className="font-semibold text-gray-300">
           Samples ({trainingData.length})
         </h3>
         <button
           onClick={onClearTrainingData}
-          className="text-xs text-gray-400 hover:text-white focus:outline-none focus:ring-2 focus:ring-cyan-500 rounded px-1 py-0.5"
+          className="text-sm text-gray-400 hover:text-white focus:outline-none focus:ring-2 focus:ring-cyan-500 rounded px-2 py-1"
           disabled={trainingData.length === 0}
           aria-label="Clear all training samples"
         >
           Clear All Samples
         </button>
       </div>
-      <div className="bg-gray-900/50 p-1 rounded-lg h-24 overflow-y-auto flex flex-wrap gap-1 mb-3 border border-gray-700 items-center justify-start">
+      <div className="bg-gray-900/50 p-2 rounded-lg h-24 overflow-y-auto flex flex-wrap gap-2 mb-6 border border-gray-700 items-center justify-start">
         {trainingData.length === 0 && (
           <p className="text-gray-500 text-sm self-center mx-auto w-full text-center">
             Add samples to begin.
@@ -114,9 +114,9 @@ export const TrainingControls: React.FC<TrainingControlsProps> = ({
           </div>
         ))}
       </div>
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-2 mb-1">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-1">
         <div>
-          <label htmlFor="epochs" className="text-xs text-gray-400">
+          <label htmlFor="epochs" className="text-sm text-gray-400">
             Epochs: {numEpochs}
           </label>
           <input
@@ -131,7 +131,7 @@ export const TrainingControls: React.FC<TrainingControlsProps> = ({
           />
         </div>
         <div>
-          <label htmlFor="lr" className="text-xs text-gray-400">
+          <label htmlFor="lr" className="text-sm text-gray-400">
             Learning Rate: {learningRate.toExponential(1)}
           </label>
           <input
@@ -146,8 +146,8 @@ export const TrainingControls: React.FC<TrainingControlsProps> = ({
           />
         </div>
       </div>
-      <div className="mb-2">
-        <label htmlFor="batchSize" className="text-xs text-gray-400">
+      <div className="mb-4">
+        <label htmlFor="batchSize" className="text-sm text-gray-400">
           Batch Size: {batchSize}
         </label>
         <input
@@ -161,38 +161,38 @@ export const TrainingControls: React.FC<TrainingControlsProps> = ({
           className="w-full h-2 bg-gray-600 rounded-lg appearance-none cursor-pointer mt-1 accent-cyan-500"
         />
       </div>
-      <div className="grid grid-cols-2 gap-2">
+      <div className="grid grid-cols-2 gap-4">
         <button
           onClick={onStartTraining}
           disabled={!canTrain}
-          className="w-full flex justify-center items-center gap-2 bg-green-600 hover:bg-green-500 text-white font-bold py-2 rounded transition-colors text-base disabled:bg-gray-600 disabled:cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-green-400"
+          className="w-full flex justify-center items-center gap-3 bg-green-600 hover:bg-green-500 text-white font-bold py-3 rounded transition-colors text-lg disabled:bg-gray-600 disabled:cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-green-400"
         >
           Train
         </button>
         <button
           onClick={onResetAll}
-          className="w-full flex justify-center items-center gap-2 bg-red-600 hover:bg-red-500 text-white font-bold py-2 rounded transition-colors text-base focus:outline-none focus:ring-2 focus:ring-red-400"
+          className="w-full flex justify-center items-center gap-3 bg-red-600 hover:bg-red-500 text-white font-bold py-3 rounded transition-colors text-lg focus:outline-none focus:ring-2 focus:ring-red-400"
         >
           (Reset All)
         </button>
       </div>
-      <div className="grid grid-cols-2 gap-2 mt-2">
+      <div className="grid grid-cols-2 gap-4 mt-4">
         <button
           onClick={onSaveSession}
-          className="w-full flex justify-center items-center gap-2 bg-blue-600 hover:bg-blue-500 text-white font-bold py-2 rounded transition-colors text-base focus:outline-none focus:ring-2 focus:ring-blue-400"
+          className="w-full flex justify-center items-center gap-3 bg-blue-600 hover:bg-blue-500 text-white font-bold py-3 rounded transition-colors text-lg focus:outline-none focus:ring-2 focus:ring-blue-400"
           aria-label="Save complete session (architecture, training data, and trained weights) to a JSON file"
         >
           Save Session
         </button>
         <button
           onClick={onLoadSession}
-          className="w-full flex justify-center items-center gap-2 bg-purple-600 hover:bg-purple-500 text-white font-bold py-2 rounded transition-colors text-base focus:outline-none focus:ring-2 focus:ring-purple-400"
+          className="w-full flex justify-center items-center gap-3 bg-purple-600 hover:bg-purple-500 text-white font-bold py-3 rounded transition-colors text-lg focus:outline-none focus:ring-2 focus:ring-purple-400"
           aria-label="Load complete session (architecture, training data, and trained weights) from a JSON file"
         >
           Load Session
         </button>
       </div>
-      <div className="mt-2 p-2 bg-gray-800 rounded-md">
+      <div className="mt-3 p-3 bg-gray-800 rounded-md">
         <div className="text-sm text-gray-300">
           <div className="flex items-center gap-2 mb-2">
             <span className="text-blue-400">Save</span>
@@ -212,11 +212,11 @@ export const TrainingControls: React.FC<TrainingControlsProps> = ({
           </div>
         </div>
       </div>
-      <div className="mt-3 space-y-2">
+      <div className="mt-6 space-y-4">
         <div>
-          <h3 className="text-base font-semibold text-gray-400">Status</h3>
+          <h3 className="text-lg font-semibold text-gray-400">Status</h3>
           <div
-            className={`p-2 rounded-md text-center font-semibold text-sm ${status === "collecting" ? "bg-gray-700 text-gray-300" : status === "training" ? "bg-blue-800 text-blue-200 animate-pulse" : status === "architecture-changed" ? "bg-yellow-800 text-yellow-200" : status === "error" ? "bg-red-800 text-red-200" : "bg-green-800 text-green-200"}`}
+            className={`p-3 rounded-md text-center font-semibold ${status === "collecting" ? "bg-gray-700 text-gray-300" : status === "training" ? "bg-blue-800 text-blue-200 animate-pulse" : status === "architecture-changed" ? "bg-yellow-800 text-yellow-200" : status === "error" ? "bg-red-800 text-red-200" : "bg-green-800 text-green-200"}`}
           >
             {status === "training" && isHybridTraining && (
               <div className="mb-2">
