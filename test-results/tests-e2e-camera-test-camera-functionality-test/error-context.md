@@ -1,0 +1,140 @@
+# Page snapshot
+
+```yaml
+- banner:
+  - heading "Interactive CNN with TensorFlow.js" [level=1]
+  - paragraph: Train neural networks in your browser
+- main:
+  - navigation "Tabs":
+    - tab "Training" [selected]
+    - tab "Live Inference"
+    - tab "Web Worker Test"
+  - tabpanel:
+    - heading "Training Mode" [level=2]
+    - text: 4 layers configured 0 samples collected
+    - button "Network Architecture 4 Collapse" [expanded]:
+      - heading "Network Architecture" [level=2]
+      - text: 4 Collapse
+      - img
+    - heading "1. Define Architecture" [level=2]
+    - paragraph: "Layer 1: Conv"
+    - button "Remove layer 1": ×
+    - text: Filter Size
+    - combobox "Filter Size":
+      - option "3x3" [selected]
+      - option "5x5"
+    - text: Num Filters
+    - spinbutton "Num Filters": "8"
+    - text: Activation
+    - combobox "Activation":
+      - option "Relu" [selected]
+      - option "Sigmoid"
+      - option "Tanh"
+      - option "Linear"
+    - paragraph: "Layer 2: Pool"
+    - button "Remove layer 2": ×
+    - text: "Pool Size: 2x2"
+    - 'slider "Pool Size: 2x2"': "2"
+    - text: Pooling Type
+    - combobox "Pooling Type":
+      - option "Max" [selected]
+      - option "Average"
+    - paragraph: "Layer 3: Conv"
+    - button "Remove layer 3": ×
+    - text: Filter Size
+    - combobox "Filter Size":
+      - option "3x3" [selected]
+      - option "5x5"
+    - text: Num Filters
+    - spinbutton "Num Filters": "16"
+    - text: Activation
+    - combobox "Activation":
+      - option "Relu" [selected]
+      - option "Sigmoid"
+      - option "Tanh"
+      - option "Linear"
+    - paragraph: "Layer 4: Pool"
+    - button "Remove layer 4": ×
+    - text: "Pool Size: 2x2"
+    - 'slider "Pool Size: 2x2"': "2"
+    - text: Pooling Type
+    - combobox "Pooling Type":
+      - option "Max" [selected]
+      - option "Average"
+    - button "+ Conv"
+    - button "+ Pool"
+    - button "+ Activation"
+    - button "+ Dropout"
+    - button "+ Flatten"
+    - button "+ Dense"
+    - button "+ Reshape"
+    - text: Drag layers to reorder • Click × to remove
+    - button "GPU Performance Collapse" [expanded]:
+      - heading "GPU Performance" [level=2]
+      - text: Collapse
+      - img
+    - text: "CPU Mode Backend: unknown +"
+    - button "Data Collection 0 Collapse" [expanded]:
+      - heading "Data Collection" [level=2]
+      - text: 0 Collapse
+      - img
+    - heading "2. Collect Data" [level=2]
+    - heading "Camera Capture" [level=3]
+    - button "Start Camera":
+      - img
+      - text: Start Camera
+    - img
+    - paragraph: Camera Preview
+    - img
+    - paragraph: No camera found on this device.
+    - img
+    - paragraph: Camera Permission Required
+    - paragraph: Please allow camera access to capture training images.
+    - paragraph: Capture photos to use as training samples
+    - paragraph: Make sure your subject is well-lit and clearly visible
+    - paragraph: 🟣 Use "Go Live" mode to see real-time CNN pipeline visualization
+    - button "Training & Session Management Collapse" [expanded]:
+      - heading "Training & Session Management" [level=2]
+      - text: Collapse
+      - img
+    - heading "3. Train & Predict" [level=2]
+    - heading "Samples (0)" [level=3]
+    - button "Clear all training samples" [disabled]: Clear All Samples
+    - paragraph: Add samples to begin.
+    - text: "Epochs: 10"
+    - 'slider "Epochs: 10"': "10"
+    - text: "Learning Rate: 1.0e-3"
+    - 'slider "Learning Rate: 1.0e-3"': "0.001"
+    - text: "Batch Size: 8"
+    - 'slider "Batch Size: 8"': "8"
+    - button "Train" [disabled]
+    - button "(Reset All)"
+    - button "Save complete session (architecture, training data, and trained weights) to a JSON file": Save Session
+    - button "Load complete session (architecture, training data, and trained weights) from a JSON file": Load Session
+    - text: Save Session Management •
+    - strong: "Save:"
+    - text: Architecture + Training Data + Trained Weights •
+    - strong: "Load:"
+    - text: Restore complete training state •
+    - strong: "Share:"
+    - text: Sessions work across devices
+    - heading "Status" [level=3]
+    - text: Ready... Train for loss graph.
+- contentinfo:
+  - paragraph: © 2024 Hopping Mad Games, LLC. All Rights Reserved.
+  - heading "IMPORTANT DISCLAIMER" [level=3]
+  - paragraph: This is a proprietary demonstration project for portfolio purposes only.
+  - paragraph:
+    - strong: "NOT FREE SOFTWARE:"
+    - text: This code is NOT offered under any open-source license. All code, concepts, implementations, and intellectual property contained herein remain the exclusive property of Hopping Mad Games, LLC.
+  - paragraph:
+    - strong: "NO COMMERCIAL USE:"
+    - text: Any commercial use, modification, distribution, or derivative work based on this code is strictly prohibited without explicit written permission from Hopping Mad Games, LLC.
+  - paragraph:
+    - strong: "DEMO ONLY:"
+    - text: This application is provided solely to demonstrate technical capabilities and implementation approaches. It is not intended for production use or commercial deployment.
+  - paragraph: Interactive CNN Trainer with TensorFlow.js - WebGPU Acceleration - Real-time Visualization - Web Worker Background Training
+  - paragraph: Demonstration of advanced browser-based machine learning capabilities
+  - paragraph: For licensing inquiries or commercial use permissions, contact Hopping Mad Games, LLC
+- button "🔧 Debug Tests"
+```

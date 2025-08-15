@@ -314,13 +314,6 @@ export const TrainableConvNet: React.FC = () => {
     setTrainingData((prev) => prev.filter((dataPoint) => dataPoint.id !== id));
   };
 
-  const predictFromDataCollectionCanvas = useCallback(
-    async (grid: number[][][]) => {
-      await runPrediction(grid);
-    },
-    [runPrediction],
-  );
-
   const handleStartTraining = async () => {
     if (trainingData.length === 0) {
       alert("Please add training samples.");
@@ -401,7 +394,7 @@ export const TrainableConvNet: React.FC = () => {
         }
       });
     }
-  }, [tfStatus, initializeModel, predictFromDataCollectionCanvas]);
+  }, [tfStatus, initializeModel]);
 
   const maxBatchSize = trainingData.length > 0 ? trainingData.length : 32; // Batch size can be up to num samples
 
@@ -633,7 +626,7 @@ export const TrainableConvNet: React.FC = () => {
           liveCameraMode={liveCameraMode}
           onLiveCameraModeChange={setLiveCameraMode}
           onCameraStreamingChange={setIsCameraStreaming}
-          predictFromCanvas={predictFromDataCollectionCanvas}
+          predict={runPrediction}
           // Training props
           numEpochs={numEpochs}
           onNumEpochsChange={setNumEpochs}
@@ -679,7 +672,7 @@ export const TrainableConvNet: React.FC = () => {
               tfStatus === "training")
           }
           prediction={prediction}
-          onPredictFromCanvas={predictFromDataCollectionCanvas}
+          onPredict={runPrediction}
           liveCameraMode={liveCameraMode}
           onLiveCameraModeChange={setLiveCameraMode}
           onCameraStreamingChange={setIsCameraStreaming}
