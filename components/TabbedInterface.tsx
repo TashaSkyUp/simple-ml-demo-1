@@ -6,6 +6,7 @@ interface Tab {
   icon?: string;
   content: ReactNode;
   badge?: string | number;
+  headerContent?: ReactNode;
 }
 
 interface TabbedInterfaceProps {
@@ -31,11 +32,12 @@ export const TabbedInterface: React.FC<TabbedInterfaceProps> = ({
   };
 
   const activeTabContent = tabs.find((tab) => tab.id === activeTab)?.content;
+  const activeTabHeader = tabs.find((tab) => tab.id === activeTab)?.headerContent;
 
   return (
     <div className={`w-full ${className}`}>
       {/* Tab Headers */}
-      <div className="border-b border-gray-700 bg-gray-800 rounded-t-lg">
+      <div className="border-b border-gray-700 bg-gray-800 rounded-t-lg flex justify-between items-center pr-4">
         <nav className="flex space-x-0" aria-label="Tabs">
           {tabs.map((tab, index) => (
             <button
@@ -43,13 +45,11 @@ export const TabbedInterface: React.FC<TabbedInterfaceProps> = ({
               onClick={() => handleTabChange(tab.id)}
               className={`
                 group relative px-6 py-4 text-sm font-medium transition-all duration-200
-                ${
-                  activeTab === tab.id
-                    ? "bg-gray-900 text-cyan-400 border-b-2 border-cyan-400"
-                    : "text-gray-300 hover:text-gray-100 hover:bg-gray-700"
+                ${activeTab === tab.id
+                  ? "bg-gray-900 text-cyan-400 border-b-2 border-cyan-400"
+                  : "text-gray-300 hover:text-gray-100 hover:bg-gray-700"
                 }
                 ${index === 0 ? "rounded-tl-lg" : ""}
-                ${index === tabs.length - 1 ? "rounded-tr-lg" : ""}
                 focus:outline-none focus:ring-2 focus:ring-cyan-400 focus:ring-inset
               `}
               aria-selected={activeTab === tab.id}
@@ -79,6 +79,11 @@ export const TabbedInterface: React.FC<TabbedInterfaceProps> = ({
             </button>
           ))}
         </nav>
+
+        {/* Active Tab Header Content */}
+        <div className="hidden md:block">
+          {activeTabHeader}
+        </div>
       </div>
 
       {/* Tab Content */}
@@ -86,7 +91,7 @@ export const TabbedInterface: React.FC<TabbedInterfaceProps> = ({
         <div
           role="tabpanel"
           aria-labelledby={`tab-${activeTab}`}
-          className="p-6 space-y-6 animate-fade-in"
+          className="p-2 space-y-6 animate-fade-in"
         >
           {activeTabContent}
         </div>

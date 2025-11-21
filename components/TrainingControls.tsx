@@ -17,11 +17,11 @@ interface TrainingControlsProps {
   onStartTraining: () => void;
   onResetAll: () => void;
   status:
-    | "collecting"
-    | "training"
-    | "success"
-    | "architecture-changed"
-    | "error";
+  | "collecting"
+  | "training"
+  | "success"
+  | "architecture-changed"
+  | "error";
   epochsRun: number;
   lossHistory: number[];
   onSaveSession: () => void; // New prop
@@ -50,7 +50,7 @@ export const TrainingControls: React.FC<TrainingControlsProps> = ({
   lossHistory,
   onSaveSession, // Destructure new prop
   onLoadSession, // Destructure new prop
-  isUsingWorker: isUsingBackgroundWorker,
+  isUsingBackgroundWorker,
   isHybridTraining,
   trainingMode,
 }) => {
@@ -65,9 +65,7 @@ export const TrainingControls: React.FC<TrainingControlsProps> = ({
 
   return (
     <div>
-      <h2 className="text-lg font-bold mb-2 text-cyan-400">
-        3. Train & Predict
-      </h2>
+
       <div className="flex justify-between items-center mb-2">
         <h3 className="font-semibold text-gray-300 text-sm">
           Samples ({trainingData.length})

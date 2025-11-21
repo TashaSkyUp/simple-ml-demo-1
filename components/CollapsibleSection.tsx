@@ -71,9 +71,8 @@ export const CollapsibleSection: React.FC<CollapsibleSectionProps> = ({
             {isOpen ? "Collapse" : "Expand"}
           </span>
           <svg
-            className={`w-5 h-5 text-gray-400 transition-all duration-300 ${
-              isOpen ? "rotate-180 text-cyan-400" : "hover:text-gray-300"
-            }`}
+            className={`w-5 h-5 text-gray-400 transition-all duration-300 ${isOpen ? "rotate-180 text-cyan-400" : "hover:text-gray-300"
+              }`}
             fill="none"
             stroke="currentColor"
             viewBox="0 0 24 24"
@@ -90,16 +89,14 @@ export const CollapsibleSection: React.FC<CollapsibleSectionProps> = ({
 
       <div
         id={`section-${title.replace(/\s+/g, "-").toLowerCase()}`}
-        className={`transition-all duration-500 ease-in-out transform ${
-          isOpen
-            ? "max-h-screen opacity-100 translate-y-0"
-            : "max-h-0 opacity-0 overflow-hidden -translate-y-2"
-        }`}
+        className={`transition-all duration-500 ease-in-out transform ${isOpen
+          ? "max-h-screen opacity-100 translate-y-0"
+          : "max-h-0 opacity-0 overflow-hidden -translate-y-2"
+          }`}
       >
         <div
-          className={`p-3 space-y-3 transition-all duration-300 ${
-            isOpen ? "animate-fade-in" : ""
-          } ${contentClassName}`}
+          className={`p-1 space-y-2 transition-all duration-300 ${isOpen ? "animate-fade-in" : ""
+            } ${contentClassName}`}
         >
           {children}
         </div>

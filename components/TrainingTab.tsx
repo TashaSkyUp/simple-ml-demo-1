@@ -118,47 +118,13 @@ export const TrainingTab: React.FC<TrainingTabProps> = ({
   toggleSection,
 }) => {
   return (
-    <div className="space-y-3">
-      {/* Training Tab Header */}
-      <div className="bg-gray-800 rounded-lg p-2 border border-gray-700">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <span className="text-xl"></span>
-            <div>
-              <h2 className="text-lg font-semibold text-gray-100">
-                Training Mode
-              </h2>
-            </div>
-          </div>
-          <div className="flex items-center gap-2 text-sm">
-            <div className="flex items-center gap-2">
-              <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
-              <span className="text-gray-300">
-                {layers.length} layers configured
-              </span>
-            </div>
-            <div className="flex items-center gap-2">
-              <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-              <span className="text-gray-300">
-                {trainingData.length} samples collected
-              </span>
-            </div>
-            {epochsRun > 0 && (
-              <div className="flex items-center gap-2">
-                <div className="w-2 h-2 bg-purple-500 rounded-full"></div>
-                <span className="text-gray-300">
-                  {epochsRun} epochs trained
-                </span>
-              </div>
-            )}
-          </div>
-        </div>
-      </div>
+    <div className="space-y-6">
+
 
       {/* Responsive Grid Layout */}
-      <div className="grid grid-cols-1 xl:grid-cols-3 lg:grid-cols-2 gap-3">
-        {/* Architecture Section */}
-        <div className="xl:col-span-1">
+      <div className="grid grid-cols-1 xl:grid-cols-3 lg:grid-cols-2 gap-2">
+        {/* Architecture Section - Spans 1 columns on large screens */}
+        <div className="xl:col-span-1 lg:col-span-1">
           <CollapsibleSection
             title="Network Architecture"
             icon=""
@@ -176,33 +142,10 @@ export const TrainingTab: React.FC<TrainingTabProps> = ({
               reorderLayers={onReorderLayers}
             />
           </CollapsibleSection>
-
-          {/* GPU Performance Section */}
-          <div className="mt-3">
-            <CollapsibleSection
-              title="GPU Performance"
-              icon=""
-              badge={
-                gpuBenchmark.currentBackend?.toUpperCase() ||
-                (gpuBenchmark.opsPerSecond > 0
-                  ? `${Math.round(gpuBenchmark.opsPerSecond)} ops/s`
-                  : undefined)
-              }
-              sectionId="training-gpu-performance"
-              isOpen={isSectionOpen("training-gpu-performance")}
-              onToggle={toggleSection}
-              className="h-fit hover-lift"
-            >
-              <GPUStatus
-                benchmarkData={gpuBenchmark}
-                onRunBenchmark={onRunGPUBenchmark}
-              />
-            </CollapsibleSection>
-          </div>
         </div>
 
         {/* Data Collection Section */}
-        <div className="xl:col-span-1">
+        <div className="xl:col-span-1 lg:col-span-1">
           <CollapsibleSection
             title="Data Collection"
             icon=""
@@ -228,7 +171,7 @@ export const TrainingTab: React.FC<TrainingTabProps> = ({
         </div>
 
         {/* Training Controls Section */}
-        <div className="xl:col-span-1 lg:col-span-2 xl:col-span-1">
+        <div className="xl:col-span-1 lg:col-span-1">
           <CollapsibleSection
             title="Training & Session Management"
             icon=""
@@ -259,23 +202,95 @@ export const TrainingTab: React.FC<TrainingTabProps> = ({
               onResetAll={onResetAll}
               status={
                 trainingStatus as
-                  | "collecting"
-                  | "training"
-                  | "success"
-                  | "architecture-changed"
-                  | "error"
+                | "collecting"
+                | "training"
+                | "success"
+                | "architecture-changed"
+                | "error"
               }
               epochsRun={epochsRun}
               lossHistory={lossHistory}
               onSaveSession={onSaveSession}
               onLoadSession={onLoadSession}
-              isUsingWorker={isUsingBackgroundWorker}
+              isUsingBackgroundWorker={isUsingBackgroundWorker}
               isHybridTraining={isHybridTraining}
               trainingMode={trainingMode}
             />
           </CollapsibleSection>
         </div>
+
+
       </div>
+
+      {/* GPU Performance Section - Moved to its own grid cell */}
+      <div className="xl:col-span-1 lg:col-span-1">
+        <CollapsibleSection
+          title="GPU Performance"
+          icon=""
+          badge={
+            gpuBenchmark.currentBackend?.toUpperCase() ||
+            (gpuBenchmark.opsPerSecond > 0
+              ? `${Math.round(gpuBenchmark.opsPerSecond)} ops/s`
+              : undefined)
+          }
+          sectionId="training-gpu-performance"
+          isOpen={isSectionOpen("training-gpu-performance")}
+          onToggle={toggleSection}
+          className="h-fit hover-lift"
+        >
+          <GPUStatus
+            benchmarkData={gpuBenchmark}
+            onRunBenchmark={onRunGPUBenchmark}
+          />
+        </CollapsibleSection>
+      </div>
+      {/* Training Tips Section */}
+      <CollapsibleSection
+        title="Training Tips & Best Practices"
+        icon=""
+        sectionId="training-tips"
+        isOpen={isSectionOpen("training-tips")}
+        onToggle={toggleSection}
+        className="w-full hover-lift"
+      >
+        <div className="grid grid-cols-1 md:grid-cols-1 lg:grid-cols-1 gap-2">
+          <div className="bg-gray-800 rounded-lg p-4 border border-gray-700">
+            <h3 className="text-lg font-semibold text-cyan-400 mb-2">
+              Data Collection
+            </h3>
+            <ul className="text-sm text-gray-300 space-y-1">
+              <li>• Collect varied samples for each class</li>
+              <li>• Use data augmentation for better generalization</li>
+              <li>• Aim for balanced dataset sizes</li>
+              <li>• Draw clearly and consistently</li>
+            </ul>
+          </div>
+
+          <div className="bg-gray-800 rounded-lg p-4 border border-gray-700">
+            <h3 className="text-lg font-semibold text-green-400 mb-2">
+              Architecture Design
+            </h3>
+            <ul className="text-sm text-gray-300 space-y-1">
+              <li>• Start simple, add complexity gradually</li>
+              <li>• Use Conv2D → MaxPooling patterns</li>
+              <li>• Add Flatten before Dense layers</li>
+              <li>• Match output units to number of classes</li>
+            </ul>
+          </div>
+
+          <div className="bg-gray-800 rounded-lg p-4 border border-gray-700">
+            <h3 className="text-lg font-semibold text-purple-400 mb-2">
+              Training Strategy
+            </h3>
+            <ul className="text-sm text-gray-300 space-y-1">
+              <li>• Start with default learning rate (0.001)</li>
+              <li>• Monitor loss curve for overfitting</li>
+              <li>• Save sessions before major changes</li>
+              <li>• Use GPU acceleration when available</li>
+            </ul>
+          </div>
+        </div>
+      </CollapsibleSection>
     </div>
   );
 };

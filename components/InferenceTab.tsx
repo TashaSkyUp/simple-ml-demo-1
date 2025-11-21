@@ -363,49 +363,7 @@ export const InferenceTab: React.FC<InferenceTabProps> = ({
   ]);
   return (
     <div className="space-y-6">
-      {/* Inference Tab Header */}
-      <div className="bg-gray-800 rounded-lg p-4 border border-gray-700">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <span className="text-2xl">Predict</span>
-            <div>
-              <h2 className="text-xl font-semibold text-gray-100">
-                Live Inference
-              </h2>
-              <p className="text-sm text-gray-400">
-                Test your trained model with real-time predictions and
-                visualization
-              </p>
-            </div>
-          </div>
-          <div className="flex items-center gap-4 text-sm">
-            <div className="flex items-center gap-2">
-              <div
-                className={`w-2 h-2 rounded-full ${
-                  modelReady ? "bg-green-500" : "bg-red-500"
-                }`}
-              ></div>
-              <span className="text-gray-300">
-                Model {modelReady ? "Ready" : "Not Ready"}
-              </span>
-            </div>
-            {liveCameraMode && (
-              <div className="flex items-center gap-2">
-                <div className="w-2 h-2 bg-red-500 rounded-full animate-pulse"></div>
-                <span className="text-gray-300">Live Camera Active</span>
-              </div>
-            )}
-            {liveLayerOutputs.length > 0 && (
-              <div className="flex items-center gap-2">
-                <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
-                <span className="text-gray-300">
-                  {liveLayerOutputs.length} layers visualizing
-                </span>
-              </div>
-            )}
-          </div>
-        </div>
-      </div>
+
 
       {/* Model Status Warning */}
       {!modelReady && (
@@ -455,12 +413,12 @@ export const InferenceTab: React.FC<InferenceTabProps> = ({
             <div className="space-y-6">
               {/* Input Methods */}
               <DataCollection
-                onAddData={() => {}} // No data collection in inference mode
+                onAddData={() => { }} // No data collection in inference mode
                 predict={onPredict}
                 augmentFlip={false}
-                onAugmentFlipChange={() => {}}
+                onAugmentFlipChange={() => { }}
                 augmentTranslate={false}
-                onAugmentTranslateChange={() => {}}
+                onAugmentTranslateChange={() => { }}
                 liveCameraMode={liveCameraMode}
                 onLiveCameraModeChange={onLiveCameraModeChange}
                 onCameraStreamingChange={onCameraStreamingChange}
@@ -568,7 +526,7 @@ export const InferenceTab: React.FC<InferenceTabProps> = ({
               <div className="bg-gray-800 border border-gray-600 rounded-lg p-4">
                 <div className="flex items-center justify-between mb-3">
                   <h3 className="text-lg font-semibold text-gray-300">
-                     Enable Audio Alerts
+                    Enable Audio Alerts
                   </h3>
                   <button
                     onClick={() => {
@@ -578,11 +536,10 @@ export const InferenceTab: React.FC<InferenceTabProps> = ({
                         initializeAudioContext();
                       }
                     }}
-                    className={`px-4 py-2 rounded-lg font-medium transition-colors ${
-                      audioEnabled
-                        ? "bg-green-600 hover:bg-green-500 text-white"
-                        : "bg-gray-600 hover:bg-gray-500 text-gray-300"
-                    }`}
+                    className={`px-4 py-2 rounded-lg font-medium transition-colors ${audioEnabled
+                      ? "bg-green-600 hover:bg-green-500 text-white"
+                      : "bg-gray-600 hover:bg-gray-500 text-gray-300"
+                      }`}
                   >
                     {audioEnabled ? "ON" : "OFF"}
                   </button>
@@ -602,7 +559,7 @@ export const InferenceTab: React.FC<InferenceTabProps> = ({
               {audioEnabled && (
                 <div className="bg-indigo-900 border border-indigo-600 rounded-lg p-4">
                   <h3 className="text-lg font-semibold text-indigo-300 mb-3">
-                     Trigger Configuration
+                    Trigger Configuration
                   </h3>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
@@ -662,11 +619,10 @@ export const InferenceTab: React.FC<InferenceTabProps> = ({
                       </label>
                       <button
                         onClick={() => setOnlyInLiveMode(!onlyInLiveMode)}
-                        className={`px-3 py-2 rounded text-sm font-medium transition-colors ${
-                          onlyInLiveMode
-                            ? "bg-indigo-600 hover:bg-indigo-500 text-white"
-                            : "bg-gray-600 hover:bg-gray-500 text-gray-300"
-                        }`}
+                        className={`px-3 py-2 rounded text-sm font-medium transition-colors ${onlyInLiveMode
+                          ? "bg-indigo-600 hover:bg-indigo-500 text-white"
+                          : "bg-gray-600 hover:bg-gray-500 text-gray-300"
+                          }`}
                       >
                         {onlyInLiveMode ? "Live Only" : "All Modes"}
                       </button>
@@ -711,7 +667,7 @@ export const InferenceTab: React.FC<InferenceTabProps> = ({
               {audioEnabled && (
                 <div className="bg-blue-900 border border-blue-600 rounded-lg p-4">
                   <h3 className="text-lg font-semibold text-blue-300 mb-3">
-                     Volume Control
+                    Volume Control
                   </h3>
                   <div className="flex items-center gap-3">
                     <span className="text-sm text-blue-200 min-w-[40px]">
@@ -740,7 +696,7 @@ export const InferenceTab: React.FC<InferenceTabProps> = ({
               {audioEnabled && (
                 <div className="bg-green-900 border border-green-600 rounded-lg p-4">
                   <h3 className="text-lg font-semibold text-green-300 mb-3">
-                     Class 0 Chime
+                    Class 0 Chime
                   </h3>
                   <div className="space-y-3">
                     <input
@@ -826,7 +782,7 @@ export const InferenceTab: React.FC<InferenceTabProps> = ({
               {audioEnabled && (
                 <div className="bg-purple-900 border border-purple-600 rounded-lg p-4">
                   <h3 className="text-lg font-semibold text-purple-300 mb-3">
-                     Class 1 Chime
+                    Class 1 Chime
                   </h3>
                   <div className="space-y-3">
                     <input
@@ -914,7 +870,7 @@ export const InferenceTab: React.FC<InferenceTabProps> = ({
               {audioEnabled && (
                 <div className="bg-yellow-900 border border-yellow-600 rounded-lg p-4">
                   <h3 className="text-lg font-semibold text-yellow-300 mb-2">
-                     Alert Status
+                    Alert Status
                   </h3>
                   <div className="grid grid-cols-2 gap-4 text-sm">
                     <div>
@@ -1037,7 +993,7 @@ export const InferenceTab: React.FC<InferenceTabProps> = ({
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           <div className="bg-gray-800 rounded-lg p-4 border border-gray-700">
             <h3 className="text-lg font-semibold text-cyan-400 mb-2">
-               Inference Speed
+              Inference Speed
             </h3>
             <div className="text-2xl font-bold text-white mb-1">
               {liveCameraMode ? "~30ms" : "< 100ms"}
@@ -1047,7 +1003,7 @@ export const InferenceTab: React.FC<InferenceTabProps> = ({
 
           <div className="bg-gray-800 rounded-lg p-4 border border-gray-700">
             <h3 className="text-lg font-semibold text-green-400 mb-2">
-               Model Complexity
+              Model Complexity
             </h3>
             <div className="text-2xl font-bold text-white mb-1">
               {liveLayerOutputs.length}
@@ -1057,7 +1013,7 @@ export const InferenceTab: React.FC<InferenceTabProps> = ({
 
           <div className="bg-gray-800 rounded-lg p-4 border border-gray-700">
             <h3 className="text-lg font-semibold text-purple-400 mb-2">
-               Accuracy
+              Accuracy
             </h3>
             <div className="text-2xl font-bold text-white mb-1">
               {prediction.confidence > 0

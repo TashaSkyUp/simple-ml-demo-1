@@ -602,10 +602,36 @@ export const TrainableConvNet: React.FC = () => {
     fileInput.click();
   };
 
+  const modelReady = !!model && (tfStatus === "ready" || tfStatus === "success" || tfStatus === "training");
+
   const tabs = [
     {
       id: "training",
       label: "Training",
+      headerContent: (
+        <div className="flex items-center gap-4 text-sm">
+          <div className="flex items-center gap-2">
+            <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
+            <span className="text-gray-300">
+              {layers.length} layers configured
+            </span>
+          </div>
+          <div className="flex items-center gap-2">
+            <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+            <span className="text-gray-300">
+              {trainingData.length} samples collected
+            </span>
+          </div>
+          {epochsRun > 0 && (
+            <div className="flex items-center gap-2">
+              <div className="w-2 h-2 bg-purple-500 rounded-full"></div>
+              <span className="text-gray-300">
+                {epochsRun} epochs trained
+              </span>
+            </div>
+          )}
+        </div>
+      ),
       content: (
         <TrainingTab
           // Architecture props
@@ -663,14 +689,36 @@ export const TrainableConvNet: React.FC = () => {
         : prediction.label !== "?"
           ? prediction.label
           : undefined,
+      headerContent: (
+        <div className="flex items-center gap-4 text-sm">
+          <div className="flex items-center gap-2">
+            <div
+              className={`w-2 h-2 rounded-full ${modelReady ? "bg-green-500" : "bg-red-500"
+                }`}
+            ></div>
+            <span className="text-gray-300">
+              Model {modelReady ? "Ready" : "Not Ready"}
+            </span>
+          </div>
+          {liveCameraMode && (
+            <div className="flex items-center gap-2">
+              <div className="w-2 h-2 bg-red-500 rounded-full animate-pulse"></div>
+              <span className="text-gray-300">Live Camera Active</span>
+            </div>
+          )}
+          {liveLayerOutputs.length > 0 && (
+            <div className="flex items-center gap-2">
+              <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
+              <span className="text-gray-300">
+                {liveLayerOutputs.length} layers visualizing
+              </span>
+            </div>
+          )}
+        </div>
+      ),
       content: (
         <InferenceTab
-          modelReady={
-            !!model &&
-            (tfStatus === "ready" ||
-              tfStatus === "success" ||
-              tfStatus === "training")
-          }
+          modelReady={modelReady}
           prediction={prediction}
           onPredict={runPrediction}
           liveCameraMode={liveCameraMode}

@@ -185,10 +185,7 @@ export const ArchitectureDefinition: React.FC<ArchitectureDefinitionProps> = ({
 
   return (
     <div>
-      <h2 className="text-lg font-bold mb-2 text-cyan-400">
-        1. Define Architecture
-      </h2>
-      <div className="space-y-2 bg-gray-900/50 p-2 rounded-lg overflow-y-auto">
+      <div className="space-y-3 bg-gray-900/50 p-1 rounded-lg max-h-[64rem] overflow-y-auto">
         {layers.map((layer, index) => (
           <div
             key={layer.id}
@@ -203,414 +200,366 @@ export const ArchitectureDefinition: React.FC<ArchitectureDefinitionProps> = ({
             onTouchMove={handleTouchMove}
             onTouchEnd={handleTouchEnd}
             className={`
-                            bg-gray-700 p-2 rounded-md cursor-move transition-all duration-200
+                            bg-gray-700 p-1 rounded-md cursor-move transition-all duration-200
                             ${draggedIndex === index ? "opacity-50 scale-95" : ""}
                             ${hoverIndex === index ? "border-2 border-cyan-400 bg-gray-600" : "border-2 border-transparent"}
                         `}
           >
-            <div className="flex justify-between items-center mb-2">
-              <div className="flex items-center space-x-2">
-                <div className="flex flex-col justify-center w-6 h-6 text-gray-400 hover:text-cyan-400 transition-colors">
+            <div className="flex items-center gap-2 w-full">
+              <div className="flex items-center gap-2">
+                <div className="flex flex-col justify-center w-2 h-2 text-gray-400 hover:text-cyan-400 transition-colors cursor-move">
                   <div className="w-1 h-1 bg-current rounded-full mb-1"></div>
                   <div className="w-1 h-1 bg-current rounded-full mb-1"></div>
                   <div className="w-1 h-1 bg-current rounded-full"></div>
                 </div>
-                <p className="font-semibold text-cyan-400">
-                  Layer {index + 1}:{" "}
+                <p className="font-bold text-cyan-400 whitespace-nowrap">
                   {layer.type.charAt(0).toUpperCase() + layer.type.slice(1)}
                 </p>
               </div>
+
+              <div className="flex-1 flex items-center gap-4 overflow-x-auto no-scrollbar">
+                {layer.type === LayerType.Conv && (
+                  <>
+                    <div className="flex items-center gap-2">
+                      <label
+                        htmlFor={`conv-filtersize-${layer.id}`}
+                        className="text-sm text-gray-400 whitespace-nowrap"
+                      >
+                        Size
+                      </label>
+                      <select
+                        id={`conv-filtersize-${layer.id}`}
+                        value={(layer as ConvLayerConfig).filterSize}
+                        onChange={(e) =>
+                          updateLayer(layer.id, {
+                            filterSize: parseInt(e.target.value) as 3 | 5,
+                          })
+                        }
+                        className="bg-gray-800 text-white p-1 rounded-md border border-gray-600 text-sm focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500"
+                      >
+                        <option value="3">3x3</option>
+                        <option value="5">5x5</option>
+                      </select>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <label
+                        htmlFor={`conv-numfilters-${layer.id}`}
+                        className="text-sm text-gray-400 whitespace-nowrap"
+                      >
+                        Num
+                      </label>
+                      <input
+                        id={`conv-numfilters-${layer.id}`}
+                        type="number"
+                        min="1"
+                        max="64"
+                        step="1"
+                        value={(layer as ConvLayerConfig).numFilters}
+                        onChange={(e) =>
+                          updateLayer(layer.id, {
+                            numFilters: handleNumericInput(
+                              e.target.value,
+                              1,
+                              1,
+                              64,
+                            ),
+                          })
+                        }
+                        className="w-10 bg-gray-800 text-white p-1 rounded-md border border-gray-600 text-sm focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500"
+                      />
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <label
+                        htmlFor={`conv-activation-${layer.id}`}
+                        className="text-sm text-gray-400 whitespace-nowrap"
+                      >
+                        Act
+                      </label>
+                      <select
+                        id={`conv-activation-${layer.id}`}
+                        value={
+                          (layer as ConvLayerConfig).activation ||
+                          ActivationFunction.ReLU
+                        }
+                        onChange={(e) =>
+                          updateLayer(layer.id, {
+                            activation: e.target.value as ActivationFunction,
+                          })
+                        }
+                        className="w-12 bg-gray-800 text-white p-1 rounded-md border border-gray-600 text-sm focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500"
+                      >
+                        {Object.values(ActivationFunction).map((funcName) => (
+                          <option key={funcName} value={funcName}>
+                            {funcName.charAt(0).toUpperCase() +
+                              funcName.slice(1)}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                  </>
+                )}
+
+                {layer.type === LayerType.Pool && (
+                  <>
+                    <div className="flex items-center gap-1">
+                      <label
+                        htmlFor={`pool-size-${layer.id}`}
+                        className="text-sm text-gray-400 whitespace-nowrap"
+                      >
+                        Size: {(layer as PoolLayerConfig).poolSize}x
+                        {(layer as PoolLayerConfig).poolSize}
+                      </label>
+                      <input
+                        id={`pool-size-${layer.id}`}
+                        type="range"
+                        min="2"
+                        max="4"
+                        step="1"
+                        value={(layer as PoolLayerConfig).poolSize}
+                        onChange={(e) =>
+                          updateLayer(layer.id, {
+                            poolSize: parseInt(e.target.value),
+                          })
+                        }
+                        className="w-12 h-2 bg-gray-600 rounded-lg appearance-none cursor-pointer accent-cyan-500"
+                      />
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <label
+                        htmlFor={`pool-type-${layer.id}`}
+                        className="text-sm text-gray-400 whitespace-nowrap"
+                      >
+                        Type
+                      </label>
+                      <select
+                        id={`pool-type-${layer.id}`}
+                        value={(layer as PoolLayerConfig).poolingType}
+                        onChange={(e) =>
+                          updateLayer(layer.id, {
+                            poolingType: e.target.value as PoolingType,
+                          })
+                        }
+                        className="w-12 bg-gray-800 text-white p-0.5 rounded-md border border-gray-600 text-xs focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500"
+                      >
+                        {Object.values(PoolingType).map((poolTypeName) => (
+                          <option key={poolTypeName} value={poolTypeName}>
+                            {poolTypeName.charAt(0).toUpperCase() +
+                              poolTypeName.slice(1)}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                  </>
+                )}
+
+                {layer.type === LayerType.Dropout && (
+                  <div className="flex items-center gap-2 w-full max-w-xs">
+                    <label
+                      htmlFor={`dropout-rate-${layer.id}`}
+                      className="text-sm text-gray-400 whitespace-nowrap min-w-[80px]"
+                    >
+                      Rate:{" "}
+                      {Math.round((layer as DropoutLayerConfig).rate * 100)}%
+                    </label>
+                    <input
+                      id={`dropout-rate-${layer.id}`}
+                      type="range"
+                      min="0.05"
+                      max="0.5"
+                      step="0.01"
+                      value={(layer as DropoutLayerConfig).rate}
+                      onChange={(e) =>
+                        updateLayer(layer.id, {
+                          rate: parseFloat(e.target.value),
+                        })
+                      }
+                      className="w-full h-2 bg-gray-600 rounded-lg appearance-none cursor-pointer accent-cyan-500"
+                    />
+                  </div>
+                )}
+
+                {layer.type === LayerType.Activation && (
+                  <div className="flex items-center gap-2">
+                    <label
+                      htmlFor={`activation-func-${layer.id}`}
+                      className="text-sm text-gray-400 whitespace-nowrap"
+                    >
+                      Func
+                    </label>
+                    <select
+                      id={`activation-func-${layer.id}`}
+                      value={(layer as ActivationLayerConfig).func}
+                      onChange={(e) =>
+                        updateLayer(layer.id, {
+                          func: e.target.value as ActivationFunction,
+                        })
+                      }
+                      className="bg-gray-800 text-white p-1 rounded-md border border-gray-600 text-sm focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500"
+                    >
+                      {Object.values(ActivationFunction).map((funcName) => (
+                        <option key={funcName} value={funcName}>
+                          {funcName.charAt(0).toUpperCase() + funcName.slice(1)}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                )}
+
+                {layer.type === LayerType.Dense && (
+                  <>
+                    <div className="flex items-center gap-2">
+                      <label
+                        htmlFor={`dense-units-${layer.id}`}
+                        className="text-sm text-gray-400 whitespace-nowrap"
+                      >
+                        Units
+                      </label>
+                      <input
+                        id={`dense-units-${layer.id}`}
+                        type="number"
+                        min="1"
+                        max="128"
+                        step="1"
+                        value={(layer as DenseLayerConfig).units}
+                        onChange={(e) =>
+                          updateLayer(layer.id, {
+                            units: handleNumericInput(
+                              e.target.value,
+                              1,
+                              1,
+                              128,
+                            ),
+                          })
+                        }
+                        className="w-16 bg-gray-800 text-white p-1 rounded-md border border-gray-600 text-sm focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500"
+                      />
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <label
+                        htmlFor={`dense-activation-${layer.id}`}
+                        className="text-sm text-gray-400 whitespace-nowrap"
+                      >
+                        Activation
+                      </label>
+                      <select
+                        id={`dense-activation-${layer.id}`}
+                        value={(layer as DenseLayerConfig).activation}
+                        onChange={(e) =>
+                          updateLayer(layer.id, {
+                            activation: e.target.value as ActivationFunction,
+                          })
+                        }
+                        className="bg-gray-800 text-white p-1 rounded-md border border-gray-600 text-sm focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500"
+                      >
+                        {Object.values(ActivationFunction).map((funcName) => (
+                          <option key={funcName} value={funcName}>
+                            {funcName.charAt(0).toUpperCase() +
+                              funcName.slice(1)}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                  </>
+                )}
+
+                {layer.type === LayerType.Flatten && (
+                  <p className="text-sm text-gray-400 italic whitespace-nowrap">
+                    Flattens input
+                  </p>
+                )}
+
+                {layer.type === LayerType.Reshape && (
+                  <div className="flex items-center gap-4">
+                    <div className="flex items-center gap-2">
+                      <span className="text-sm text-gray-400 whitespace-nowrap">
+                        Target: [
+                        {(layer as ReshapeLayerConfig).targetShape.join(", ")}]
+                      </span>
+                    </div>
+                    <div className="flex items-center gap-1">
+                      <input
+                        type="number"
+                        min="1"
+                        max="256"
+                        value={(layer as ReshapeLayerConfig).targetShape[0]}
+                        onChange={(e) => {
+                          const newShape = [
+                            ...(layer as ReshapeLayerConfig).targetShape,
+                          ];
+                          newShape[0] = Math.max(
+                            1,
+                            parseInt(e.target.value) || 1,
+                          );
+                          updateLayer(layer.id, { targetShape: newShape });
+                        }}
+                        className="w-12 bg-gray-800 text-white p-1 rounded border border-gray-600 text-sm focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500"
+                      />
+                      <span className="text-gray-500">×</span>
+                      <input
+                        type="number"
+                        min="1"
+                        max="256"
+                        value={(layer as ReshapeLayerConfig).targetShape[1]}
+                        onChange={(e) => {
+                          const newShape = [
+                            ...(layer as ReshapeLayerConfig).targetShape,
+                          ];
+                          newShape[1] = Math.max(
+                            1,
+                            parseInt(e.target.value) || 1,
+                          );
+                          updateLayer(layer.id, { targetShape: newShape });
+                        }}
+                        className="w-12 bg-gray-800 text-white p-1 rounded border border-gray-600 text-sm focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500"
+                      />
+                      <span className="text-gray-500">×</span>
+                      <input
+                        type="number"
+                        min="1"
+                        max="256"
+                        value={(layer as ReshapeLayerConfig).targetShape[2]}
+                        onChange={(e) => {
+                          const newShape = [
+                            ...(layer as ReshapeLayerConfig).targetShape,
+                          ];
+                          newShape[2] = Math.max(
+                            1,
+                            parseInt(e.target.value) || 1,
+                          );
+                          updateLayer(layer.id, { targetShape: newShape });
+                        }}
+                        className="w-12 bg-gray-800 text-white p-1 rounded border border-gray-600 text-sm focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500"
+                      />
+                    </div>
+                  </div>
+                )}
+              </div>
+
               <button
                 onClick={(e) => {
                   e.stopPropagation();
                   removeLayer(layer.id);
                 }}
-                className="text-red-400 hover:text-red-300 font-bold p-1 leading-none rounded-full focus:outline-none focus:ring-2 focus:ring-red-500 hover:bg-red-900/20 transition-colors"
+                className="text-red-400 hover:text-red-300 font-bold p-2 rounded-full hover:bg-red-900/20 transition-colors flex-shrink-0"
                 aria-label={`Remove layer ${index + 1}`}
               >
                 &times;
               </button>
             </div>
 
-            {layer.type === LayerType.Conv && (
-              <div className="grid grid-cols-2 gap-x-4 gap-y-2">
-                <div>
-                  <label
-                    htmlFor={`conv-filtersize-${layer.id}`}
-                    className="text-xs text-gray-400 block"
-                  >
-                    Filter Size
-                  </label>
-                  <select
-                    id={`conv-filtersize-${layer.id}`}
-                    value={(layer as ConvLayerConfig).filterSize}
-                    onChange={(e) =>
-                      updateLayer(layer.id, {
-                        filterSize: parseInt(e.target.value) as 3 | 5,
-                      })
-                    }
-                    className="w-full bg-gray-800 text-white p-1 rounded-md border border-gray-600 mt-1 focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500"
-                  >
-                    <option value="3">3x3</option>
-                    <option value="5">5x5</option>
-                  </select>
-                </div>
-                <div>
-                  <label
-                    htmlFor={`conv-numfilters-${layer.id}`}
-                    className="text-xs text-gray-400 block"
-                  >
-                    Num Filters
-                  </label>
-                  <input
-                    id={`conv-numfilters-${layer.id}`}
-                    type="number"
-                    min="1"
-                    max="64"
-                    step="1"
-                    value={(layer as ConvLayerConfig).numFilters}
-                    onChange={(e) =>
-                      updateLayer(layer.id, {
-                        numFilters: handleNumericInput(
-                          e.target.value,
-                          1,
-                          1,
-                          64,
-                        ),
-                      })
-                    }
-                    className="w-full bg-gray-800 text-white p-1 rounded-md border border-gray-600 mt-1 focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500"
-                  />
-                </div>
-                <div className="col-span-2">
-                  <label
-                    htmlFor={`conv-activation-${layer.id}`}
-                    className="text-xs text-gray-400 block"
-                  >
-                    Activation
-                  </label>
-                  <select
-                    id={`conv-activation-${layer.id}`}
-                    value={
-                      (layer as ConvLayerConfig).activation ||
-                      ActivationFunction.ReLU
-                    }
-                    onChange={(e) =>
-                      updateLayer(layer.id, {
-                        activation: e.target.value as ActivationFunction,
-                      })
-                    }
-                    className="w-full bg-gray-800 text-white p-1 rounded-md border border-gray-600 mt-1 focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500"
-                  >
-                    {Object.values(ActivationFunction).map((funcName) => (
-                      <option key={funcName} value={funcName}>
-                        {funcName.charAt(0).toUpperCase() + funcName.slice(1)}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-              </div>
-            )}
-
-            {layer.type === LayerType.Pool && (
-              <div className="grid grid-cols-2 gap-x-4 gap-y-2">
-                <div>
-                  <label
-                    htmlFor={`pool-size-${layer.id}`}
-                    className="text-xs text-gray-400 block"
-                  >
-                    Pool Size: {(layer as PoolLayerConfig).poolSize}x
-                    {(layer as PoolLayerConfig).poolSize}
-                  </label>
-                  <input
-                    id={`pool-size-${layer.id}`}
-                    type="range"
-                    min="2"
-                    max="4"
-                    step="1"
-                    value={(layer as PoolLayerConfig).poolSize}
-                    onChange={(e) =>
-                      updateLayer(layer.id, {
-                        poolSize: parseInt(e.target.value),
-                      })
-                    }
-                    className="w-full h-2 bg-gray-600 rounded-lg appearance-none cursor-pointer mt-1 accent-cyan-500"
-                  />
-                </div>
-                <div>
-                  <label
-                    htmlFor={`pool-type-${layer.id}`}
-                    className="text-xs text-gray-400 block"
-                  >
-                    Pooling Type
-                  </label>
-                  <select
-                    id={`pool-type-${layer.id}`}
-                    value={(layer as PoolLayerConfig).poolingType}
-                    onChange={(e) =>
-                      updateLayer(layer.id, {
-                        poolingType: e.target.value as PoolingType,
-                      })
-                    }
-                    className="w-full bg-gray-800 text-white p-1 rounded-md border border-gray-600 mt-1 focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500"
-                  >
-                    {Object.values(PoolingType).map((poolTypeName) => (
-                      <option key={poolTypeName} value={poolTypeName}>
-                        {poolTypeName.charAt(0).toUpperCase() +
-                          poolTypeName.slice(1)}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-              </div>
-            )}
-
-            {layer.type === LayerType.Dropout && (
-              <div>
-                <label
-                  htmlFor={`dropout-rate-${layer.id}`}
-                  className="text-xs text-gray-400 block"
-                >
-                  Dropout Rate:{" "}
-                  {Math.round((layer as DropoutLayerConfig).rate * 100)}%
-                </label>
-                <input
-                  id={`dropout-rate-${layer.id}`}
-                  type="range"
-                  min="0.05"
-                  max="0.5"
-                  step="0.01"
-                  value={(layer as DropoutLayerConfig).rate}
-                  onChange={(e) =>
-                    updateLayer(layer.id, { rate: parseFloat(e.target.value) })
-                  }
-                  className="w-full h-2 bg-gray-600 rounded-lg appearance-none cursor-pointer mt-1 accent-cyan-500"
-                />
-              </div>
-            )}
-
-            {layer.type === LayerType.Activation && (
-              <div>
-                <label
-                  htmlFor={`activation-func-${layer.id}`}
-                  className="text-xs text-gray-400 block"
-                >
-                  Function
-                </label>
-                <select
-                  id={`activation-func-${layer.id}`}
-                  value={(layer as ActivationLayerConfig).func}
-                  onChange={(e) =>
-                    updateLayer(layer.id, {
-                      func: e.target.value as ActivationFunction,
-                    })
-                  }
-                  className="w-full bg-gray-800 text-white p-1 rounded-md border border-gray-600 mt-1 focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500"
-                >
-                  {Object.values(ActivationFunction).map((funcName) => (
-                    <option key={funcName} value={funcName}>
-                      {funcName.charAt(0).toUpperCase() + funcName.slice(1)}
-                    </option>
-                  ))}
-                </select>
-              </div>
-            )}
-
-            {layer.type === LayerType.Dense && (
-              <div className="grid grid-cols-2 gap-x-4 gap-y-2">
-                <div>
-                  <label
-                    htmlFor={`dense-units-${layer.id}`}
-                    className="text-xs text-gray-400 block"
-                  >
-                    Units
-                  </label>
-                  <input
-                    id={`dense-units-${layer.id}`}
-                    type="number"
-                    min="1"
-                    max="128"
-                    step="1"
-                    value={(layer as DenseLayerConfig).units}
-                    onChange={(e) =>
-                      updateLayer(layer.id, {
-                        units: handleNumericInput(e.target.value, 1, 1, 128),
-                      })
-                    }
-                    className="w-full bg-gray-800 text-white p-1 rounded-md border border-gray-600 mt-1 focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500"
-                  />
-                </div>
-                <div>
-                  <label
-                    htmlFor={`dense-activation-${layer.id}`}
-                    className="text-xs text-gray-400 block"
-                  >
-                    Activation
-                  </label>
-                  <select
-                    id={`dense-activation-${layer.id}`}
-                    value={(layer as DenseLayerConfig).activation}
-                    onChange={(e) =>
-                      updateLayer(layer.id, {
-                        activation: e.target.value as ActivationFunction,
-                      })
-                    }
-                    className="w-full bg-gray-800 text-white p-1 rounded-md border border-gray-600 mt-1 focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500"
-                  >
-                    {Object.values(ActivationFunction).map((funcName) => (
-                      <option key={funcName} value={funcName}>
-                        {funcName.charAt(0).toUpperCase() + funcName.slice(1)}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-              </div>
-            )}
-
-            {layer.type === LayerType.Flatten && (
-              <p className="text-xs text-gray-400 italic">
-                Flattens input. No configurable parameters.
-              </p>
-            )}
-
-            {layer.type === LayerType.Reshape && (
-              <div>
-                <label
-                  htmlFor={`reshape-target-${layer.id}`}
-                  className="text-xs text-gray-400 block mb-2"
-                >
-                  Target Shape: [
-                  {(layer as ReshapeLayerConfig).targetShape.join(", ")}]
-                </label>
-                {(() => {
-                  const validation = validateReshapeBasic(
-                    (layer as ReshapeLayerConfig).targetShape,
-                  );
-                  return (
-                    <div
-                      className={`text-xs p-2 rounded mb-2 ${
-                        validation.isValid
-                          ? "bg-gray-800 text-gray-300 border border-gray-600"
-                          : "bg-red-900/30 text-red-300 border border-red-700"
-                      }`}
-                    >
-                      {validation.message}
-                    </div>
-                  );
-                })()}
-                <div className="grid grid-cols-3 gap-2 mt-2">
-                  <div>
-                    <label className="text-xs text-gray-500 block">
-                      Height
-                    </label>
-                    <input
-                      type="number"
-                      min="1"
-                      max="256"
-                      value={(layer as ReshapeLayerConfig).targetShape[0]}
-                      onChange={(e) => {
-                        const newShape = [
-                          ...(layer as ReshapeLayerConfig).targetShape,
-                        ];
-                        newShape[0] = Math.max(
-                          1,
-                          parseInt(e.target.value) || 1,
-                        );
-                        updateLayer(layer.id, { targetShape: newShape });
-                      }}
-                      className="w-full bg-gray-800 text-white p-1 rounded border border-gray-600 text-sm focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500"
-                    />
-                  </div>
-                  <div>
-                    <label className="text-xs text-gray-500 block">Width</label>
-                    <input
-                      type="number"
-                      min="1"
-                      max="256"
-                      value={(layer as ReshapeLayerConfig).targetShape[1]}
-                      onChange={(e) => {
-                        const newShape = [
-                          ...(layer as ReshapeLayerConfig).targetShape,
-                        ];
-                        newShape[1] = Math.max(
-                          1,
-                          parseInt(e.target.value) || 1,
-                        );
-                        updateLayer(layer.id, { targetShape: newShape });
-                      }}
-                      className="w-full bg-gray-800 text-white p-1 rounded border border-gray-600 text-sm focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500"
-                    />
-                  </div>
-                  <div>
-                    <label className="text-xs text-gray-500 block">
-                      Channels
-                    </label>
-                    <input
-                      type="number"
-                      min="1"
-                      max="256"
-                      value={(layer as ReshapeLayerConfig).targetShape[2]}
-                      onChange={(e) => {
-                        const newShape = [
-                          ...(layer as ReshapeLayerConfig).targetShape,
-                        ];
-                        newShape[2] = Math.max(
-                          1,
-                          parseInt(e.target.value) || 1,
-                        );
-                        updateLayer(layer.id, { targetShape: newShape });
-                      }}
-                      className="w-full bg-gray-800 text-white p-1 rounded border border-gray-600 text-sm focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500"
-                    />
-                  </div>
-                </div>
-                <div className="mt-2 flex gap-2">
-                  <button
-                    onClick={() =>
-                      updateLayer(layer.id, { targetShape: [28, 28, 1] })
-                    }
-                    className="text-xs bg-gray-600 hover:bg-gray-500 text-white px-2 py-1 rounded transition-colors"
-                  >
-                    28×28×1
-                  </button>
-                  <button
-                    onClick={() =>
-                      updateLayer(layer.id, { targetShape: [14, 14, 8] })
-                    }
-                    className="text-xs bg-gray-600 hover:bg-gray-500 text-white px-2 py-1 rounded transition-colors"
-                  >
-                    14×14×8
-                  </button>
-                  <button
-                    onClick={() =>
-                      updateLayer(layer.id, { targetShape: [7, 7, 16] })
-                    }
-                    className="text-xs bg-gray-600 hover:bg-gray-500 text-white px-2 py-1 rounded transition-colors"
-                  >
-                    7×7×16
-                  </button>
-                  <button
-                    onClick={() =>
-                      updateLayer(layer.id, { targetShape: [7, 7, 16] })
-                    }
-                    className="text-xs bg-gray-600 hover:bg-gray-500 text-white px-2 py-1 rounded transition-colors"
-                  >
-                    7×7×16
-                  </button>
-                </div>
-              </div>
-            )}
-          </div>
+          </div >
         ))}
 
-        {layers.length === 0 && (
-          <div className="text-center text-gray-500 py-8">
-            <p className="mb-2">No layers defined yet</p>
-            <p className="text-sm">
-              Add layers below to build your CNN architecture
-            </p>
-          </div>
-        )}
+        {
+          layers.length === 0 && (
+            <div className="text-center text-gray-500 py-8">
+              <p className="mb-2">No layers defined yet</p>
+              <p className="text-sm">
+                Add layers below to build your CNN architecture
+              </p>
+            </div>
+          )
+        }
 
         <div className="grid grid-cols-2 md:grid-cols-3 gap-2 pt-2">
           <button
@@ -658,16 +607,7 @@ export const ArchitectureDefinition: React.FC<ArchitectureDefinitionProps> = ({
         </div>
 
         {layers.length > 0 && (
-          <div className="mt-2 p-2 bg-gray-800/50 rounded-lg border border-gray-700">
-            <div className="flex items-center space-x-2 text-xs text-gray-400">
-              <div className="flex flex-col justify-center w-4 h-4">
-                <div className="w-0.5 h-0.5 bg-current rounded-full mb-0.5"></div>
-                <div className="w-0.5 h-0.5 bg-current rounded-full mb-0.5"></div>
-                <div className="w-0.5 h-0.5 bg-current rounded-full"></div>
-              </div>
-              <span>Drag layers to reorder • Click × to remove</span>
-            </div>
-          </div>
+          <div></div>
         )}
       </div>
     </div>
